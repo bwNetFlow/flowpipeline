@@ -1,0 +1,9 @@
+---
+- segment: kafkaconsumer
+  config:
+    server: localhost:9092
+    topic: flows
+    group: test
+    notls: 1
+    noauth: 1
+- segment: printflowdump

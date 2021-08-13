@@ -2,12 +2,13 @@ package main
 
 import (
 	"flag"
-	"github.com/bwNetFlow/flowpipeline/pipeline"
-	"github.com/hashicorp/logutils"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
+
+	"github.com/bwNetFlow/flowpipeline/pipeline"
+	"github.com/hashicorp/logutils"
 )
 
 func main() {
@@ -24,6 +25,7 @@ func main() {
 	config, err := ioutil.ReadFile(*configfile)
 	if err != nil {
 		log.Printf("[error] reading config file: %s", err)
+		return
 	}
 	pipeline := pipeline.NewFromConfig(config)
 	pipeline.AutoDrain()

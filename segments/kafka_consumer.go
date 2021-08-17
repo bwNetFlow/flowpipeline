@@ -1,12 +1,13 @@
 package segments
 
 import (
-	"github.com/bwNetFlow/kafkaconnector"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
+
+	kafka "github.com/bwNetFlow/kafkaconnector"
 )
 
 type KafkaConsumer struct {
@@ -60,7 +61,11 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 		log.Printf("[info] KafkaConsumer: Authenticating as user '%s'.", segment.User)
 	}
 
-	kafkaConn.StartConsumer(segment.Server, strings.Split(segment.Topic, ","), segment.Group, -1)
+	err := kafkaConn.StartConsumer(segment.Server, strings.Split(segment.Topic, ","), segment.Group, -1)
+	if err != nil {
+		log.Println("[error] KafkaConsumer: Error starting consumer, this usually indicates a misconfiguration (auth).")
+		os.Exit(1)
+	}
 
 	// receive flows in a loop
 	for {

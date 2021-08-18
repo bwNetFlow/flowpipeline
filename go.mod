@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/Shopify/sarama v1.29.1 // indirect
+	github.com/bwNetFlow/consumer_prometheus v0.0.0-20210316091512-7f2ac713da39
 	github.com/bwNetFlow/flowfilter v0.0.0-20210421105740-1e45550de2f6
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20190717112653-3fe50ea5b638
 	github.com/bwNetFlow/kafkaconnector v0.0.0-20210817091537-cdd6f54695a0

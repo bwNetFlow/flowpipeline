@@ -2,13 +2,14 @@ package pipeline
 
 import (
 	"flag"
-	"github.com/bwNetFlow/flowpipeline/segments"
-	"gopkg.in/yaml.v2"
 	"log"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/bwNetFlow/flowpipeline/segments"
+	"gopkg.in/yaml.v2"
 )
 
 // any new segments need to be added here to be recognized by the config parser
@@ -27,6 +28,7 @@ func recognizedInstances() []interface{} {
 		segments.PrintDots{},
 		segments.StdIn{},
 		segments.StdOut{},
+		segments.PrometheusExporter{},
 	}
 }
 

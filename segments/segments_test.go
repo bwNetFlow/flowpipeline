@@ -1,12 +1,13 @@
 package segments
 
 import (
-	flow "github.com/bwNetFlow/protobuf/go"
-	"github.com/hashicorp/logutils"
 	"log"
 	"os"
 	"sync"
 	"testing"
+
+	flow "github.com/bwNetFlow/protobuf/go"
+	"github.com/hashicorp/logutils"
 )
 
 func TestMain(m *testing.M) {
@@ -209,4 +210,13 @@ func TestSegment_StdOut_passthrough(t *testing.T) {
 	if result == nil {
 		t.Error("Segment StdOut is not passing through flows.")
 	}
+}
+
+// Prometheus Exporter test, passthrough test only
+func TestSegment_Prometheus_exporter(t *testing.T) {
+	result := testSegmentWithFlow(&StdOut{}, &flow.FlowMessage{})
+	if result == nil {
+		t.Error("Segment PrometheusExporter is not passing through flows.")
+	}
+
 }

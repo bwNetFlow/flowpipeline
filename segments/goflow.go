@@ -2,14 +2,17 @@ package segments
 
 import (
 	"context"
-	flow "github.com/bwNetFlow/protobuf/go"
-	"github.com/golang/protobuf/proto"
-	"github.com/netsampler/goflow2/transport"
-	"github.com/netsampler/goflow2/utils"
 	"log"
 	"os"
 	"strconv"
 	"sync"
+
+	flow "github.com/bwNetFlow/protobuf/go"
+	"github.com/golang/protobuf/proto"
+
+	formatter "github.com/netsampler/goflow2/format/protobuf"
+	"github.com/netsampler/goflow2/transport"
+	"github.com/netsampler/goflow2/utils"
 )
 
 type Goflow struct {
@@ -57,9 +60,6 @@ type ChannelDriver struct {
 	out chan *flow.FlowMessage
 }
 
-func (d *ChannelDriver) Prepare() error             { return nil }
-func (d *ChannelDriver) Init(context.Context) error { return nil }
-
 func (d *ChannelDriver) Send(key, data []byte) error {
 	msg := &flow.FlowMessage{}
 	if err := proto.Unmarshal(data, msg); err != nil {
@@ -76,11 +76,13 @@ func (d *ChannelDriver) Close(context.Context) error {
 }
 
 func (segment *Goflow) startGoFlow(transport transport.TransportInterface) {
+	// TODO: devise a custom formatter to avoid de- and reencoding between
+	// both protobuf formats, goflow-original and ours.
+	formatter := &formatter.ProtobufDriver{}
 	sNF := &utils.StateNetFlow{
+		Format:    formatter,
 		Transport: transport,
 	}
-
-	// go httpServer(sNF)
 
 	log.Printf("[info] Goflow: Listening for Netflow v9 on port %d...", segment.Port)
 	err := sNF.FlowRoutine(1, "", int(segment.Port), false)

@@ -39,7 +39,7 @@ func (segment *Goflow) Run(wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 	segment.goflow_in = make(chan *flow.FlowMessage)
-	go segment.startGoFlow(&ChannelDriver{segment.goflow_in})
+	go segment.startGoFlow(&channelDriver{segment.goflow_in})
 	for {
 		select {
 		case msg, ok := <-segment.goflow_in:
@@ -56,11 +56,11 @@ func (segment *Goflow) Run(wg *sync.WaitGroup) {
 	}
 }
 
-type ChannelDriver struct {
+type channelDriver struct {
 	out chan *flow.FlowMessage
 }
 
-func (d *ChannelDriver) Send(key, data []byte) error {
+func (d *channelDriver) Send(key, data []byte) error {
 	msg := &flow.FlowMessage{}
 	if err := proto.Unmarshal(data, msg); err != nil {
 		log.Println("[error] Goflow: Conversion error for received flow.")
@@ -70,7 +70,7 @@ func (d *ChannelDriver) Send(key, data []byte) error {
 	return nil
 }
 
-func (d *ChannelDriver) Close(context.Context) error {
+func (d *channelDriver) Close(context.Context) error {
 	close(d.out)
 	return nil
 }

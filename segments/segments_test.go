@@ -47,7 +47,7 @@ func TestSegment_NoOp_passthrough(t *testing.T) {
 
 // DropFields Segment tests are thorough and try every combination
 func TestSegment_DropFields_policyKeep(t *testing.T) {
-	result := testSegmentWithFlow(&DropFields{Policy: "keep", Keep: "DstAddr"},
+	result := testSegmentWithFlow(&DropFields{Policy: "keep", Fields: "DstAddr"},
 		&flow.FlowMessage{SrcAddr: []byte{192, 168, 88, 142}, DstAddr: []byte{192, 168, 88, 143}})
 	if len(result.SrcAddr) != 0 || len(result.DstAddr) == 0 {
 		t.Error("Segment DropFields is not keeping the proper fields.")
@@ -55,7 +55,7 @@ func TestSegment_DropFields_policyKeep(t *testing.T) {
 }
 
 func TestSegment_DropFields_policyDrop(t *testing.T) {
-	result := testSegmentWithFlow(&DropFields{Policy: "drop", Drop: "SrcAddr"},
+	result := testSegmentWithFlow(&DropFields{Policy: "drop", Fields: "SrcAddr"},
 		&flow.FlowMessage{SrcAddr: []byte{192, 168, 88, 142}, DstAddr: []byte{192, 168, 88, 143}})
 	if len(result.SrcAddr) != 0 || len(result.DstAddr) == 0 {
 		t.Error("Segment DropFields is not dropping the proper fields.")
@@ -218,5 +218,4 @@ func TestSegment_Prometheus_exporter(t *testing.T) {
 	if result == nil {
 		t.Error("Segment PrometheusExporter is not passing through flows.")
 	}
-
 }

@@ -25,14 +25,14 @@ func (segment *PrometheusExporter) Run(wg *sync.WaitGroup) {
 		os.Exit(1)
 	}
 
-	var promExporter = exporter.Exporter{}
-	promExporter.Initialize()
-	promExporter.ServeEndpoints(segment.PromEndpoint)
-
 	defer func() {
 		close(segment.out)
 		wg.Done()
 	}()
+
+	var promExporter = exporter.Exporter{}
+	promExporter.Initialize()
+	promExporter.ServeEndpoints(segment.PromEndpoint)
 
 	for msg := range segment.in {
 		segment.out <- msg

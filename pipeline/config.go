@@ -15,7 +15,7 @@ type SegmentRepr struct {
 	Config map[string]string `yaml:"config"`  // to be expanded by our instance
 }
 
-func (s *SegmentRepr) ExpandedConfig() (expandedConfig map[string]string) {
+func (s *SegmentRepr) ExpandedConfig() map[string]string {
 	argvMapper := func(placeholderName string) string {
 		argnum, err := strconv.Atoi(placeholderName)
 		if err == nil && argnum < len(flag.Args()) {
@@ -30,10 +30,10 @@ func (s *SegmentRepr) ExpandedConfig() (expandedConfig map[string]string) {
 			expandedConfig[k] = os.ExpandEnv(v)
 		}
 	}
-	return
+	return expandedConfig
 }
 
-func SegmentListFromConfig(config []byte) (segmentList []segments.Segment) {
+func SegmentListFromConfig(config []byte) []segments.Segment {
 	// parse a list of SegmentReprs from yaml
 	pipelineRepr := new([]SegmentRepr)
 
@@ -49,10 +49,10 @@ func SegmentListFromConfig(config []byte) (segmentList []segments.Segment) {
 		if segmenttype == nil {
 			os.Exit(1)
 		}
-		// the Segments New method knows how to handle our config
+		// the Segment's New method knows how to handle our config
 		segmentList[i] = segmenttype.New(segmentrepr.ExpandedConfig())
 	}
-	return
+	return segmentList
 }
 
 func NewFromConfig(config []byte) *Pipeline {

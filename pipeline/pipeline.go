@@ -46,7 +46,7 @@ func (pipeline Pipeline) Close() {
 // Initializes a new Pipeline object and then starts all segment goroutines
 // therein. Initialization includes creating any intermediate channels and
 // wiring up the segments in the segmentList with them.
-func NewPipeline(segmentList ...segments.Segment) *Pipeline {
+func New(segmentList ...segments.Segment) *Pipeline {
 	channels := make([]chan *flow.FlowMessage, len(segmentList)+1)
 	channels[0] = make(chan *flow.FlowMessage)
 	wg := sync.WaitGroup{}

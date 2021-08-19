@@ -10,11 +10,21 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// A config representation of a segment. It is intended to look like this:
+//   - segment: noop
+//     config:
+//       key: value
+//       foo: bar
+// This struct has the appropriate yaml tags inline.
 type SegmentRepr struct {
 	Name   string            `yaml:"segment"` // to be looked up with a registry
 	Config map[string]string `yaml:"config"`  // to be expanded by our instance
 }
 
+// Returns the SegmentRepr's Config with all its variables expanded. It tries
+// to match numeric variables such as '$1' to the corresponding command line
+// argument not matched by flags, or else uses regular environment variable
+// expansion.
 func (s *SegmentRepr) ExpandedConfig() map[string]string {
 	argvMapper := func(placeholderName string) string {
 		argnum, err := strconv.Atoi(placeholderName)
@@ -23,7 +33,7 @@ func (s *SegmentRepr) ExpandedConfig() map[string]string {
 		}
 		return ""
 	}
-	expandedConfig = make(map[string]string)
+	expandedConfig := make(map[string]string)
 	for k, v := range s.Config {
 		expandedConfig[k] = os.Expand(v, argvMapper) // try to convert $n and such to argv[n]
 		if expandedConfig[k] == "" && v != "" {      // if unsuccessful, do regular env expansion
@@ -33,7 +43,9 @@ func (s *SegmentRepr) ExpandedConfig() map[string]string {
 	return expandedConfig
 }
 
-func SegmentListFromConfig(config []byte) []segments.Segment {
+// Builds a list of Segment objects from raw configuration bytes and
+// initializes a Pipeline with them.
+func NewFromConfig(config []byte) *Pipeline {
 	// parse a list of SegmentReprs from yaml
 	pipelineRepr := new([]SegmentRepr)
 
@@ -43,7 +55,7 @@ func SegmentListFromConfig(config []byte) []segments.Segment {
 	}
 
 	// we have SegmentReprs parsed, instanciate them as actual Segments
-	segmentList = make([]segments.Segment, len(*pipelineRepr))
+	segmentList := make([]segments.Segment, len(*pipelineRepr))
 	for i, segmentrepr := range *pipelineRepr {
 		segmenttype := segments.LookupSegment(segmentrepr.Name) // a typed nil instance
 		if segmenttype == nil {
@@ -52,9 +64,5 @@ func SegmentListFromConfig(config []byte) []segments.Segment {
 		// the Segment's New method knows how to handle our config
 		segmentList[i] = segmenttype.New(segmentrepr.ExpandedConfig())
 	}
-	return segmentList
-}
-
-func NewFromConfig(config []byte) *Pipeline {
-	return NewPipeline(SegmentListFromConfig(config)...)
+	return New(segmentList...)
 }

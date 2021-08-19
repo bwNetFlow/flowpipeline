@@ -1,11 +1,10 @@
 module github.com/bwNetFlow/flowpipeline
 
-go 1.16
+go 1.17
 
 require (
 	github.com/Shopify/sarama v1.29.1 // indirect
 	github.com/bwNetFlow/consumer_prometheus v0.0.0-20210316091512-7f2ac713da39
-	github.com/bwNetFlow/flowfilter v0.0.0-20210421105740-1e45550de2f6
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20190717112653-3fe50ea5b638
 	github.com/bwNetFlow/kafkaconnector v0.0.0-20210817091537-cdd6f54695a0
 	github.com/bwNetFlow/protobuf/go v0.0.0-20210804122501-17ef96425f1f
@@ -25,4 +24,27 @@ require (
 	golang.org/x/sys v0.0.0-20210816183151-1e6c022a8912 // indirect
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/yaml.v2 v2.4.0
+)
+
+require (
+	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/deathowl/go-metrics-prometheus v0.0.0-20200518174047-74482eab5bfb // indirect
+	github.com/eapache/go-resiliency v1.2.0 // indirect
+	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
+	github.com/eapache/queue v1.1.0 // indirect
+	github.com/hashicorp/go-uuid v1.0.2 // indirect
+	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
+	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
+	github.com/jcmturner/gofork v1.0.0 // indirect
+	github.com/jcmturner/gokrb5/v8 v8.4.2 // indirect
+	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
+	github.com/libp2p/go-reuseport v0.0.2 // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/prometheus/client_golang v1.11.0 // indirect
+	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 )

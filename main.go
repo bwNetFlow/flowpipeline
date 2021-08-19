@@ -1,3 +1,12 @@
+// The flowpipeline package unifies all bwNetFlow functionality and aims to
+// replace all dedicated platform components. By providing configurable
+// pipelines to process flows all usual processess can be recreated in a simple
+// and streamlined manner.
+//
+// The main entrypoint accepts command line flags to point to a configuration
+// file, establishes the log level, and ensures a smooth exit on SIGINT. The
+// actual configuration is done using the 'pipeline' package by referencing the
+// different types in the 'segments' package.
 package main
 
 import (

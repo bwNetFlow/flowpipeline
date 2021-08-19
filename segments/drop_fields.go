@@ -12,15 +12,13 @@ import (
 type DropFields struct {
 	BaseSegment
 	Policy string
-	Keep   string
-	Drop   string
+	Fields string
 }
 
 func (segment DropFields) New(config map[string]string) Segment {
 	return &DropFields{
 		Policy: config["policy"],
-		Keep:   config["keep"],
-		Drop:   config["drop"],
+		Fields: config["fields"],
 	}
 }
 
@@ -29,18 +27,15 @@ func (segment *DropFields) Run(wg *sync.WaitGroup) {
 		close(segment.out)
 		wg.Done()
 	}()
-	if segment.Policy == "keep" && segment.Keep == "" {
-		log.Println("[warning] DropFields: This segment is probably misconfigured, if 'policy: keep' and 'keep: \"\"' all flows will be empty.")
-	} else if segment.Policy == "drop" && segment.Drop == "" {
-		log.Println("[warning] DropFields: This segment is probably misconfigured, if 'policy: drop', the 'drop' parameter needs to be set for the segment to do anything.")
-	}
+	log.Println("[warning] DropFields: This segment is probably misconfigured, the 'fields' parameter should not be empty.")
+	fields := strings.Split(segment.Fields, ",")
 	for original := range segment.in {
 		reflected_original := reflect.ValueOf(original)
-		switch segment.Policy {
-		case "keep":
-			reduced := &flow.FlowMessage{}
-			reflected_reduced := reflect.ValueOf(reduced)
-			for _, fieldname := range strings.Split(segment.Keep, ",") {
+		for _, fieldname := range fields {
+			switch segment.Policy {
+			case "keep":
+				reduced := &flow.FlowMessage{}
+				reflected_reduced := reflect.ValueOf(reduced)
 				original_field := reflect.Indirect(reflected_original).FieldByName(fieldname)
 				reduced_field := reflected_reduced.Elem().FieldByName(fieldname)
 				if original_field.IsValid() && reduced_field.IsValid() {
@@ -48,16 +43,14 @@ func (segment *DropFields) Run(wg *sync.WaitGroup) {
 				} else {
 					log.Printf("[warning] DropFields: A flow message did not have a field named '%s' to keep.", fieldname)
 				}
-			}
-			segment.out <- reduced
-		case "drop":
-			for _, fieldname := range strings.Split(segment.Drop, ",") {
+				segment.out <- reduced
+			case "drop":
 				original_field := reflect.Indirect(reflected_original).FieldByName(fieldname)
 				if original_field.IsValid() {
 					original_field.Set(reflect.Zero(original_field.Type()))
 				}
+				segment.out <- original
 			}
-			segment.out <- original
 		}
 	}
 }

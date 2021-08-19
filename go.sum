@@ -72,9 +72,11 @@ github.com/bwNetFlow/flowfilter v0.0.0-20210817095615-3e1c3a6c906c h1:/qGq+fiVRh
 github.com/bwNetFlow/flowfilter v0.0.0-20210817095615-3e1c3a6c906c/go.mod h1:1HcMNlyIc9e9A5jflI/zhpQpmzDOwjKrDU4f8TuTNug=
 github.com/bwNetFlow/ip_prefix_trie v0.0.0-20190717112653-3fe50ea5b638 h1:MFALW2jn0+bOAwFYpAJT8IeLl1kPtm+yj9P/uYCNU40=
 github.com/bwNetFlow/ip_prefix_trie v0.0.0-20190717112653-3fe50ea5b638/go.mod h1:45RTnAhh/L10gvdWz42iPWezPTasrl2JITEBMeOYhvo=
+github.com/bwNetFlow/kafkaconnector v0.0.0-20201026123259-b5b86cfb0ae8/go.mod h1:R6MPTgZjYE07gbK+nYlf6LuJS24/uJn06uVDiv6fQYA=
 github.com/bwNetFlow/kafkaconnector v0.0.0-20210817091537-cdd6f54695a0 h1:OUzMhaRnXiehD2VAQatkbGB80R1uxE4Jpaj6pDUIrL8=
 github.com/bwNetFlow/kafkaconnector v0.0.0-20210817091537-cdd6f54695a0/go.mod h1:R6MPTgZjYE07gbK+nYlf6LuJS24/uJn06uVDiv6fQYA=
 github.com/bwNetFlow/protobuf/go v0.0.0-20200514124336-bf8695918c8c/go.mod h1:MhZaptdapMCx+cAla29K+uuVIL66PW2BcTPpueWq+aA=
+github.com/bwNetFlow/protobuf/go v0.0.0-20201022144742-933b7710ed05/go.mod h1:MhZaptdapMCx+cAla29K+uuVIL66PW2BcTPpueWq+aA=
 github.com/bwNetFlow/protobuf/go v0.0.0-20210804122501-17ef96425f1f h1:INL9OE1hazgDU2j/9Q5p8JAx0beI7sBEONqD57mukF0=
 github.com/bwNetFlow/protobuf/go v0.0.0-20210804122501-17ef96425f1f/go.mod h1:tNL5Xqo9JAU6c5UwT7tgzVZ638ldDEB4jXmwjWE5+5c=
 github.com/bwNetFlow/protobuf_helpers v0.0.0-20201023100003-d8f865edf256 h1:Plqm9JuRev4FfUG55y2mKoLrD7connUaEUK2JkBogVE=

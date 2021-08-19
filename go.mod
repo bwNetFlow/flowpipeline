@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/Shopify/sarama v1.29.1 // indirect
 	github.com/bwNetFlow/consumer_prometheus v0.0.0-20210316091512-7f2ac713da39
+	github.com/bwNetFlow/flowfilter v0.0.0-20210817095615-3e1c3a6c906c
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20190717112653-3fe50ea5b638
 	github.com/bwNetFlow/kafkaconnector v0.0.0-20210817091537-cdd6f54695a0
 	github.com/bwNetFlow/protobuf/go v0.0.0-20210804122501-17ef96425f1f
@@ -29,6 +30,7 @@ require (
 require (
 	github.com/alecthomas/participle/v2 v2.0.0-alpha7 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/bwNetFlow/protobuf_helpers v0.0.0-20201023100003-d8f865edf256 // indirect
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deathowl/go-metrics-prometheus v0.0.0-20200518174047-74482eab5bfb // indirect

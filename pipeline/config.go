@@ -28,6 +28,7 @@ func recognizedInstances() []interface{} {
 		segments.PrintDots{},
 		segments.StdIn{},
 		segments.StdOut{},
+		segments.PrometheusExporter{},
 	}
 }
 

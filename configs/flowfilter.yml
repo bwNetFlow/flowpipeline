@@ -1,0 +1,5 @@
+---
+- segment: flowfilter
+  config:
+    filter: "pps > 1000 and proto udp and port 0"
+    # see filter docs in https://github.com/bwNetFlow/flowfilter

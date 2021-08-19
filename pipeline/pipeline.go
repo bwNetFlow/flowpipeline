@@ -1,12 +1,17 @@
+// The pipeline package manages segments in Pipeline objects.
 package pipeline
 
 import (
-	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 	"log"
 	"sync"
+
+	"github.com/bwNetFlow/flowpipeline/segments"
+	flow "github.com/bwNetFlow/protobuf/go"
 )
 
+// Basically a list of segments. It further exposes the In and Out channels of
+// the Pipeline as a whole, i.e. the ingress channel of the first and the
+// egress channel of the last segment in its SegmentList.
 type Pipeline struct {
 	In          chan *flow.FlowMessage
 	Out         chan *flow.FlowMessage
@@ -14,6 +19,10 @@ type Pipeline struct {
 	SegmentList []segments.Segment `yaml: segments`
 }
 
+// Starts up a goroutine specific to this Pipeline which reads any message from
+// the Out channel and discards it. This is a convenience function to enable
+// having a segment at the end of the pipeline handle all results, i.e. having
+// no post-pipeline processing.
 func (pipeline Pipeline) AutoDrain() {
 	go func() {
 		for _ = range pipeline.Out {
@@ -22,6 +31,10 @@ func (pipeline Pipeline) AutoDrain() {
 	}()
 }
 
+// Closes down a Pipeline by closing its In channel and waiting for all
+// segments to propagate this close event through the full pipeline,
+// terminating all segment goroutines and thus releasing the waitgroup.
+// Blocking.
 func (pipeline Pipeline) Close() {
 	defer func() {
 		recover() // in case In is already closed
@@ -30,6 +43,9 @@ func (pipeline Pipeline) Close() {
 	close(pipeline.In)
 }
 
+// Initializes a new Pipeline object and then starts all segment goroutines
+// therein. Initialization includes creating any intermediate channels and
+// wiring up the segments in the segmentList with them.
 func NewPipeline(segmentList ...segments.Segment) *Pipeline {
 	channels := make([]chan *flow.FlowMessage, len(segmentList)+1)
 	channels[0] = make(chan *flow.FlowMessage)

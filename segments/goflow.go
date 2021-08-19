@@ -76,8 +76,6 @@ func (d *ChannelDriver) Close(context.Context) error {
 }
 
 func (segment *Goflow) startGoFlow(transport transport.TransportInterface) {
-	// TODO: devise a custom formatter to avoid de- and reencoding between
-	// both protobuf formats, goflow-original and ours.
 	formatter := &formatter.ProtobufDriver{}
 	sNF := &utils.StateNetFlow{
 		Format:    formatter,

@@ -1,9 +1,39 @@
 package segments
 
 import (
-	flow "github.com/bwNetFlow/protobuf/go"
+	"log"
+	"os"
 	"sync"
+
+	flow "github.com/bwNetFlow/protobuf/go"
 )
+
+var (
+	registeredSegments = make(map[string]Segment)
+	lock               = &sync.RWMutex{}
+)
+
+func RegisterSegment(name string, s Segment) {
+	lock.Lock()
+	_, ok := registeredSegments[name]
+	if ok {
+		log.Printf("[error] Segments: Tried to register conflicting segment name '%s'.", name)
+		os.Exit(1)
+	}
+	registeredSegments[name] = s
+	lock.Unlock()
+}
+
+func LookupSegment(name string) Segment {
+	lock.RLock()
+	segment, ok := registeredSegments[name]
+	lock.RUnlock()
+	if !ok {
+		log.Printf("[error] Configured segment %s not found, exiting...", name)
+		os.Exit(1)
+	}
+	return segment
+}
 
 type Segment interface {
 	New(config map[string]string) Segment
@@ -16,27 +46,9 @@ type BaseSegment struct {
 	out chan<- *flow.FlowMessage
 }
 
-func (segment *BaseSegment) Run(wg *sync.WaitGroup) {
-	defer func() {
-		close(segment.out)
-		wg.Done()
-	}()
-	for msg := range segment.in {
-		segment.out <- msg
-	}
-}
-
 func (segment *BaseSegment) Rewire(in <-chan *flow.FlowMessage, out chan<- *flow.FlowMessage) {
 	segment.in = in
 	segment.out = out
-}
-
-type NoOp struct {
-	BaseSegment
-}
-
-func (segment NoOp) New(config map[string]string) Segment {
-	return &NoOp{}
 }
 
 // TODO:

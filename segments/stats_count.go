@@ -29,3 +29,8 @@ func (segment *Count) Run(wg *sync.WaitGroup) {
 	// use log without level to print to stderr but never filter it
 	log.Printf("%s%d", segment.Prefix, segment.count)
 }
+
+func init() {
+	segment := &Count{}
+	RegisterSegment("count", segment)
+}

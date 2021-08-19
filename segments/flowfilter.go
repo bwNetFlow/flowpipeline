@@ -1,10 +1,11 @@
 package segments
 
 import (
-	"github.com/bwNetFlow/flowfilter/parser"
-	"github.com/bwNetFlow/flowfilter/visitors"
 	"log"
 	"sync"
+
+	"github.com/bwNetFlow/flowfilter/parser"
+	"github.com/bwNetFlow/flowfilter/visitors"
 )
 
 type FlowFilter struct {
@@ -40,4 +41,9 @@ func (segment *FlowFilter) Run(wg *sync.WaitGroup) {
 			segment.out <- msg
 		}
 	}
+}
+
+func init() {
+	segment := &FlowFilter{}
+	RegisterSegment("flowfilter", segment)
 }

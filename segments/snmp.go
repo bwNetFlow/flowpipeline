@@ -59,3 +59,8 @@ func querySNMP(router string, iface uint32, datapoint string) {
 func fetchInterfaceData(router string, iface uint32) (string, string, uint32) {
 	return "", "", 0
 }
+
+func init() {
+	segment := &SNMPInterface{}
+	RegisterSegment("snmpinterface", segment)
+}

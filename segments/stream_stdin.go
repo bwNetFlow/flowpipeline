@@ -3,9 +3,11 @@ package segments
 import (
 	"bufio"
 	"bytes"
+	"log"
+
 	flow "github.com/bwNetFlow/protobuf/go"
 	"google.golang.org/protobuf/encoding/protojson"
-	"log"
+
 	// "io"
 	"os"
 	"sync"
@@ -56,4 +58,9 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 			segment.out <- msg
 		}
 	}
+}
+
+func init() {
+	segment := &StdIn{}
+	RegisterSegment("stdin", segment)
 }

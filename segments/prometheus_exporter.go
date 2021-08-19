@@ -39,3 +39,8 @@ func (segment *PrometheusExporter) Run(wg *sync.WaitGroup) {
 		promExporter.Increment(msg)
 	}
 }
+
+func init() {
+	segment := &PrometheusExporter{}
+	RegisterSegment("prometheusexporter", segment)
+}

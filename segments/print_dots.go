@@ -37,3 +37,8 @@ func (segment *PrintDots) Run(wg *sync.WaitGroup) {
 		segment.out <- msg
 	}
 }
+
+func init() {
+	segment := &PrintDots{}
+	RegisterSegment("printdots", segment)
+}

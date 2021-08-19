@@ -4,57 +4,11 @@ import (
 	"flag"
 	"log"
 	"os"
-	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
 	"gopkg.in/yaml.v2"
 )
-
-// any new segments need to be added here to be recognized by the config parser
-func recognizedInstances() []interface{} {
-	return []interface{}{
-		segments.AddCid{},
-		segments.Count{},
-		segments.DropFields{},
-		segments.GeoLocation{},
-		segments.Goflow{},
-		segments.FlowFilter{},
-		segments.KafkaConsumer{},
-		segments.KafkaProducer{},
-		segments.NoOp{},
-		segments.PrintFlowdump{},
-		segments.PrintDots{},
-		segments.StdIn{},
-		segments.StdOut{},
-		segments.PrometheusExporter{},
-	}
-}
-
-type SegmentRegistry struct {
-	Types map[string]reflect.Type
-}
-
-func (s *SegmentRegistry) Lookup(name string) segments.Segment {
-	if segmenttype := s.Types[strings.ToLower(name)]; segmenttype != nil {
-		v := reflect.New(segmenttype).Elem()
-		return v.Addr().Interface().(segments.Segment)
-	} else {
-		log.Printf("Error: Unknown segment '%s' configured. Options are %+v", name, reflect.ValueOf(s.Types).MapKeys())
-		return nil
-	}
-}
-
-func NewSegmentRegistry() *SegmentRegistry {
-	var typemap = make(map[string]reflect.Type)
-	for _, v := range recognizedInstances() {
-		t := reflect.TypeOf(v)
-		// we use lowercase internally and leave the 'segment.' prefix off
-		typemap[strings.ToLower(t.String()[9:])] = t
-	}
-	return &SegmentRegistry{Types: typemap}
-}
 
 type SegmentRepr struct {
 	Name   string            `yaml:"segment"` // to be looked up with a registry
@@ -89,10 +43,9 @@ func SegmentListFromConfig(config []byte) (segmentList []segments.Segment) {
 	}
 
 	// we have SegmentReprs parsed, instanciate them as actual Segments
-	registry := NewSegmentRegistry()
 	segmentList = make([]segments.Segment, len(*pipelineRepr))
 	for i, segmentrepr := range *pipelineRepr {
-		segmenttype := registry.Lookup(segmentrepr.Name) // a typed nil instance
+		segmenttype := segments.LookupSegment(segmentrepr.Name) // a typed nil instance
 		if segmenttype == nil {
 			os.Exit(1)
 		}

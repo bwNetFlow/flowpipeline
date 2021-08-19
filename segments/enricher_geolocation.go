@@ -1,11 +1,12 @@
 package segments
 
 import (
-	maxmind "github.com/oschwald/maxminddb-golang"
 	"log"
 	"net"
 	"strconv"
 	"sync"
+
+	maxmind "github.com/oschwald/maxminddb-golang"
 )
 
 type GeoLocation struct {
@@ -74,4 +75,9 @@ func (segment *GeoLocation) readDb() {
 		log.Printf("[error] GeoLocation: Could not open specified Maxmind DB file: %v", err)
 		return
 	}
+}
+
+func init() {
+	segment := &GeoLocation{}
+	RegisterSegment("geolocation", segment)
 }

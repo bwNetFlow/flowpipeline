@@ -2,10 +2,11 @@ package segments
 
 import (
 	"fmt"
-	"google.golang.org/protobuf/encoding/protojson"
 	"log"
 	"os"
 	"sync"
+
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type StdOut struct {
@@ -30,4 +31,9 @@ func (segment *StdOut) Run(wg *sync.WaitGroup) {
 		fmt.Fprintln(os.Stdout, string(data))
 		segment.out <- msg
 	}
+}
+
+func init() {
+	segment := &StdOut{}
+	RegisterSegment("stdout", segment)
 }

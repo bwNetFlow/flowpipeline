@@ -80,3 +80,8 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 		}
 	}
 }
+
+func init() {
+	segment := &KafkaConsumer{}
+	RegisterSegment("kafkaconsumer", segment)
+}

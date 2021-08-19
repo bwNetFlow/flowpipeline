@@ -1,11 +1,12 @@
 package segments
 
 import (
-	flow "github.com/bwNetFlow/protobuf/go"
 	"log"
 	"reflect"
 	"strings"
 	"sync"
+
+	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 type DropFields struct {
@@ -59,4 +60,9 @@ func (segment *DropFields) Run(wg *sync.WaitGroup) {
 			segment.out <- original
 		}
 	}
+}
+
+func init() {
+	segment := &DropFields{}
+	RegisterSegment("dropfields", segment)
 }

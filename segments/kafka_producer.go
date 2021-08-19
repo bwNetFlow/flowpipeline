@@ -1,11 +1,12 @@
 package segments
 
 import (
-	"github.com/bwNetFlow/kafkaconnector"
 	"log"
 	"os"
 	"strconv"
 	"sync"
+
+	kafka "github.com/bwNetFlow/kafkaconnector"
 )
 
 type KafkaProducer struct {
@@ -68,4 +69,9 @@ func (segment *KafkaProducer) Run(wg *sync.WaitGroup) {
 		segment.out <- msg
 		producerChannel <- msg
 	}
+}
+
+func init() {
+	segment := &KafkaProducer{}
+	RegisterSegment("kafkaproducer", segment)
 }

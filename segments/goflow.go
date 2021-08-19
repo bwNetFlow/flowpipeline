@@ -89,3 +89,8 @@ func (segment *Goflow) startGoFlow(transport transport.TransportInterface) {
 		os.Exit(1)
 	}
 }
+
+func init() {
+	segment := &Goflow{}
+	RegisterSegment("goflow", segment)
+}

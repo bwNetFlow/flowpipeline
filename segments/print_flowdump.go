@@ -2,11 +2,12 @@ package segments
 
 import (
 	"fmt"
-	flow "github.com/bwNetFlow/protobuf/go"
-	"github.com/dustin/go-humanize"
 	"net"
 	"sync"
 	"time"
+
+	flow "github.com/bwNetFlow/protobuf/go"
+	"github.com/dustin/go-humanize"
 )
 
 type PrintFlowdump struct {
@@ -83,4 +84,9 @@ func format_flow(flowmsg *flow.FlowMessage) string {
 		flowmsg.SrcIfDesc, flowmsg.DstIfDesc, router, proto,
 		duration, humanize.SI(float64(flowmsg.Bytes*8/duration),
 			"bps"), humanize.SI(float64(flowmsg.Packets/duration), "pps"))
+}
+
+func init() {
+	segment := &PrintFlowdump{}
+	RegisterSegment("printflowdump", segment)
 }

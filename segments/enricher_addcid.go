@@ -2,13 +2,14 @@ package segments
 
 import (
 	"encoding/csv"
-	"github.com/bwNetFlow/ip_prefix_trie"
 	"io"
 	"log"
 	"net"
 	"os"
 	"strconv"
 	"sync"
+
+	"github.com/bwNetFlow/ip_prefix_trie"
 )
 
 type AddCid struct {
@@ -115,4 +116,9 @@ func (segment *AddCid) readPrefixList() {
 		}
 	}
 	log.Printf("[info] AddCid: Read prefix list with %d prefixes.", count)
+}
+
+func init() {
+	segment := &AddCid{}
+	RegisterSegment("addcid", segment)
 }

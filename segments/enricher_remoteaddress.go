@@ -43,3 +43,8 @@ func (segment *RemoteAddress) Run(wg *sync.WaitGroup) {
 		segment.out <- msg
 	}
 }
+
+func init() {
+	segment := &RemoteAddress{}
+	RegisterSegment("remoteaddress", segment)
+}

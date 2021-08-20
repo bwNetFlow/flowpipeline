@@ -24,10 +24,10 @@ func (segment Normalize) New(config map[string]string) Segment {
 
 func (segment *Normalize) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.Out)
+		close(segment.out)
 		wg.Done()
 	}()
-	for msg := range segment.In {
+	for msg := range segment.in {
 		if msg.SamplingRate > 0 {
 			msg.Bytes *= msg.SamplingRate
 			msg.Packets *= msg.SamplingRate
@@ -38,7 +38,7 @@ func (segment *Normalize) Run(wg *sync.WaitGroup) {
 			msg.SamplingRate = segment.Fallback
 			msg.Normalized = 1
 		}
-		segment.Out <- msg
+		segment.out <- msg
 	}
 }
 

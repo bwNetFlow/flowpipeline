@@ -54,7 +54,7 @@ func (segment SNMPInterface) New(config map[string]string) Segment {
 
 func (segment *SNMPInterface) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.Out)
+		close(segment.out)
 		wg.Done()
 	}()
 
@@ -69,7 +69,7 @@ func (segment *SNMPInterface) Run(wg *sync.WaitGroup) {
 		log.Printf("[error] SNMPInterface: Configuration error, regex does not compile: %v", err)
 	}
 
-	for msg := range segment.In {
+	for msg := range segment.in {
 		router := net.IP(msg.SamplerAddress).String()
 		// TODO: rename SrcIf and DstIf fields to match goflow InIf/OutIf
 		if msg.InIf > 0 {
@@ -90,7 +90,7 @@ func (segment *SNMPInterface) Run(wg *sync.WaitGroup) {
 				}
 			}
 		}
-		segment.Out <- msg
+		segment.out <- msg
 	}
 }
 

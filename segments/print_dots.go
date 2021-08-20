@@ -25,16 +25,16 @@ func (segment PrintDots) New(config map[string]string) Segment {
 
 func (segment *PrintDots) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.Out)
+		close(segment.out)
 		wg.Done()
 	}()
 	count := uint64(0)
-	for msg := range segment.In {
+	for msg := range segment.in {
 		if count += 1; count >= segment.FlowsPerDot {
 			fmt.Printf(".")
 			count = 0
 		}
-		segment.Out <- msg
+		segment.out <- msg
 	}
 }
 

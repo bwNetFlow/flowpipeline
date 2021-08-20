@@ -24,12 +24,12 @@ func (segment DropFields) New(config map[string]string) Segment {
 
 func (segment *DropFields) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.Out)
+		close(segment.out)
 		wg.Done()
 	}()
 	log.Println("[warning] DropFields: This segment is probably misconfigured, the 'fields' parameter should not be empty.")
 	fields := strings.Split(segment.Fields, ",")
-	for original := range segment.In {
+	for original := range segment.in {
 		reflected_original := reflect.ValueOf(original)
 		for _, fieldname := range fields {
 			switch segment.Policy {
@@ -43,13 +43,13 @@ func (segment *DropFields) Run(wg *sync.WaitGroup) {
 				} else {
 					log.Printf("[warning] DropFields: A flow message did not have a field named '%s' to keep.", fieldname)
 				}
-				segment.Out <- reduced
+				segment.out <- reduced
 			case "drop":
 				original_field := reflect.Indirect(reflected_original).FieldByName(fieldname)
 				if original_field.IsValid() {
 					original_field.Set(reflect.Zero(original_field.Type()))
 				}
-				segment.Out <- original
+				segment.out <- original
 			}
 		}
 	}

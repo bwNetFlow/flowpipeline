@@ -17,11 +17,11 @@ func (segment RemoteAddress) New(config map[string]string) Segment {
 
 func (segment *RemoteAddress) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.Out)
+		close(segment.out)
 		wg.Done()
 	}()
 
-	for msg := range segment.In {
+	for msg := range segment.in {
 		switch segment.FlowSrc {
 		case "border":
 			switch {
@@ -40,7 +40,7 @@ func (segment *RemoteAddress) Run(wg *sync.WaitGroup) {
 		case "mixed":
 			msg.RemoteAddr = 0 // reset previous info, we can't tell in a mixed env
 		}
-		segment.Out <- msg
+		segment.out <- msg
 	}
 }
 

@@ -19,12 +19,12 @@ func (segment Count) New(config map[string]string) Segment {
 
 func (segment *Count) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.Out)
+		close(segment.out)
 		wg.Done()
 	}()
-	for msg := range segment.In {
+	for msg := range segment.in {
 		segment.count += 1
-		segment.Out <- msg
+		segment.out <- msg
 	}
 	// use log without level to print to stderr but never filter it
 	log.Printf("%s%d", segment.Prefix, segment.count)

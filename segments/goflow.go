@@ -36,7 +36,7 @@ func (segment Goflow) New(config map[string]string) Segment {
 
 func (segment *Goflow) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.Out)
+		close(segment.out)
 		wg.Done()
 	}()
 	segment.goflow_in = make(chan *flow.FlowMessage)
@@ -47,12 +47,12 @@ func (segment *Goflow) Run(wg *sync.WaitGroup) {
 			if !ok {
 				return
 			}
-			segment.Out <- msg
-		case msg, ok := <-segment.In:
+			segment.out <- msg
+		case msg, ok := <-segment.in:
 			if !ok {
 				return
 			}
-			segment.Out <- msg
+			segment.out <- msg
 		}
 	}
 }

@@ -39,12 +39,12 @@ func (segment AddCid) New(config map[string]string) Segment {
 
 func (segment *AddCid) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.Out)
+		close(segment.out)
 		wg.Done()
 	}()
 
 	segment.readPrefixList()
-	for msg := range segment.In {
+	for msg := range segment.in {
 		var laddress net.IP
 		switch {
 		case msg.RemoteAddr == 1: // 1 indicates SrcAddr is the RemoteAddr
@@ -53,7 +53,7 @@ func (segment *AddCid) Run(wg *sync.WaitGroup) {
 			laddress = msg.SrcAddr // we want the LocalAddr tho
 		default:
 			if !segment.DropUnmatched {
-				segment.Out <- msg
+				segment.out <- msg
 			}
 			continue
 		}
@@ -66,7 +66,7 @@ func (segment *AddCid) Run(wg *sync.WaitGroup) {
 			retCid, _ := segment.trieV4.Lookup(laddress).(int64) // try to get a CID
 			msg.Cid = uint32(retCid)
 		}
-		segment.Out <- msg
+		segment.out <- msg
 	}
 }
 

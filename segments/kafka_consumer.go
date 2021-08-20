@@ -37,7 +37,7 @@ func (segment KafkaConsumer) New(config map[string]string) Segment {
 
 func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.Out)
+		close(segment.out)
 		wg.Done()
 	}()
 
@@ -71,12 +71,12 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 	for {
 		select {
 		case msg := <-kafkaConn.ConsumerChannel():
-			segment.Out <- msg
-		case msg, ok := <-segment.In:
+			segment.out <- msg
+		case msg, ok := <-segment.in:
 			if !ok {
 				return
 			}
-			segment.Out <- msg
+			segment.out <- msg
 		}
 	}
 }

@@ -24,9 +24,13 @@ type AddCid struct {
 func (segment AddCid) New(config map[string]string) Segment {
 	drop, err := strconv.ParseBool(config["dropunmatched"])
 	if err != nil {
-		log.Println("[warning] AddCid: Config option 'dropunmatched' was not parsable, defaulting to false.")
 		drop = false
 	}
+	if config["filename"] == "" {
+		log.Println("[error] AddCid: This segment requires a 'filename' parameter.")
+		os.Exit(1)
+	}
+
 	return &AddCid{
 		FileName:      config["filename"],
 		DropUnmatched: drop,
@@ -38,11 +42,6 @@ func (segment *AddCid) Run(wg *sync.WaitGroup) {
 		close(segment.Out)
 		wg.Done()
 	}()
-
-	if segment.FileName == "" {
-		log.Println("[error] AddCid: This segment requires a 'filename' parameter.")
-		os.Exit(1)
-	}
 
 	segment.readPrefixList()
 	for msg := range segment.In {

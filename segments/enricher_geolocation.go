@@ -31,12 +31,20 @@ func (segment GeoLocation) New(config map[string]string) Segment {
 
 func (segment *GeoLocation) Run(wg *sync.WaitGroup) {
 	defer func() {
-		segment.dbHandle.Close()
 		close(segment.out)
 		wg.Done()
 	}()
 
-	segment.readDb()
+	var err error
+	segment.dbHandle, err = maxmind.Open(segment.FileName)
+	if err != nil {
+		log.Printf("[error] GeoLocation: Could not open specified Maxmind DB file: %v", err)
+		return
+	}
+
+	defer func() {
+		segment.dbHandle.Close()
+	}()
 
 	var dbrecord struct {
 		Country struct {
@@ -65,15 +73,6 @@ func (segment *GeoLocation) Run(wg *sync.WaitGroup) {
 			log.Printf("[error] GeoLocation: Lookup of remote address failed: %v", err)
 		}
 		segment.out <- msg
-	}
-}
-
-func (segment *GeoLocation) readDb() {
-	var err error
-	segment.dbHandle, err = maxmind.Open(segment.FileName)
-	if err != nil {
-		log.Printf("[error] GeoLocation: Could not open specified Maxmind DB file: %v", err)
-		return
 	}
 }
 

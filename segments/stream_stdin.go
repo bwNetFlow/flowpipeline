@@ -23,7 +23,7 @@ func (segment StdIn) New(config map[string]string) Segment {
 
 func (segment *StdIn) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
 	fromStdin := make(chan []byte)
@@ -43,11 +43,11 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 	}()
 	for {
 		select {
-		case msg, ok := <-segment.in:
+		case msg, ok := <-segment.In:
 			if !ok {
 				return
 			}
-			segment.out <- msg
+			segment.Out <- msg
 		case line := <-fromStdin:
 			msg := &flow.FlowMessage{}
 			err := protojson.Unmarshal(line, msg)
@@ -55,7 +55,7 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 				log.Printf("[warning] StdIn: Skipping a flow, failed to recode stdin to protobuf: %v", err)
 				continue
 			}
-			segment.out <- msg
+			segment.Out <- msg
 		}
 	}
 }

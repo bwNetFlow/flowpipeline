@@ -31,7 +31,7 @@ func (segment GeoLocation) New(config map[string]string) Segment {
 
 func (segment *GeoLocation) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
 
@@ -52,7 +52,7 @@ func (segment *GeoLocation) Run(wg *sync.WaitGroup) {
 		} `maxminddb:"country"`
 	}
 
-	for msg := range segment.in {
+	for msg := range segment.In {
 		var raddress net.IP
 		switch {
 		case msg.RemoteAddr == 1: // 1 indicates SrcAddr is the RemoteAddr
@@ -61,7 +61,7 @@ func (segment *GeoLocation) Run(wg *sync.WaitGroup) {
 			raddress = msg.DstAddr
 		default:
 			if !segment.DropUnmatched {
-				segment.out <- msg
+				segment.Out <- msg
 			}
 			continue
 		}
@@ -72,7 +72,7 @@ func (segment *GeoLocation) Run(wg *sync.WaitGroup) {
 		} else {
 			log.Printf("[error] GeoLocation: Lookup of remote address failed: %v", err)
 		}
-		segment.out <- msg
+		segment.Out <- msg
 	}
 }
 

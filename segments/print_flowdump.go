@@ -16,12 +16,12 @@ type PrintFlowdump struct {
 
 func (segment *PrintFlowdump) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
-	for msg := range segment.in {
+	for msg := range segment.In {
 		fmt.Println(format_flow(msg))
-		segment.out <- msg
+		segment.Out <- msg
 	}
 }
 

@@ -21,7 +21,7 @@ func (segment FlowFilter) New(config map[string]string) Segment {
 
 func (segment *FlowFilter) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
 	expr, err := parser.Parse(segment.Filter)
@@ -32,13 +32,13 @@ func (segment *FlowFilter) Run(wg *sync.WaitGroup) {
 	log.Printf("[info] FlowFilter: Using filter expression: %s", segment.Filter)
 
 	filter := &visitors.Filter{}
-	for msg := range segment.in {
+	for msg := range segment.In {
 		if match, err := filter.CheckFlow(expr, msg); match {
 			if err != nil {
 				log.Printf("[error] FlowFilter: Semantic error in filter expression: %v", err)
 				return
 			}
-			segment.out <- msg
+			segment.Out <- msg
 		}
 	}
 }

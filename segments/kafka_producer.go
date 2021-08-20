@@ -43,7 +43,7 @@ func (segment *KafkaProducer) Run(wg *sync.WaitGroup) {
 
 	var kafkaConn = kafka.Connector{}
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		kafkaConn.Close()
 		wg.Done()
 	}()
@@ -65,8 +65,8 @@ func (segment *KafkaProducer) Run(wg *sync.WaitGroup) {
 
 	producerChannel := kafkaConn.ProducerChannel(segment.Topic)
 
-	for msg := range segment.in {
-		segment.out <- msg
+	for msg := range segment.In {
+		segment.Out <- msg
 		producerChannel <- msg
 	}
 }

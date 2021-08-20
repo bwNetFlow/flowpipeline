@@ -49,7 +49,7 @@ func LookupSegment(name string) Segment {
 // Rewire function and the associated vars.
 type Segment interface {
 	New(config map[string]string) Segment                      // for reading the provided config
-	Run(wg *sync.WaitGroup)                                    // goroutine, must close(segment.out) when segment.in is closed
+	Run(wg *sync.WaitGroup)                                    // goroutine, must close(segment.Out) when segment.In is closed
 	Rewire(<-chan *flow.FlowMessage, chan<- *flow.FlowMessage) // embed this using BaseSegment
 }
 
@@ -57,16 +57,16 @@ type Segment interface {
 // type only need the New and the Run methods to be compliant to the Segment
 // interface.
 type BaseSegment struct {
-	in  <-chan *flow.FlowMessage
-	out chan<- *flow.FlowMessage
+	In  <-chan *flow.FlowMessage
+	Out chan<- *flow.FlowMessage
 }
 
 // This function rewires this Segment with the provided channels. This is
 // typically called only by pipeline.New() and present in any Segment
 // implementation.
 func (segment *BaseSegment) Rewire(in <-chan *flow.FlowMessage, out chan<- *flow.FlowMessage) {
-	segment.in = in
-	segment.out = out
+	segment.In = in
+	segment.Out = out
 }
 
 // TODO:

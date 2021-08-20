@@ -26,7 +26,7 @@ func (segment *PrometheusExporter) Run(wg *sync.WaitGroup) {
 	}
 
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
 
@@ -34,8 +34,8 @@ func (segment *PrometheusExporter) Run(wg *sync.WaitGroup) {
 	promExporter.Initialize()
 	promExporter.ServeEndpoints(segment.PromEndpoint)
 
-	for msg := range segment.in {
-		segment.out <- msg
+	for msg := range segment.In {
+		segment.Out <- msg
 		promExporter.Increment(msg)
 	}
 }

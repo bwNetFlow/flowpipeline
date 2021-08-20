@@ -220,11 +220,35 @@ func TestSegment_StdOut_passthrough(t *testing.T) {
 	}
 }
 
-// Prometheus Exporter test, passthrough test only
+// PrometheusExporter Segment test, passthrough test only
 func TestSegment_PrometheusExporter_passthrough(t *testing.T) {
 	result := testSegmentWithFlows(&StdOut{}, []*flow.FlowMessage{&flow.FlowMessage{}})
 	if result == nil {
 		t.Error("Segment PrometheusExporter is not passing through flows.")
+	}
+}
+
+// Normalize Segment test, in-flow SampleingRate test
+func TestSegment_Normalize_inFlowSamplingRate(t *testing.T) {
+	result := testSegmentWithFlows(&Normalize{}, []*flow.FlowMessage{&flow.FlowMessage{SamplingRate: 32, Bytes: 1}})
+	if result.Bytes != 32 {
+		t.Error("Segment Normalize is not working with in-flow SamplingRate.")
+	}
+}
+
+// Normalize Segment test, fallback SampleingRate test
+func TestSegment_Normalize_fallbackSamplingRate(t *testing.T) {
+	result := testSegmentWithFlows(&Normalize{Fallback: 42}, []*flow.FlowMessage{&flow.FlowMessage{SamplingRate: 0, Bytes: 1}})
+	if result.Bytes != 42 {
+		t.Error("Segment Normalize is not working with fallback SamplingRate.")
+	}
+}
+
+// Normalize Segment test, no fallback SampleingRate test
+func TestSegment_Normalize_noFallbackSamplingRate(t *testing.T) {
+	result := testSegmentWithFlows(&Normalize{}, []*flow.FlowMessage{&flow.FlowMessage{SamplingRate: 0, Bytes: 1}})
+	if result.Bytes != 1 {
+		t.Error("Segment Normalize is not working with fallback SamplingRate.")
 	}
 }
 

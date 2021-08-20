@@ -37,9 +37,17 @@ func (segment SNMPInterface) New(config map[string]string) Segment {
 		}
 		connLimit = parsedConnLimit
 	}
+	var community string = "public"
+	if config["community"] != "" {
+		community = config["community"]
+	}
+	var regex string = "^(.*)$"
+	if config["regex"] != "" {
+		regex = config["regex"]
+	}
 	return &SNMPInterface{
-		Community: config["community"],
-		Regex:     config["regex"],
+		Community: community,
+		Regex:     regex,
 		ConnLimit: connLimit,
 	}
 }

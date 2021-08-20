@@ -72,7 +72,7 @@ func TestSegment_DropFields_policyDrop(t *testing.T) {
 
 // AddCid Segment tests are thorough and try every combination
 func TestSegment_AddCid_noLocalAddrKeep(t *testing.T) {
-	result := testSegmentWithFlows(&AddCid{FileName: "../example_subnets.csv"},
+	result := testSegmentWithFlows(&AddCid{FileName: "../examples/enricher/customer_subnets.csv"},
 		[]*flow.FlowMessage{&flow.FlowMessage{RemoteAddr: 0, SrcAddr: []byte{192, 168, 88, 142}}})
 	if result.Cid != 0 {
 		t.Error("Segment AddCid is adding a Cid when the local address is undetermined.")
@@ -80,7 +80,7 @@ func TestSegment_AddCid_noLocalAddrKeep(t *testing.T) {
 }
 
 func TestSegment_AddCid_noLocalAddrDrop(t *testing.T) {
-	result := testSegmentWithFlows(&AddCid{FileName: "../example_subnets.csv", DropUnmatched: true},
+	result := testSegmentWithFlows(&AddCid{FileName: "../examples/enricher/customer_subnets.csv", DropUnmatched: true},
 		[]*flow.FlowMessage{&flow.FlowMessage{RemoteAddr: 0, SrcAddr: []byte{192, 168, 88, 142}}})
 	if result != nil {
 		t.Error("Segment AddCid is not dropping the flow as instructed if the local address is undetermined.")
@@ -88,7 +88,7 @@ func TestSegment_AddCid_noLocalAddrDrop(t *testing.T) {
 }
 
 func TestSegment_AddCid_localAddrIsDst(t *testing.T) {
-	result := testSegmentWithFlows(&AddCid{FileName: "../example_subnets.csv"},
+	result := testSegmentWithFlows(&AddCid{FileName: "../examples/enricher/customer_subnets.csv"},
 		[]*flow.FlowMessage{&flow.FlowMessage{RemoteAddr: 1, DstAddr: []byte{192, 168, 88, 42}}})
 	if result.Cid != 1 {
 		t.Error("Segment AddCid is not adding a Cid when the local address is the destination address.")
@@ -96,7 +96,7 @@ func TestSegment_AddCid_localAddrIsDst(t *testing.T) {
 }
 
 func TestSegment_AddCid_localAddrIsSrc(t *testing.T) {
-	result := testSegmentWithFlows(&AddCid{FileName: "../example_subnets.csv"},
+	result := testSegmentWithFlows(&AddCid{FileName: "../examples/enricher/customer_subnets.csv"},
 		[]*flow.FlowMessage{&flow.FlowMessage{RemoteAddr: 2, SrcAddr: []byte{192, 168, 88, 142}}})
 	if result.Cid != 1 {
 		t.Error("Segment AddCid is not adding a Cid when the local address is the source address.")
@@ -105,7 +105,7 @@ func TestSegment_AddCid_localAddrIsSrc(t *testing.T) {
 
 // GeoLocation Segment tests are thorough and try every combination
 func TestSegment_GeoLocation_noRemoteAddrKeep(t *testing.T) {
-	result := testSegmentWithFlows(&GeoLocation{FileName: "../GeoLite2-Country-Test.mmdb"},
+	result := testSegmentWithFlows(&GeoLocation{FileName: "../examples/enricher/GeoLite2-Country-Test.mmdb"},
 		[]*flow.FlowMessage{&flow.FlowMessage{RemoteAddr: 0, SrcAddr: []byte{2, 125, 160, 218}, DstAddr: []byte{2, 125, 160, 218}}})
 	if result.RemoteCountry != "" {
 		t.Error("Segment GeoLocation is adding a RemoteCountry when the remote address is undetermined.")
@@ -114,7 +114,7 @@ func TestSegment_GeoLocation_noRemoteAddrKeep(t *testing.T) {
 
 func TestSegment_GeoLocation_noRemoteAddrDrop(t *testing.T) {
 	result := testSegmentWithFlows(&GeoLocation{
-		FileName: "../GeoLite2-Country-Test.mmdb", DropUnmatched: true},
+		FileName: "../examples/enricher/GeoLite2-Country-Test.mmdb", DropUnmatched: true},
 		[]*flow.FlowMessage{&flow.FlowMessage{RemoteAddr: 0, SrcAddr: []byte{2, 125, 160, 218}, DstAddr: []byte{2, 125, 160, 218}}})
 	if result != nil {
 		t.Error("Segment GeoLocation is not dropping the flow as instructed if the remote address is undetermined.")
@@ -122,7 +122,7 @@ func TestSegment_GeoLocation_noRemoteAddrDrop(t *testing.T) {
 }
 
 func TestSegment_GeoLocation_remoteAddrIsSrc(t *testing.T) {
-	result := testSegmentWithFlows(&GeoLocation{FileName: "../GeoLite2-Country-Test.mmdb"},
+	result := testSegmentWithFlows(&GeoLocation{FileName: "../examples/enricher/GeoLite2-Country-Test.mmdb"},
 		[]*flow.FlowMessage{&flow.FlowMessage{RemoteAddr: 1, SrcAddr: []byte{2, 125, 160, 218}}})
 	if result.RemoteCountry != "GB" {
 		t.Error("Segment GeoLocation is not adding RemoteCountry when the remote address is the source address.")
@@ -130,9 +130,9 @@ func TestSegment_GeoLocation_remoteAddrIsSrc(t *testing.T) {
 }
 
 func TestSegment_GeoLocation_remoteAddrIsDst(t *testing.T) {
-	result := testSegmentWithFlows(&GeoLocation{FileName: "../GeoLite2-Country-Test.mmdb"},
+	result := testSegmentWithFlows(&GeoLocation{FileName: "../examples/enricher/GeoLite2-Country-Test.mmdb"},
 		[]*flow.FlowMessage{&flow.FlowMessage{RemoteAddr: 2, DstAddr: []byte{2, 125, 160, 218}}})
-	if result.RemoteCountry != "GB" {
+	if result == nil || result.RemoteCountry != "GB" {
 		t.Error("Segment GeoLocation is not adding RemoteCountry when the remote address is the destination address.")
 	}
 }

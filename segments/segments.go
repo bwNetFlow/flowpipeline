@@ -44,6 +44,25 @@ func LookupSegment(name string) Segment {
 	return segment
 }
 
+// Used by the tests to run single flow messages through a segment.
+func TestSegment(name string, config map[string]string, msg *flow.FlowMessage) *flow.FlowMessage {
+	segment := LookupSegment(name).New(config)
+
+	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	segment.Rewire(in, out)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go segment.Run(wg)
+
+	in <- msg
+	close(in)
+	resultMsg := <-out
+	wg.Wait()
+
+	return resultMsg
+}
+
 // This interface is central to an Pipeline object, as it operates on a list of
 // them. In general, Segments should embed the BaseSegment to provide the
 // Rewire function and the associated vars.

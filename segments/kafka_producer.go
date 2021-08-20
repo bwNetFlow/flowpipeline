@@ -21,6 +21,7 @@ type KafkaProducer struct {
 }
 
 func (segment KafkaProducer) New(config map[string]string) Segment {
+	// TODO: parse this properly
 	notls, _ := strconv.ParseBool(config["notls"])
 	noauth, _ := strconv.ParseBool(config["noauth"])
 	return &KafkaProducer{

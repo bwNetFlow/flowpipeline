@@ -1,6 +1,7 @@
 package segments
 
 import (
+	"log"
 	"strconv"
 	"sync"
 )
@@ -11,12 +12,18 @@ type Normalize struct {
 }
 
 func (segment Normalize) New(config map[string]string) Segment {
-	var fallback uint64
-	if parsedFallback, err := strconv.ParseUint(config["fallback"], 10, 32); err == nil {
-		fallback = parsedFallback
+	var fallback uint64 = 0
+
+	if config["fallback"] != "" {
+		if parsedFallback, err := strconv.ParseUint(config["fallback"], 10, 32); err == nil {
+			fallback = parsedFallback
+		} else {
+			log.Println("[error] Normalize: Could not parse 'fallback' parameter, using default 0.")
+		}
 	} else {
-		fallback = 0
+		log.Println("[info] Normalize: 'fallback' set to default '0'.")
 	}
+
 	return &Normalize{
 		Fallback: fallback,
 	}

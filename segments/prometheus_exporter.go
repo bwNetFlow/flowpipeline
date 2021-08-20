@@ -2,7 +2,6 @@ package segments
 
 import (
 	"log"
-	"os"
 	"sync"
 
 	"github.com/bwNetFlow/consumer_prometheus/exporter"
@@ -14,17 +13,18 @@ type PrometheusExporter struct {
 }
 
 func (segment PrometheusExporter) New(config map[string]string) Segment {
+	// TODO: provide default port
+	if config["endpoint"] == "" {
+		log.Println("[error] PrometheusExporter: Missing required configuration parameter 'endpoint'.")
+		return nil
+	}
+
 	return &PrometheusExporter{
 		PromEndpoint: config["endpoint"],
 	}
 }
 
 func (segment *PrometheusExporter) Run(wg *sync.WaitGroup) {
-	if segment.PromEndpoint == "" {
-		log.Println("[error] PrometheusExporter: Missing required configuration parameter.")
-		os.Exit(1)
-	}
-
 	defer func() {
 		close(segment.out)
 		wg.Done()

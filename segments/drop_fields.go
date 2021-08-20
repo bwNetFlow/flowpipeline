@@ -16,6 +16,14 @@ type DropFields struct {
 }
 
 func (segment DropFields) New(config map[string]string) Segment {
+	if !(config["policy"] == "keep" || config["policy"] == "drop") {
+		log.Println("[error] DropFields: The 'policy' parameter is required to be either 'keep' or 'drop'.")
+		return nil
+	}
+	if config["fields"] == "" {
+		log.Println("[warning] DropFields: This segment is probably misconfigured, the 'fields' parameter should not be empty.")
+	}
+
 	return &DropFields{
 		Policy: config["policy"],
 		Fields: config["fields"],
@@ -27,7 +35,6 @@ func (segment *DropFields) Run(wg *sync.WaitGroup) {
 		close(segment.out)
 		wg.Done()
 	}()
-	log.Println("[warning] DropFields: This segment is probably misconfigured, the 'fields' parameter should not be empty.")
 	fields := strings.Split(segment.Fields, ",")
 	for original := range segment.in {
 		reflected_original := reflect.ValueOf(original)

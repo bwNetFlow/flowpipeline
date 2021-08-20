@@ -12,7 +12,7 @@ import (
 func TestMain(m *testing.M) {
 	log.SetOutput(&logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"info", "warning", "error"},
-		MinLevel: logutils.LogLevel("warning"),
+		MinLevel: logutils.LogLevel("info"),
 		Writer:   os.Stderr,
 	})
 	code := m.Run()
@@ -57,7 +57,7 @@ func TestSegment_AddCid_noLocalAddrKeep(t *testing.T) {
 }
 
 func TestSegment_AddCid_noLocalAddrDrop(t *testing.T) {
-	result := TestSegment("addcid", map[string]string{"filename": "../examples/enricher/customer_subnets.csv", "dropunmatched": "false"},
+	result := TestSegment("addcid", map[string]string{"filename": "../examples/enricher/customer_subnets.csv", "dropunmatched": "true"},
 		&flow.FlowMessage{RemoteAddr: 0, SrcAddr: []byte{192, 168, 88, 142}})
 	if result != nil {
 		t.Error("Segment AddCid is not dropping the flow as instructed if the local address is undetermined.")
@@ -98,7 +98,7 @@ func TestSegment_GeoLocation_noRemoteAddrDrop(t *testing.T) {
 }
 
 func TestSegment_GeoLocation_remoteAddrIsSrc(t *testing.T) {
-	result := TestSegment("geolocation", map[string]string{"fileName": "../examples/enricher/GeoLite2-Country-Test.mmdb"},
+	result := TestSegment("geolocation", map[string]string{"filename": "../examples/enricher/GeoLite2-Country-Test.mmdb"},
 		&flow.FlowMessage{RemoteAddr: 1, SrcAddr: []byte{2, 125, 160, 218}})
 	if result.RemoteCountry != "GB" {
 		t.Error("Segment GeoLocation is not adding RemoteCountry when the remote address is the source address.")
@@ -106,7 +106,7 @@ func TestSegment_GeoLocation_remoteAddrIsSrc(t *testing.T) {
 }
 
 func TestSegment_GeoLocation_remoteAddrIsDst(t *testing.T) {
-	result := TestSegment("geolocation", map[string]string{"fileName": "../examples/enricher/GeoLite2-Country-Test.mmdb"},
+	result := TestSegment("geolocation", map[string]string{"filename": "../examples/enricher/GeoLite2-Country-Test.mmdb"},
 		&flow.FlowMessage{RemoteAddr: 2, DstAddr: []byte{2, 125, 160, 218}})
 	if result == nil || result.RemoteCountry != "GB" {
 		t.Error("Segment GeoLocation is not adding RemoteCountry when the remote address is the destination address.")
@@ -115,7 +115,7 @@ func TestSegment_GeoLocation_remoteAddrIsDst(t *testing.T) {
 
 // RemoteAddress Segment testing is basically checking whether switch/case is working okay...
 func TestSegment_RemoteAddress(t *testing.T) {
-	result := TestSegment("remoteaddress", map[string]string{"flowSrc": "border"},
+	result := TestSegment("remoteaddress", map[string]string{"flowsrc": "border"},
 		&flow.FlowMessage{FlowDirection: 0})
 	if result.RemoteAddr != 1 {
 		t.Error("Segment RemoteAddress is not determining RemoteAddr correctly.")

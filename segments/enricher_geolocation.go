@@ -20,8 +20,11 @@ type GeoLocation struct {
 func (segment GeoLocation) New(config map[string]string) Segment {
 	drop, err := strconv.ParseBool(config["dropunmatched"])
 	if err != nil {
-		log.Println("[warning] GeoLocation: Config option 'dropunmatched' was not parsable, defaulting to false.")
-		drop = false
+		log.Println("[info] GeoLocation: 'dropunmatched' set to default 'false'.")
+	}
+	if config["filename"] == "" {
+		log.Println("[error] GeoLocation: This segment requires the 'filename' parameter.")
+		return nil
 	}
 	return &GeoLocation{
 		FileName:      config["filename"],

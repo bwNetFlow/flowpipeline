@@ -1,6 +1,7 @@
 package segments
 
 import (
+	"log"
 	"sync"
 )
 
@@ -10,6 +11,10 @@ type RemoteAddress struct {
 }
 
 func (segment RemoteAddress) New(config map[string]string) Segment {
+	if !(config["flowsrc"] == "border" || config["flowsrc"] == "user" || config["flowsrc"] == "mixed") {
+		log.Println("[error] DropFields: The 'policy' parameter is required to be one of 'border', 'user', or 'mixed'.")
+		return nil
+	}
 	return &RemoteAddress{
 		FlowSrc: config["flowsrc"],
 	}

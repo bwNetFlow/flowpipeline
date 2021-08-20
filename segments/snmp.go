@@ -31,19 +31,31 @@ type SNMPInterface struct {
 
 func (segment SNMPInterface) New(config map[string]string) Segment {
 	var connLimit uint64 = 16
-	if parsedConnLimit, err := strconv.ParseUint(config["connlimit"], 10, 32); err == nil {
-		if parsedConnLimit == 0 {
-			log.Println("[error] SNMPInterface: Limiting connections to 0 will not work. Remove this segment or use a higher value (recommendation >= 16).")
+	if config["connlimit"] != "" {
+		if parsedConnLimit, err := strconv.ParseUint(config["connlimit"], 10, 32); err == nil {
+			connLimit = parsedConnLimit
+			if connLimit == 0 {
+				log.Println("[error] SNMPInterface: Limiting connections to 0 will not work. Remove this segment or use a higher value (recommendation >= 16).")
+				return nil
+			}
+		} else {
+			log.Println("[error] SNMPInterface: Could not parse 'connlimit' parameter, using default 16.")
 		}
-		connLimit = parsedConnLimit
+	} else {
+		log.Println("[info] SNMPInterface: 'connlimit' set to default '16'.")
 	}
+
 	var community string = "public"
 	if config["community"] != "" {
 		community = config["community"]
+	} else {
+		log.Println("[info] SNMPInterface: 'community' set to default 'public'.")
 	}
 	var regex string = "^(.*)$"
 	if config["regex"] != "" {
 		regex = config["regex"]
+	} else {
+		log.Println("[info] SNMPInterface: 'regex' set to default '^(.*)$'.")
 	}
 	return &SNMPInterface{
 		Community: community,

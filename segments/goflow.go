@@ -23,11 +23,15 @@ type Goflow struct {
 }
 
 func (segment Goflow) New(config map[string]string) Segment {
-	var port uint64
-	if parsedPort, err := strconv.ParseUint(config["port"], 10, 32); err == nil {
-		port = parsedPort
+	var port uint64 = 2055
+	if config["port"] != "" {
+		if parsedPort, err := strconv.ParseUint(config["port"], 10, 32); err == nil {
+			port = parsedPort
+		} else {
+			log.Println("[error] Goflow: Could not parse 'port' parameter, using default 2055.")
+		}
 	} else {
-		port = 2055
+		log.Println("[info] Goflow: 'port' set to default '2055'.")
 	}
 	return &Goflow{
 		Port: port,

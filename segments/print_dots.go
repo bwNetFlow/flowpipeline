@@ -2,6 +2,7 @@ package segments
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"sync"
 )
@@ -16,6 +17,11 @@ func (segment PrintDots) New(config map[string]string) Segment {
 	if parsedFpd, err := strconv.ParseUint(config["flows_per_dot"], 10, 32); err == nil {
 		fpd = parsedFpd
 	} else {
+		if config["flows_per_dot"] != "" {
+			log.Println("[error] PrintDots: Could not parse 'flows_per_dot' parameter, using default 5000.")
+		} else {
+			log.Println("[info] PrintDots: 'flows_per_dot' set to default '5000'.")
+		}
 		fpd = 5000
 	}
 	return &PrintDots{

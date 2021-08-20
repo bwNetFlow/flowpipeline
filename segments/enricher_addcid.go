@@ -24,11 +24,11 @@ type AddCid struct {
 func (segment AddCid) New(config map[string]string) Segment {
 	drop, err := strconv.ParseBool(config["dropunmatched"])
 	if err != nil {
-		drop = false
+		log.Println("[info] AddCid: 'dropunmatched' set to default 'false'.")
 	}
 	if config["filename"] == "" {
 		log.Println("[error] AddCid: This segment requires a 'filename' parameter.")
-		os.Exit(1)
+		return nil
 	}
 
 	return &AddCid{

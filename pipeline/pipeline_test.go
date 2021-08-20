@@ -1,14 +1,15 @@
 package pipeline
 
 import (
+	"testing"
+
 	"github.com/bwNetFlow/flowpipeline/segments"
 	flow "github.com/bwNetFlow/protobuf/go"
-	"testing"
 )
 
 func TestPipelineBuild(t *testing.T) {
 	segmentList := []segments.Segment{&segments.NoOp{}, &segments.NoOp{}}
-	pipeline := NewPipeline(segmentList...)
+	pipeline := New(segmentList...)
 	pipeline.In <- &flow.FlowMessage{Type: 3}
 	fmsg := <-pipeline.Out
 	if fmsg.Type != 3 {
@@ -18,21 +19,17 @@ func TestPipelineBuild(t *testing.T) {
 
 func TestPipelineTeardown(t *testing.T) {
 	segmentList := []segments.Segment{&segments.NoOp{}, &segments.NoOp{}}
-	pipeline := NewPipeline(segmentList...)
+	pipeline := New(segmentList...)
 	pipeline.AutoDrain()
 	pipeline.In <- &flow.FlowMessage{Type: 3}
 	pipeline.Close() // TODO: fail test on halting ;)
 }
 
 func TestPipelineConfigSuccess(t *testing.T) {
-	segmentList := SegmentListFromConfig([]byte(`---
+	pipeline := NewFromConfig([]byte(`---
 - segment: noop
   config:
     foo: $baz`))
-	if len(segmentList) != 1 {
-		t.Error("Config Parsing is not okay.")
-	}
-	pipeline := NewPipeline(segmentList...)
 	pipeline.In <- &flow.FlowMessage{Type: 3}
 	fmsg := <-pipeline.Out
 	if fmsg.Type != 3 {

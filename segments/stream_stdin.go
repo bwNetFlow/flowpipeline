@@ -8,7 +8,7 @@ import (
 	flow "github.com/bwNetFlow/protobuf/go"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	// "io"
+	"io"
 	"os"
 	"sync"
 )
@@ -31,7 +31,7 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 		for {
 			rdr := bufio.NewReader(os.Stdin)
 			line, err := rdr.ReadBytes('\n')
-			if err != nil {
+			if err != io.EOF {
 				log.Printf("[warning] StdIn: Skipping a flow, could not read line from stdin: %v", err)
 				continue
 			}

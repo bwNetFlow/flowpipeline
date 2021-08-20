@@ -17,8 +17,9 @@ import (
 
 type Goflow struct {
 	BaseSegment
+	Port uint64
+
 	goflow_in chan *flow.FlowMessage
-	Port      uint64
 }
 
 func (segment Goflow) New(config map[string]string) Segment {

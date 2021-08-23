@@ -1,0 +1,17 @@
+---
+###############################################################################
+# Receive Netflow v9 using Goflow on a local port.
+- segment: goflow
+  config:
+    port: 2055
+
+###############################################################################
+# Produce flow messages to a local cluster for further pipelines. TLS and auth
+# are disabled. Usual config for a dev Kafka setup.
+- segment: kafkaproducer
+  config:
+    server: localhost:9092
+    topic: flows
+    group: test
+    notls: 1
+    noauth: 1

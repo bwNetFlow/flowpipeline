@@ -1,0 +1,23 @@
+---
+###############################################################################
+# Consume flow messages, it's best to use an enriched topic as flowdump
+# printing involves interface descriptions.
+- segment: kafkaconsumer
+  config:
+    server: kafka01.example.com:9093
+    topic: flow-messages-enriched
+    group: myuser-flowdump
+    user: myuser
+    pass: $KAFKA_SASL_PASS
+
+###############################################################################
+# Filter flows dynamically, i.e. via commandline argument. This makes for a
+# tcpdump-style experience
+- segment: flowfilter
+  config:
+    filter: $0  # this refers to the first arg.
+
+###############################################################################
+# Print flowdump, this is a predefined format that is not configurable at this
+# point.
+- segment: printflowdump

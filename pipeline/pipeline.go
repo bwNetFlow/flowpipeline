@@ -27,7 +27,7 @@ func (pipeline Pipeline) AutoDrain() {
 	go func() {
 		for _ = range pipeline.Out {
 		}
-		log.Println("Pipeline closed.")
+		log.Println("[info] Pipeline closed, auto draining finished.")
 	}()
 }
 

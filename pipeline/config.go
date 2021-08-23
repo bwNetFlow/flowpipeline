@@ -51,7 +51,7 @@ func NewFromConfig(config []byte) *Pipeline {
 
 	err := yaml.Unmarshal(config, &pipelineRepr)
 	if err != nil {
-		log.Fatalf("Error: %v", err)
+		log.Fatalf("[error] Error parsing configuration YAML: %v", err)
 	}
 
 	// we have SegmentReprs parsed, instanciate them as actual Segments
@@ -62,7 +62,13 @@ func NewFromConfig(config []byte) *Pipeline {
 			os.Exit(1)
 		}
 		// the Segment's New method knows how to handle our config
-		segmentList[i] = segmenttype.New(segmentrepr.ExpandedConfig())
+		segment := segmenttype.New(segmentrepr.ExpandedConfig())
+		if segment != nil {
+			segmentList[i] = segment
+		} else {
+			log.Printf("[error] Configured segment '%s' could not be initialized properly, see previous messages.", segmentrepr.Name)
+			os.Exit(1)
+		}
 	}
 	return New(segmentList...)
 }

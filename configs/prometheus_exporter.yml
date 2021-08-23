@@ -1,4 +1,0 @@
----
-- segment: prometheusexporter
-  config:
-    endpoint: ":8080"

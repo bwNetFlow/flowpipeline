@@ -87,9 +87,3 @@ func (segment *BaseSegment) Rewire(in <-chan *flow.FlowMessage, out chan<- *flow
 	segment.in = in
 	segment.out = out
 }
-
-// TODO:
-// &segments.KafkaProducerSplit{}
-// &segments.SNMP{communities: map[string]string{"default": "public"}},
-// &segments.BMPInfo{...},
-// &segments.Aggregate/GroupBy{Aggr: "SUM", Step: "5m"},

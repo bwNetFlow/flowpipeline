@@ -22,7 +22,7 @@ func TestPipelineTeardown(t *testing.T) {
 	pipeline := New(segmentList...)
 	pipeline.AutoDrain()
 	pipeline.In <- &flow.FlowMessage{Type: 3}
-	pipeline.Close() // TODO: fail test on halting ;)
+	pipeline.Close() // fail test on halting ;)
 }
 
 func TestPipelineConfigSuccess(t *testing.T) {

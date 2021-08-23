@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	flow "github.com/bwNetFlow/protobuf/go"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	formatter "github.com/netsampler/goflow2/format/protobuf"
 	"github.com/netsampler/goflow2/transport"

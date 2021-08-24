@@ -15,7 +15,7 @@
 # Filter flows for relevancy before proceeding to enrich them.
 - segment: flowfilter
   config:
-    filter: address 0.0.0.0/0 or address ::/0  # optionally filter for relevancy here
+    filter:  # optionally filter for relevancy here
 
 ###############################################################################
 # This tags all flows with the information whether their source or destination

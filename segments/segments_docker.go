@@ -1,7 +1,7 @@
-// +build docker
+// +build container
 
 package segments
 
 func init() {
-	dockerVolume = "/config/"
+	containerVolumePrefix = "/config/"
 }

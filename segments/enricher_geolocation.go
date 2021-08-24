@@ -30,7 +30,7 @@ func (segment GeoLocation) New(config map[string]string) Segment {
 		FileName:      config["filename"],
 		DropUnmatched: drop,
 	}
-	newSegment.dbHandle, err = maxmind.Open(dockerVolume + config["filename"])
+	newSegment.dbHandle, err = maxmind.Open(containerVolumePrefix + config["filename"])
 	if err != nil {
 		log.Printf("[error] GeoLocation: Could not open specified Maxmind DB file: %v", err)
 		return nil

@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	registeredSegments = make(map[string]Segment)
-	lock               = &sync.RWMutex{}
-	dockerVolume       = ""
+	registeredSegments    = make(map[string]Segment)
+	lock                  = &sync.RWMutex{}
+	containerVolumePrefix = ""
 )
 
 // Used by Segments to register themselves in their init() functions. Errors

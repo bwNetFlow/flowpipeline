@@ -71,7 +71,7 @@ func (segment *AddCid) Run(wg *sync.WaitGroup) {
 }
 
 func (segment *AddCid) readPrefixList() {
-	f, err := os.Open(segment.FileName)
+	f, err := os.Open(dockerVolume + segment.FileName)
 	defer f.Close()
 	if err != nil {
 		log.Printf("[error] AddCid: Could not open prefix list: %v", err)

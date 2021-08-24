@@ -5,7 +5,7 @@ ADD . /opt/build
 WORKDIR /opt/build
 
 # build the binary
-RUN CGO_ENABLED=0 go build -o fpl -v
+RUN CGO_ENABLED=0 go build -tags docker -o fpl -v
 FROM alpine
 WORKDIR /
 

@@ -21,12 +21,12 @@ var (
 // Used by Segments to register themselves in their init() functions. Errors
 // and exits immediately on conflicts.
 func RegisterSegment(name string, s Segment) {
-	lock.Lock()
 	_, ok := registeredSegments[name]
 	if ok {
 		log.Printf("[error] Segments: Tried to register conflicting segment name '%s'.", name)
 		os.Exit(1)
 	}
+	lock.Lock()
 	registeredSegments[name] = s
 	lock.Unlock()
 }

@@ -1,5 +1,5 @@
 // This package is home to all pipeline segment implementations. Generally,
-// every segment lives in its own file, implements the Segment interface,
+// every segment lives in its own package, implements the Segment interface,
 // embeds the BaseSegment to take care of the I/O side of things, and has an
 // additional init() function to register itself using RegisterSegment.
 package segments

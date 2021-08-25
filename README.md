@@ -1,6 +1,6 @@
 # Flow Pipeline
 
-<!-- quick links here maybe -->
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline)
 
 ## About The Project
 
@@ -52,9 +52,28 @@ podman run -v ./examples/xy:/config flowpipeline
 docker run -v ./examples/xy:/config flowpipeline
 ```
 
-## Usage
+## Configuration
 
-TODO
+By looking at the examples you should be able to get a good idea what the
+config looks like in detail and what the possible applications are. For sake of
+completeness, here's another minimal example which starts listening for Netflow
+v9 on port 2055, applies the filter given as first argument, and then prints it
+out in a `tcpdump`-style format.
+
+```yaml
+- segment: goflow
+- segment: flowfilter
+  config:
+    filter: $0
+- segment: printflowdump
+```
+
+You'd call it with `./flowpipeline "proto tcp and (port 80 or port 443)"`., for
+instance.
+
+As for which Segments are available and what their configuration options are,
+please refer to the
+[documentation](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline).
 
 ## Contributing
 

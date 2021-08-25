@@ -1,3 +1,4 @@
+// Forwards flows and serves as a template for new segments, otherwise does nothing.
 package noop
 
 import (

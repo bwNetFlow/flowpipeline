@@ -1,4 +1,4 @@
-package segments
+package kafkaproducer
 
 import (
 	"log"
@@ -6,12 +6,13 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/segments"
 	kafka "github.com/bwNetFlow/kafkaconnector"
 	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 type KafkaProducer struct {
-	BaseSegment
+	segments.BaseSegment
 	Server      string
 	Topic       string
 	TopicSuffix string
@@ -21,7 +22,7 @@ type KafkaProducer struct {
 	UseAuth     bool
 }
 
-func (segment KafkaProducer) New(config map[string]string) Segment {
+func (segment KafkaProducer) New(config map[string]string) segments.Segment {
 	if config["server"] == "" || config["topic"] == "" {
 		log.Println("[error] KafkaProducer: Missing required configuration parameters.")
 		return nil
@@ -78,7 +79,7 @@ func (segment KafkaProducer) New(config map[string]string) Segment {
 func (segment *KafkaProducer) Run(wg *sync.WaitGroup) {
 	var kafkaConn = kafka.Connector{}
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		kafkaConn.Close()
 		wg.Done()
 	}()
@@ -100,13 +101,13 @@ func (segment *KafkaProducer) Run(wg *sync.WaitGroup) {
 
 	producerChannel := kafkaConn.ProducerChannel(segment.Topic + segment.TopicSuffix)
 
-	for msg := range segment.in {
-		segment.out <- msg
+	for msg := range segment.In {
+		segment.Out <- msg
 		producerChannel <- msg
 	}
 }
 
 func init() {
 	segment := &KafkaProducer{}
-	RegisterSegment("kafkaproducer", segment)
+	segments.RegisterSegment("kafkaproducer", segment)
 }

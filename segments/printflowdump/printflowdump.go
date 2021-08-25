@@ -1,4 +1,4 @@
-package segments
+package printflowdump
 
 import (
 	"fmt"
@@ -6,26 +6,27 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bwNetFlow/flowpipeline/segments"
 	flow "github.com/bwNetFlow/protobuf/go"
 	"github.com/dustin/go-humanize"
 )
 
 type PrintFlowdump struct {
-	BaseSegment
+	segments.BaseSegment
 }
 
 func (segment *PrintFlowdump) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
-	for msg := range segment.in {
+	for msg := range segment.In {
 		fmt.Println(format_flow(msg))
-		segment.out <- msg
+		segment.Out <- msg
 	}
 }
 
-func (segment PrintFlowdump) New(config map[string]string) Segment {
+func (segment PrintFlowdump) New(config map[string]string) segments.Segment {
 	return &PrintFlowdump{}
 }
 
@@ -88,5 +89,5 @@ func format_flow(flowmsg *flow.FlowMessage) string {
 
 func init() {
 	segment := &PrintFlowdump{}
-	RegisterSegment("printflowdump", segment)
+	segments.RegisterSegment("printflowdump", segment)
 }

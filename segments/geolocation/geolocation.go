@@ -1,4 +1,4 @@
-package segments
+package geolocation
 
 import (
 	"log"
@@ -6,18 +6,19 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/segments"
 	maxmind "github.com/oschwald/maxminddb-golang"
 )
 
 type GeoLocation struct {
-	BaseSegment
+	segments.BaseSegment
 	FileName      string
 	DropUnmatched bool
 
 	dbHandle *maxmind.Reader
 }
 
-func (segment GeoLocation) New(config map[string]string) Segment {
+func (segment GeoLocation) New(config map[string]string) segments.Segment {
 	drop, err := strconv.ParseBool(config["dropunmatched"])
 	if err != nil {
 		log.Println("[info] GeoLocation: 'dropunmatched' set to default 'false'.")
@@ -30,7 +31,7 @@ func (segment GeoLocation) New(config map[string]string) Segment {
 		FileName:      config["filename"],
 		DropUnmatched: drop,
 	}
-	newSegment.dbHandle, err = maxmind.Open(containerVolumePrefix + config["filename"])
+	newSegment.dbHandle, err = maxmind.Open(segments.ContainerVolumePrefix + config["filename"])
 	if err != nil {
 		log.Printf("[error] GeoLocation: Could not open specified Maxmind DB file: %v", err)
 		return nil
@@ -40,7 +41,7 @@ func (segment GeoLocation) New(config map[string]string) Segment {
 
 func (segment *GeoLocation) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
 
@@ -54,7 +55,7 @@ func (segment *GeoLocation) Run(wg *sync.WaitGroup) {
 		} `maxminddb:"country"`
 	}
 
-	for msg := range segment.in {
+	for msg := range segment.In {
 		var raddress net.IP
 		switch {
 		case msg.RemoteAddr == 1: // 1 indicates SrcAddr is the RemoteAddr
@@ -63,7 +64,7 @@ func (segment *GeoLocation) Run(wg *sync.WaitGroup) {
 			raddress = msg.DstAddr
 		default:
 			if !segment.DropUnmatched {
-				segment.out <- msg
+				segment.Out <- msg
 			}
 			continue
 		}
@@ -74,11 +75,11 @@ func (segment *GeoLocation) Run(wg *sync.WaitGroup) {
 		} else {
 			log.Printf("[error] GeoLocation: Lookup of remote address failed: %v", err)
 		}
-		segment.out <- msg
+		segment.Out <- msg
 	}
 }
 
 func init() {
 	segment := &GeoLocation{}
-	RegisterSegment("geolocation", segment)
+	segments.RegisterSegment("geolocation", segment)
 }

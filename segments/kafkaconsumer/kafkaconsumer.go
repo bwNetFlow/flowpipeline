@@ -1,4 +1,4 @@
-package segments
+package kafkaconsumer
 
 import (
 	"log"
@@ -7,11 +7,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/segments"
 	kafka "github.com/bwNetFlow/kafkaconnector"
 )
 
 type KafkaConsumer struct {
-	BaseSegment
+	segments.BaseSegment
 	Server  string
 	Topic   string
 	Group   string
@@ -21,7 +22,7 @@ type KafkaConsumer struct {
 	UseAuth bool
 }
 
-func (segment KafkaConsumer) New(config map[string]string) Segment {
+func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 	if config["server"] == "" || config["topic"] == "" || config["group"] == "" {
 		log.Println("[error] KafkaConsumer: Missing required configuration parameters.")
 		return nil
@@ -67,7 +68,7 @@ func (segment KafkaConsumer) New(config map[string]string) Segment {
 
 func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
 
@@ -95,17 +96,17 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 	for {
 		select {
 		case msg := <-kafkaConn.ConsumerChannel():
-			segment.out <- msg
-		case msg, ok := <-segment.in:
+			segment.Out <- msg
+		case msg, ok := <-segment.In:
 			if !ok {
 				return
 			}
-			segment.out <- msg
+			segment.Out <- msg
 		}
 	}
 }
 
 func init() {
 	segment := &KafkaConsumer{}
-	RegisterSegment("kafkaconsumer", segment)
+	segments.RegisterSegment("kafkaconsumer", segment)
 }

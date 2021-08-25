@@ -1,4 +1,4 @@
-package segments
+package addcid
 
 import (
 	"encoding/csv"
@@ -9,11 +9,12 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/segments"
 	"github.com/bwNetFlow/ip_prefix_trie"
 )
 
 type AddCid struct {
-	BaseSegment
+	segments.BaseSegment
 	FileName      string
 	DropUnmatched bool
 
@@ -21,7 +22,7 @@ type AddCid struct {
 	trieV6 ip_prefix_trie.TrieNode
 }
 
-func (segment AddCid) New(config map[string]string) Segment {
+func (segment AddCid) New(config map[string]string) segments.Segment {
 	drop, err := strconv.ParseBool(config["dropunmatched"])
 	if err != nil {
 		log.Println("[info] AddCid: 'dropunmatched' set to default 'false'.")
@@ -39,12 +40,12 @@ func (segment AddCid) New(config map[string]string) Segment {
 
 func (segment *AddCid) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
 
 	segment.readPrefixList()
-	for msg := range segment.in {
+	for msg := range segment.In {
 		var laddress net.IP
 		switch {
 		case msg.RemoteAddr == 1: // 1 indicates SrcAddr is the RemoteAddr
@@ -53,7 +54,7 @@ func (segment *AddCid) Run(wg *sync.WaitGroup) {
 			laddress = msg.SrcAddr // we want the LocalAddr tho
 		default:
 			if !segment.DropUnmatched {
-				segment.out <- msg
+				segment.Out <- msg
 			}
 			continue
 		}
@@ -66,12 +67,12 @@ func (segment *AddCid) Run(wg *sync.WaitGroup) {
 			retCid, _ := segment.trieV4.Lookup(laddress).(int64) // try to get a CID
 			msg.Cid = uint32(retCid)
 		}
-		segment.out <- msg
+		segment.Out <- msg
 	}
 }
 
 func (segment *AddCid) readPrefixList() {
-	f, err := os.Open(containerVolumePrefix + segment.FileName)
+	f, err := os.Open(segments.ContainerVolumePrefix + segment.FileName)
 	defer f.Close()
 	if err != nil {
 		log.Printf("[error] AddCid: Could not open prefix list: %v", err)
@@ -119,5 +120,5 @@ func (segment *AddCid) readPrefixList() {
 
 func init() {
 	segment := &AddCid{}
-	RegisterSegment("addcid", segment)
+	segments.RegisterSegment("addcid", segment)
 }

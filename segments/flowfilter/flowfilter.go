@@ -1,4 +1,4 @@
-package segments
+package flowfilter
 
 import (
 	"log"
@@ -6,16 +6,17 @@ import (
 
 	"github.com/bwNetFlow/flowfilter/parser"
 	"github.com/bwNetFlow/flowfilter/visitors"
+	"github.com/bwNetFlow/flowpipeline/segments"
 )
 
 type FlowFilter struct {
-	BaseSegment
+	segments.BaseSegment
 	Filter string
 
 	expression *parser.Expression
 }
 
-func (segment FlowFilter) New(config map[string]string) Segment {
+func (segment FlowFilter) New(config map[string]string) segments.Segment {
 	var err error
 
 	newSegment := &FlowFilter{
@@ -32,25 +33,25 @@ func (segment FlowFilter) New(config map[string]string) Segment {
 
 func (segment *FlowFilter) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
 
 	log.Printf("[info] FlowFilter: Using filter expression: %s", segment.Filter)
 
 	filter := &visitors.Filter{}
-	for msg := range segment.in {
+	for msg := range segment.In {
 		if match, err := filter.CheckFlow(segment.expression, msg); match {
 			if err != nil {
 				log.Printf("[error] FlowFilter: Semantic error in filter expression: %v", err)
 				continue // TODO: introduce option on-error action, current state equals 'drop'
 			}
-			segment.out <- msg
+			segment.Out <- msg
 		}
 	}
 }
 
 func init() {
 	segment := &FlowFilter{}
-	RegisterSegment("flowfilter", segment)
+	segments.RegisterSegment("flowfilter", segment)
 }

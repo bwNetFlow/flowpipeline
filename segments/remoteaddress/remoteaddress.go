@@ -1,16 +1,18 @@
-package segments
+package remoteaddress
 
 import (
 	"log"
 	"sync"
+
+	"github.com/bwNetFlow/flowpipeline/segments"
 )
 
 type RemoteAddress struct {
-	BaseSegment
+	segments.BaseSegment
 	FlowSrc string
 }
 
-func (segment RemoteAddress) New(config map[string]string) Segment {
+func (segment RemoteAddress) New(config map[string]string) segments.Segment {
 	if !(config["flowsrc"] == "border" || config["flowsrc"] == "user" || config["flowsrc"] == "mixed") {
 		log.Println("[error] DropFields: The 'policy' parameter is required to be one of 'border', 'user', or 'mixed'.")
 		return nil
@@ -22,11 +24,11 @@ func (segment RemoteAddress) New(config map[string]string) Segment {
 
 func (segment *RemoteAddress) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
 
-	for msg := range segment.in {
+	for msg := range segment.In {
 		switch segment.FlowSrc {
 		case "border":
 			switch {
@@ -45,11 +47,11 @@ func (segment *RemoteAddress) Run(wg *sync.WaitGroup) {
 		case "mixed":
 			msg.RemoteAddr = 0 // reset previous info, we can't tell in a mixed env
 		}
-		segment.out <- msg
+		segment.Out <- msg
 	}
 }
 
 func init() {
 	segment := &RemoteAddress{}
-	RegisterSegment("remoteaddress", segment)
+	segments.RegisterSegment("remoteaddress", segment)
 }

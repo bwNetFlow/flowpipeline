@@ -1,18 +1,20 @@
-package segments
+package printdots
 
 import (
 	"fmt"
 	"log"
 	"strconv"
 	"sync"
+
+	"github.com/bwNetFlow/flowpipeline/segments"
 )
 
 type PrintDots struct {
-	BaseSegment
+	segments.BaseSegment
 	FlowsPerDot uint64
 }
 
-func (segment PrintDots) New(config map[string]string) Segment {
+func (segment PrintDots) New(config map[string]string) segments.Segment {
 	var fpd uint64
 	if parsedFpd, err := strconv.ParseUint(config["flows_per_dot"], 10, 32); err == nil {
 		fpd = parsedFpd
@@ -31,20 +33,20 @@ func (segment PrintDots) New(config map[string]string) Segment {
 
 func (segment *PrintDots) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
 	count := uint64(0)
-	for msg := range segment.in {
+	for msg := range segment.In {
 		if count += 1; count >= segment.FlowsPerDot {
 			fmt.Printf(".")
 			count = 0
 		}
-		segment.out <- msg
+		segment.Out <- msg
 	}
 }
 
 func init() {
 	segment := &PrintDots{}
-	RegisterSegment("printdots", segment)
+	segments.RegisterSegment("printdots", segment)
 }

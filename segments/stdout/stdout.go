@@ -1,4 +1,4 @@
-package segments
+package stdout
 
 import (
 	"fmt"
@@ -6,34 +6,35 @@ import (
 	"os"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/segments"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
 type StdOut struct {
-	BaseSegment
+	segments.BaseSegment
 }
 
-func (segment StdOut) New(config map[string]string) Segment {
+func (segment StdOut) New(config map[string]string) segments.Segment {
 	return &StdOut{}
 }
 
 func (segment *StdOut) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
-	for msg := range segment.in {
+	for msg := range segment.In {
 		data, err := protojson.Marshal(msg)
 		if err != nil {
 			log.Printf("[warning] StdOut: Skipping a flow, failed to recode protobuf as JSON: %v", err)
 			continue
 		}
 		fmt.Fprintln(os.Stdout, string(data))
-		segment.out <- msg
+		segment.Out <- msg
 	}
 }
 
 func init() {
 	segment := &StdOut{}
-	RegisterSegment("stdout", segment)
+	segments.RegisterSegment("stdout", segment)
 }

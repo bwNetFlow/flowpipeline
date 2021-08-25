@@ -15,7 +15,7 @@ import (
 var (
 	registeredSegments    = make(map[string]Segment)
 	lock                  = &sync.RWMutex{}
-	containerVolumePrefix = ""
+	ContainerVolumePrefix = ""
 )
 
 // Used by Segments to register themselves in their init() functions. Errors
@@ -35,19 +35,18 @@ func RegisterSegment(name string, s Segment) {
 // actual Segment objects.
 func LookupSegment(name string) Segment {
 	lock.RLock()
-	segment, ok := registeredSegments[name]
+	segment := registeredSegments[name]
 	lock.RUnlock()
-	if !ok {
-		// think about having it log the error and introduce NoOp instead of quitting
-		log.Printf("[error] Configured segment %s not found, exiting...", name)
-		os.Exit(1)
-	}
 	return segment
 }
 
 // Used by the tests to run single flow messages through a segment.
 func TestSegment(name string, config map[string]string, msg *flow.FlowMessage) *flow.FlowMessage {
 	segment := LookupSegment(name).New(config)
+	if segment == nil {
+		log.Printf("[error] There was an error instanciating the segment '%s', exiting.", name)
+		os.Exit(1)
+	}
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
 	segment.Rewire(in, out)
@@ -69,7 +68,7 @@ func TestSegment(name string, config map[string]string, msg *flow.FlowMessage) *
 // Rewire function and the associated vars.
 type Segment interface {
 	New(config map[string]string) Segment                      // for reading the provided config
-	Run(wg *sync.WaitGroup)                                    // goroutine, must close(segment.out) when segment.in is closed
+	Run(wg *sync.WaitGroup)                                    // goroutine, must close(segment.Out) when segment.In is closed
 	Rewire(<-chan *flow.FlowMessage, chan<- *flow.FlowMessage) // embed this using BaseSegment
 }
 
@@ -77,14 +76,14 @@ type Segment interface {
 // type only need the New and the Run methods to be compliant to the Segment
 // interface.
 type BaseSegment struct {
-	in  <-chan *flow.FlowMessage
-	out chan<- *flow.FlowMessage
+	In  <-chan *flow.FlowMessage
+	Out chan<- *flow.FlowMessage
 }
 
 // This function rewires this Segment with the provided channels. This is
 // typically called only by pipeline.New() and present in any Segment
 // implementation.
 func (segment *BaseSegment) Rewire(in <-chan *flow.FlowMessage, out chan<- *flow.FlowMessage) {
-	segment.in = in
-	segment.out = out
+	segment.In = in
+	segment.Out = out
 }

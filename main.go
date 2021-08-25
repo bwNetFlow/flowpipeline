@@ -18,6 +18,24 @@ import (
 
 	"github.com/bwNetFlow/flowpipeline/pipeline"
 	"github.com/hashicorp/logutils"
+
+	_ "github.com/bwNetFlow/flowpipeline/segments/addcid"
+	_ "github.com/bwNetFlow/flowpipeline/segments/count"
+	_ "github.com/bwNetFlow/flowpipeline/segments/dropfields"
+	_ "github.com/bwNetFlow/flowpipeline/segments/flowfilter"
+	_ "github.com/bwNetFlow/flowpipeline/segments/geolocation"
+	_ "github.com/bwNetFlow/flowpipeline/segments/goflow"
+	_ "github.com/bwNetFlow/flowpipeline/segments/kafkaconsumer"
+	_ "github.com/bwNetFlow/flowpipeline/segments/kafkaproducer"
+	_ "github.com/bwNetFlow/flowpipeline/segments/noop"
+	_ "github.com/bwNetFlow/flowpipeline/segments/normalize"
+	_ "github.com/bwNetFlow/flowpipeline/segments/printdots"
+	_ "github.com/bwNetFlow/flowpipeline/segments/printflowdump"
+	_ "github.com/bwNetFlow/flowpipeline/segments/prometheusexporter"
+	_ "github.com/bwNetFlow/flowpipeline/segments/remoteaddress"
+	_ "github.com/bwNetFlow/flowpipeline/segments/snmp"
+	_ "github.com/bwNetFlow/flowpipeline/segments/stdin"
+	_ "github.com/bwNetFlow/flowpipeline/segments/stdout"
 )
 
 func main() {

@@ -1,17 +1,19 @@
-package segments
+package count
 
 import (
 	"log"
 	"sync"
+
+	"github.com/bwNetFlow/flowpipeline/segments"
 )
 
 type Count struct {
-	BaseSegment
+	segments.BaseSegment
 	count  uint64
 	Prefix string
 }
 
-func (segment Count) New(config map[string]string) Segment {
+func (segment Count) New(config map[string]string) segments.Segment {
 	return &Count{
 		Prefix: config["prefix"],
 	}
@@ -19,12 +21,12 @@ func (segment Count) New(config map[string]string) Segment {
 
 func (segment *Count) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
-	for msg := range segment.in {
+	for msg := range segment.In {
 		segment.count += 1
-		segment.out <- msg
+		segment.Out <- msg
 	}
 	// use log without level to print to stderr but never filter it
 	log.Printf("%s%d", segment.Prefix, segment.count)
@@ -32,5 +34,5 @@ func (segment *Count) Run(wg *sync.WaitGroup) {
 
 func init() {
 	segment := &Count{}
-	RegisterSegment("count", segment)
+	segments.RegisterSegment("count", segment)
 }

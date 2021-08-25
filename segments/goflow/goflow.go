@@ -1,4 +1,4 @@
-package segments
+package goflow
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/segments"
 	flow "github.com/bwNetFlow/protobuf/go"
 	"google.golang.org/protobuf/proto"
 
@@ -16,13 +17,13 @@ import (
 )
 
 type Goflow struct {
-	BaseSegment
+	segments.BaseSegment
 	Port uint64
 
 	goflow_in chan *flow.FlowMessage
 }
 
-func (segment Goflow) New(config map[string]string) Segment {
+func (segment Goflow) New(config map[string]string) segments.Segment {
 	var port uint64 = 2055
 	if config["port"] != "" {
 		if parsedPort, err := strconv.ParseUint(config["port"], 10, 32); err == nil {
@@ -40,7 +41,7 @@ func (segment Goflow) New(config map[string]string) Segment {
 
 func (segment *Goflow) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
 	segment.goflow_in = make(chan *flow.FlowMessage)
@@ -51,12 +52,12 @@ func (segment *Goflow) Run(wg *sync.WaitGroup) {
 			if !ok {
 				return
 			}
-			segment.out <- msg
-		case msg, ok := <-segment.in:
+			segment.Out <- msg
+		case msg, ok := <-segment.In:
 			if !ok {
 				return
 			}
-			segment.out <- msg
+			segment.Out <- msg
 		}
 	}
 }
@@ -97,5 +98,5 @@ func (segment *Goflow) startGoFlow(transport transport.TransportInterface) {
 
 func init() {
 	segment := &Goflow{}
-	RegisterSegment("goflow", segment)
+	segments.RegisterSegment("goflow", segment)
 }

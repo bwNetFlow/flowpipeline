@@ -1,17 +1,19 @@
-package segments
+package normalize
 
 import (
 	"log"
 	"strconv"
 	"sync"
+
+	"github.com/bwNetFlow/flowpipeline/segments"
 )
 
 type Normalize struct {
-	BaseSegment
+	segments.BaseSegment
 	Fallback uint64
 }
 
-func (segment Normalize) New(config map[string]string) Segment {
+func (segment Normalize) New(config map[string]string) segments.Segment {
 	var fallback uint64 = 0
 
 	if config["fallback"] != "" {
@@ -31,10 +33,10 @@ func (segment Normalize) New(config map[string]string) Segment {
 
 func (segment *Normalize) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
-	for msg := range segment.in {
+	for msg := range segment.In {
 		if msg.SamplingRate > 0 {
 			msg.Bytes *= msg.SamplingRate
 			msg.Packets *= msg.SamplingRate
@@ -45,11 +47,11 @@ func (segment *Normalize) Run(wg *sync.WaitGroup) {
 			msg.SamplingRate = segment.Fallback
 			msg.Normalized = 1
 		}
-		segment.out <- msg
+		segment.Out <- msg
 	}
 }
 
 func init() {
 	segment := &Normalize{}
-	RegisterSegment("normalize", segment)
+	segments.RegisterSegment("normalize", segment)
 }

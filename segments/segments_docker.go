@@ -3,5 +3,5 @@
 package segments
 
 func init() {
-	containerVolumePrefix = "/config/"
+	ContainerVolumePrefix = "/config/"
 }

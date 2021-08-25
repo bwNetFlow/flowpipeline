@@ -1,4 +1,4 @@
-package segments
+package snmp
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/alouca/gosnmp"
+	"github.com/bwNetFlow/flowpipeline/segments"
 	cache "github.com/patrickmn/go-cache"
 )
 
@@ -19,7 +20,7 @@ var (
 )
 
 type SNMPInterface struct {
-	BaseSegment
+	segments.BaseSegment
 	Community string
 	Regex     string
 	ConnLimit uint64
@@ -29,7 +30,7 @@ type SNMPInterface struct {
 	connLimitSemaphore chan struct{}
 }
 
-func (segment SNMPInterface) New(config map[string]string) Segment {
+func (segment SNMPInterface) New(config map[string]string) segments.Segment {
 	var connLimit uint64 = 16
 	if config["connlimit"] != "" {
 		if parsedConnLimit, err := strconv.ParseUint(config["connlimit"], 10, 32); err == nil {
@@ -66,7 +67,7 @@ func (segment SNMPInterface) New(config map[string]string) Segment {
 
 func (segment *SNMPInterface) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
 
@@ -81,7 +82,7 @@ func (segment *SNMPInterface) Run(wg *sync.WaitGroup) {
 		log.Printf("[error] SNMPInterface: Configuration error, regex does not compile: %v", err)
 	}
 
-	for msg := range segment.in {
+	for msg := range segment.In {
 		router := net.IP(msg.SamplerAddress).String()
 		// TODO: rename SrcIf and DstIf fields to match goflow InIf/OutIf
 		if msg.InIf > 0 {
@@ -102,7 +103,7 @@ func (segment *SNMPInterface) Run(wg *sync.WaitGroup) {
 				}
 			}
 		}
-		segment.out <- msg
+		segment.Out <- msg
 	}
 }
 
@@ -168,5 +169,5 @@ func (segment *SNMPInterface) fetchInterfaceData(router string, iface uint32) (s
 
 func init() {
 	segment := &SNMPInterface{}
-	RegisterSegment("snmpinterface", segment)
+	segments.RegisterSegment("snmpinterface", segment)
 }

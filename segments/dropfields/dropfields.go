@@ -1,4 +1,4 @@
-package segments
+package dropfields
 
 import (
 	"log"
@@ -6,16 +6,17 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/segments"
 	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 type DropFields struct {
-	BaseSegment
+	segments.BaseSegment
 	Policy string
 	Fields string
 }
 
-func (segment DropFields) New(config map[string]string) Segment {
+func (segment DropFields) New(config map[string]string) segments.Segment {
 	if !(config["policy"] == "keep" || config["policy"] == "drop") {
 		log.Println("[error] DropFields: The 'policy' parameter is required to be either 'keep' or 'drop'.")
 		return nil
@@ -32,11 +33,11 @@ func (segment DropFields) New(config map[string]string) Segment {
 
 func (segment *DropFields) Run(wg *sync.WaitGroup) {
 	defer func() {
-		close(segment.out)
+		close(segment.Out)
 		wg.Done()
 	}()
 	fields := strings.Split(segment.Fields, ",")
-	for original := range segment.in {
+	for original := range segment.In {
 		reflected_original := reflect.ValueOf(original)
 		for _, fieldname := range fields {
 			switch segment.Policy {
@@ -50,13 +51,13 @@ func (segment *DropFields) Run(wg *sync.WaitGroup) {
 				} else {
 					log.Printf("[warning] DropFields: A flow message did not have a field named '%s' to keep.", fieldname)
 				}
-				segment.out <- reduced
+				segment.Out <- reduced
 			case "drop":
 				original_field := reflect.Indirect(reflected_original).FieldByName(fieldname)
 				if original_field.IsValid() {
 					original_field.Set(reflect.Zero(original_field.Type()))
 				}
-				segment.out <- original
+				segment.Out <- original
 			}
 		}
 	}
@@ -64,5 +65,5 @@ func (segment *DropFields) Run(wg *sync.WaitGroup) {
 
 func init() {
 	segment := &DropFields{}
-	RegisterSegment("dropfields", segment)
+	segments.RegisterSegment("dropfields", segment)
 }

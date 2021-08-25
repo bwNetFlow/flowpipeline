@@ -3,6 +3,7 @@ package goflow
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -12,7 +13,6 @@ import (
 	flow "github.com/bwNetFlow/protobuf/go"
 	"google.golang.org/protobuf/proto"
 
-	formatter "github.com/netsampler/goflow2/format/protobuf"
 	"github.com/netsampler/goflow2/transport"
 	"github.com/netsampler/goflow2/utils"
 )
@@ -69,6 +69,7 @@ type channelDriver struct {
 
 func (d *channelDriver) Send(key, data []byte) error {
 	msg := &flow.FlowMessage{}
+	// TODO: can we shave of this Unmarshal here and the Marshal in line 95
 	if err := proto.Unmarshal(data, msg); err != nil {
 		log.Println("[error] Goflow: Conversion error for received flow.")
 		return nil
@@ -82,8 +83,24 @@ func (d *channelDriver) Close(context.Context) error {
 	return nil
 }
 
+type myProtobufDriver struct {
+}
+
+func (d *myProtobufDriver) Format(data interface{}) ([]byte, []byte, error) {
+	msg, ok := data.(proto.Message)
+	if !ok {
+		return nil, nil, fmt.Errorf("message is not protobuf")
+	}
+	// TODO: can we shave of this Marshal here and the Unmarshal in line 72
+	b, err := proto.Marshal(msg)
+	return nil, b, err
+}
+
+func (d *myProtobufDriver) Prepare() error             { return nil }
+func (d *myProtobufDriver) Init(context.Context) error { return nil }
+
 func (segment *Goflow) startGoFlow(transport transport.TransportInterface) {
-	formatter := &formatter.ProtobufDriver{}
+	formatter := &myProtobufDriver{}
 	sNF := &utils.StateNetFlow{
 		Format:    formatter,
 		Transport: transport,

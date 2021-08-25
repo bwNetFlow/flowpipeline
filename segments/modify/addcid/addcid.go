@@ -1,5 +1,6 @@
 // Enriches any passing flow message with a customer id field based on a CIDR
-// match.
+// match. Requires a remote address to be marked in any given flow message. The
+// result is written to the Cid field of any flow.
 package addcid
 
 import (
@@ -17,8 +18,8 @@ import (
 
 type AddCid struct {
 	segments.BaseSegment
-	FileName      string
-	DropUnmatched bool
+	FileName      string // required
+	DropUnmatched bool   // optional, default is false, determines whether flows are dropped when no Cid is found
 
 	trieV4 ip_prefix_trie.TrieNode
 	trieV6 ip_prefix_trie.TrieNode

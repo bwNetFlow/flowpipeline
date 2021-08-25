@@ -11,7 +11,7 @@ import (
 
 type Normalize struct {
 	segments.BaseSegment
-	Fallback uint64
+	Fallback uint64 // optional, default is no fallback, determines a assumed sampling rate of flows if none is found in a given flow
 }
 
 func (segment Normalize) New(config map[string]string) segments.Segment {

@@ -1,4 +1,6 @@
-// Produces all received flows to Kafka instance.
+// Produces all received flows to Kafka instance. This segment is based on the
+// kafkaconnector library:
+// https://github.com/bwNetFlow/kafkaconnector
 package kafkaproducer
 
 import (
@@ -12,15 +14,25 @@ import (
 	flow "github.com/bwNetFlow/protobuf/go"
 )
 
+// All configuration parameters are the same as in the kafkaconsumer segment,
+// except for the 'topicsuffix' parameter. This parameter, if set, acts as a
+// suffix that is appended to the topic that this segment will produce a given
+// flow to. As a static suffix would not make much sense, it is interpreted as
+// a flow message field name, which will be used to create different topics
+// based on field contents. For instance, setting `topicsuffix: Proto` will
+// yield separate topics for each different protocol number occuring in all
+// flows. Usually, a sensible application is usage with customer ids (`Cid`).
+//
+// For more info, see examples/splitter in the repo.
 type KafkaProducer struct {
 	segments.BaseSegment
-	Server      string
-	Topic       string
-	TopicSuffix string
-	User        string
-	Pass        string
-	UseTls      bool
-	UseAuth     bool
+	Server      string // required
+	Topic       string // required
+	TopicSuffix string // optional, default is empty
+	User        string // required if auth is true
+	Pass        string // required if auth is true
+	Tls         bool   // optional, default is true
+	Auth        bool   // optional, default is true
 }
 
 func (segment KafkaProducer) New(config map[string]string) segments.Segment {
@@ -29,20 +41,20 @@ func (segment KafkaProducer) New(config map[string]string) segments.Segment {
 		return nil
 	}
 
-	if config["topic-suffix"] != "" {
+	if config["topicsuffix"] != "" {
 		fmsg := reflect.ValueOf(flow.FlowMessage{})
-		field := fmsg.Elem().FieldByName(config["topic-suffix"])
+		field := fmsg.Elem().FieldByName(config["topicsuffix"])
 		if !field.IsValid() {
-			log.Println("[error] KafkaProducer: The 'topic-suffix' is not a valid FlowMessage field. Disabling this feature.")
+			log.Println("[error] KafkaProducer: The 'topicsuffix' is not a valid FlowMessage field. Disabling this feature.")
 		}
 	} else {
-		log.Println("[info] KafkaProducer: 'topic-suffix' set to default disabled.")
+		log.Println("[info] KafkaProducer: 'topicsuffix' set to default disabled.")
 	}
 
-	var useTls bool = true
+	var tls bool = true
 	if config["tls"] != "" {
-		if parsedUseTls, err := strconv.ParseBool(config["tls"]); err == nil {
-			useTls = parsedUseTls
+		if parsedTls, err := strconv.ParseBool(config["tls"]); err == nil {
+			tls = parsedTls
 		} else {
 			log.Println("[error] KafkaProducer: Could not parse 'tls' parameter, using default true.")
 		}
@@ -50,10 +62,10 @@ func (segment KafkaProducer) New(config map[string]string) segments.Segment {
 		log.Println("[info] KafkaProducer: 'tls' set to default true.")
 	}
 
-	var useAuth bool = true
+	var auth bool = true
 	if config["auth"] != "" {
-		if parsedUseAuth, err := strconv.ParseBool(config["auth"]); err == nil {
-			useAuth = parsedUseAuth
+		if parsedAuth, err := strconv.ParseBool(config["auth"]); err == nil {
+			auth = parsedAuth
 		} else {
 			log.Println("[error] KafkaProducer: Could not parse 'auth' parameter, using default true.")
 		}
@@ -61,7 +73,7 @@ func (segment KafkaProducer) New(config map[string]string) segments.Segment {
 		log.Println("[info] KafkaProducer: 'auth' set to default true.")
 	}
 
-	if useAuth && (config["user"] == "" || config["pass"] == "") {
+	if auth && (config["user"] == "" || config["pass"] == "") {
 		log.Println("[error] KafkaProducer: Missing required configuration parameters for auth.")
 		return nil
 	}
@@ -69,11 +81,11 @@ func (segment KafkaProducer) New(config map[string]string) segments.Segment {
 	return &KafkaProducer{
 		Server:      config["server"],
 		Topic:       config["topic"],
-		TopicSuffix: config["topic-suffix"],
+		TopicSuffix: config["topicsuffix"],
 		User:        config["user"],
 		Pass:        config["pass"],
-		UseTls:      useTls,
-		UseAuth:     useAuth,
+		Tls:         tls,
+		Auth:        auth,
 	}
 }
 
@@ -85,12 +97,12 @@ func (segment *KafkaProducer) Run(wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 
-	if !segment.UseTls {
+	if !segment.Tls {
 		kafkaConn.DisableTLS()
 		log.Println("[info] KafkaProducer: Disabled TLS, operating unencrypted.")
 	}
 
-	if !segment.UseAuth {
+	if !segment.Auth {
 		kafkaConn.DisableAuth()
 		log.Println("[info] KafkaProducer: Disabled auth.")
 	} else {

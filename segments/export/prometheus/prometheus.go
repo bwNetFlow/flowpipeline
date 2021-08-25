@@ -1,4 +1,5 @@
-// Collects and serves statistics about passing flows.
+// Collects and serves statistics about flows. Reuses the exporter package from
+// https://github.com/bwNetFlow/consumer_prometheus
 package prometheus
 
 import (
@@ -9,24 +10,24 @@ import (
 	"github.com/bwNetFlow/flowpipeline/segments"
 )
 
-type PrometheusExporter struct {
+type Prometheus struct {
 	segments.BaseSegment
-	PromEndpoint string
+	Endpoint string // required, no default
 }
 
-func (segment PrometheusExporter) New(config map[string]string) segments.Segment {
+func (segment Prometheus) New(config map[string]string) segments.Segment {
 	// TODO: provide default port
 	if config["endpoint"] == "" {
-		log.Println("[error] PrometheusExporter: Missing required configuration parameter 'endpoint'.")
+		log.Println("[error] prometheus: Missing required configuration parameter 'endpoint'.")
 		return nil
 	}
 
-	return &PrometheusExporter{
-		PromEndpoint: config["endpoint"],
+	return &Prometheus{
+		Endpoint: config["endpoint"],
 	}
 }
 
-func (segment *PrometheusExporter) Run(wg *sync.WaitGroup) {
+func (segment *Prometheus) Run(wg *sync.WaitGroup) {
 	defer func() {
 		close(segment.Out)
 		wg.Done()
@@ -34,7 +35,7 @@ func (segment *PrometheusExporter) Run(wg *sync.WaitGroup) {
 
 	var promExporter = exporter.Exporter{}
 	promExporter.Initialize()
-	promExporter.ServeEndpoints(segment.PromEndpoint)
+	promExporter.ServeEndpoints(segment.Endpoint)
 
 	for msg := range segment.In {
 		segment.Out <- msg
@@ -43,6 +44,6 @@ func (segment *PrometheusExporter) Run(wg *sync.WaitGroup) {
 }
 
 func init() {
-	segment := &PrometheusExporter{}
-	segments.RegisterSegment("prometheusexporter", segment)
+	segment := &Prometheus{}
+	segments.RegisterSegment("prometheus", segment)
 }

@@ -1,4 +1,6 @@
-// Consumes flows from a Kafka instance and passes them to the following segments.
+// Consumes flows from a Kafka instance and passes them to the following
+// segments. This segment is based on the kafkaconnector library:
+// https://github.com/bwNetFlow/kafkaconnector
 package kafkaconsumer
 
 import (
@@ -14,13 +16,13 @@ import (
 
 type KafkaConsumer struct {
 	segments.BaseSegment
-	Server  string
-	Topic   string
-	Group   string
-	User    string
-	Pass    string
-	UseTls  bool
-	UseAuth bool
+	Server string // required
+	Topic  string // required
+	Group  string // required
+	User   string // required if auth is true
+	Pass   string // required if auth is true
+	Tls    bool   // optional, default is true
+	Auth   bool   // optional, default is true
 }
 
 func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
@@ -29,10 +31,10 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 		return nil
 	}
 
-	var useTls bool = true
+	var tls bool = true
 	if config["tls"] != "" {
-		if parsedUseTls, err := strconv.ParseBool(config["tls"]); err == nil {
-			useTls = parsedUseTls
+		if parsedTls, err := strconv.ParseBool(config["tls"]); err == nil {
+			tls = parsedTls
 		} else {
 			log.Println("[error] KafkaConsumer: Could not parse 'tls' parameter, using default true.")
 		}
@@ -40,10 +42,10 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 		log.Println("[info] KafkaConsumer: 'tls' set to default true.")
 	}
 
-	var useAuth bool = true
+	var auth bool = true
 	if config["auth"] != "" {
-		if parsedUseAuth, err := strconv.ParseBool(config["auth"]); err == nil {
-			useAuth = parsedUseAuth
+		if parsedAuth, err := strconv.ParseBool(config["auth"]); err == nil {
+			auth = parsedAuth
 		} else {
 			log.Println("[error] KafkaConsumer: Could not parse 'auth' parameter, using default true.")
 		}
@@ -51,19 +53,19 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 		log.Println("[info] KafkaConsumer: 'auth' set to default true.")
 	}
 
-	if useAuth && (config["user"] == "" || config["pass"] == "") {
+	if auth && (config["user"] == "" || config["pass"] == "") {
 		log.Println("[error] KafkaConsumer: Missing required configuration parameters for auth.")
 		return nil
 	}
 
 	return &KafkaConsumer{
-		Server:  config["server"],
-		Topic:   config["topic"],
-		Group:   config["group"],
-		User:    config["user"],
-		Pass:    config["pass"],
-		UseTls:  useTls,
-		UseAuth: useAuth,
+		Server: config["server"],
+		Topic:  config["topic"],
+		Group:  config["group"],
+		User:   config["user"],
+		Pass:   config["pass"],
+		Tls:    tls,
+		Auth:   auth,
 	}
 }
 
@@ -74,12 +76,12 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 	}()
 
 	var kafkaConn = kafka.Connector{}
-	if !segment.UseTls {
+	if !segment.Tls {
 		kafkaConn.DisableTLS()
 		log.Println("[info] KafkaConsumer: Disabled TLS, operating unencrypted.")
 	}
 
-	if !segment.UseAuth {
+	if !segment.Auth {
 		kafkaConn.DisableAuth()
 		log.Println("[info] KafkaConsumer: Disabled auth.")
 	} else {

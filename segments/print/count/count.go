@@ -1,4 +1,6 @@
 // Counts the number of passing flows and prints the result on termination.
+// Typically used to test flow counts before and after a filter segment, best
+// used with `prefix: pre` and `prefix: post`.
 package count
 
 import (
@@ -11,7 +13,7 @@ import (
 type Count struct {
 	segments.BaseSegment
 	count  uint64
-	Prefix string
+	Prefix string // optional, default is empty, a string which is printed along with the result
 }
 
 func (segment Count) New(config map[string]string) segments.Segment {

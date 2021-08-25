@@ -12,11 +12,11 @@ import (
 
 type PrintDots struct {
 	segments.BaseSegment
-	FlowsPerDot uint64
+	FlowsPerDot uint64 // optional, default is 5000
 }
 
 func (segment PrintDots) New(config map[string]string) segments.Segment {
-	var fpd uint64
+	var fpd uint64 = 5000
 	if parsedFpd, err := strconv.ParseUint(config["flows_per_dot"], 10, 32); err == nil {
 		fpd = parsedFpd
 	} else {
@@ -25,7 +25,6 @@ func (segment PrintDots) New(config map[string]string) segments.Segment {
 		} else {
 			log.Println("[info] PrintDots: 'flows_per_dot' set to default '5000'.")
 		}
-		fpd = 5000
 	}
 	return &PrintDots{
 		FlowsPerDot: fpd,

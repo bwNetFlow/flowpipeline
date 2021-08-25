@@ -1,4 +1,6 @@
 // Enriches passing flows with human-readable versions of interface ids, sourced from SNMP.
+// Obviously, this module requires to be run on a subnet which is accepted by
+// any router or exporter named by a flow's SampleAddress field.
 package snmp
 
 import (
@@ -22,9 +24,9 @@ var (
 
 type SNMPInterface struct {
 	segments.BaseSegment
-	Community string
-	Regex     string
-	ConnLimit uint64
+	Community string // optional, default is 'public'
+	Regex     string // optional, default matches all, can be used to extract content from descriptions, see examples/enricher
+	ConnLimit uint64 // optional, default is 16
 
 	compiledRegex      *regexp.Regexp
 	snmpCache          *cache.Cache

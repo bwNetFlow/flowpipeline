@@ -35,8 +35,12 @@ func RegisterSegment(name string, s Segment) {
 // actual Segment objects.
 func LookupSegment(name string) Segment {
 	lock.RLock()
-	segment := registeredSegments[name]
+	segment, ok := registeredSegments[name]
 	lock.RUnlock()
+	if !ok {
+		log.Printf("[error] Segments: Could not find a segment named '%s'.", name)
+		os.Exit(1)
+	}
 	return segment
 }
 
@@ -44,7 +48,7 @@ func LookupSegment(name string) Segment {
 func TestSegment(name string, config map[string]string, msg *flow.FlowMessage) *flow.FlowMessage {
 	segment := LookupSegment(name).New(config)
 	if segment == nil {
-		log.Printf("[error] There was an error instanciating the segment '%s', exiting.", name)
+		log.Printf("[error] Segments: There was an error instanciating the segment '%s', exiting.", name)
 		os.Exit(1)
 	}
 

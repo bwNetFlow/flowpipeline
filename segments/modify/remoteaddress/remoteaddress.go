@@ -1,4 +1,22 @@
 // Determines the remote address of flows based on different criteria.
+//
+// This segment basically runs flows through a switch case directive using its
+// only config parameter, 'flowsrc'.
+//
+// 'border' assumes flows are exported on border interfaces: If a flow's
+// direction is 'ingress' on such an interface, its remote address is the
+// source address of the flow, whereas the local address of the flow would be
+// its destination address inside our network. The same logic applies vice
+// versa: 'egress' flows have a remote destination address.
+//
+// 'user' assumes flows are exported on user interfaces: If a flow's
+// direction is 'ingress' on such an interface, its remote address is the
+// destination address of the flow, whereas the local address of the flow would be
+// its destination address inside our user's network. The same logic applies
+// vice versa: 'egress' flows have a remote source address.
+//
+// 'mixed' assumes flows are exported whereever, and thus all remote address
+// info is cleared in this case.
 package remoteaddress
 
 import (
@@ -10,7 +28,7 @@ import (
 
 type RemoteAddress struct {
 	segments.BaseSegment
-	FlowSrc string
+	FlowSrc string // required, 'border', 'user' and 'mixed' are available options, see above
 }
 
 func (segment RemoteAddress) New(config map[string]string) segments.Segment {

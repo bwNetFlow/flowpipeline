@@ -13,8 +13,8 @@ import (
 
 type DropFields struct {
 	segments.BaseSegment
-	Policy string
-	Fields string
+	Policy string // required, options are 'keep' or 'drop'
+	Fields string // optional, default is empty, determines which fields are kept/dropped
 }
 
 func (segment DropFields) New(config map[string]string) segments.Segment {

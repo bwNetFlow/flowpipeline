@@ -1,4 +1,4 @@
-// Enriches flows with a geolocation.
+// Enriches flows with a geolocation. Results are written to CountryCode field.
 package geolocation
 
 import (
@@ -13,8 +13,8 @@ import (
 
 type GeoLocation struct {
 	segments.BaseSegment
-	FileName      string
-	DropUnmatched bool
+	FileName      string // required
+	DropUnmatched bool   // optional, default is false, determines whether flows are dropped when location is indeterminate
 
 	dbHandle *maxmind.Reader
 }

@@ -1,4 +1,5 @@
-// Runs flows through a filter and forwards only matching flows.
+// Runs flows through a filter and forwards only matching flows. Reuses our own
+// https://github.com/bwNetFlow/flowfilter project, see the docs there.
 package flowfilter
 
 import (
@@ -12,7 +13,7 @@ import (
 
 type FlowFilter struct {
 	segments.BaseSegment
-	Filter string
+	Filter string // optional, default is empty
 
 	expression *parser.Expression
 }

@@ -1,4 +1,5 @@
-// Prints all incoming flows in a specific flowdump format.
+// Prints all incoming flows in a specific flowdump format. This segment
+// currently has no way to configure the output format (TODO).
 package printflowdump
 
 import (

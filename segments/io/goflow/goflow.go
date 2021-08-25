@@ -1,4 +1,6 @@
-// Captures Netflow v9 and feeds flows to the following segments.
+// Captures Netflow v9 and feeds flows to the following segments. Currently,
+// this segment only uses a limited subset of goflow2 functionality, namely the
+// NFv9 collector.
 package goflow
 
 import (
@@ -19,7 +21,7 @@ import (
 
 type Goflow struct {
 	segments.BaseSegment
-	Port uint64
+	Port uint64 // optional, default is 2055
 
 	goflow_in chan *flow.FlowMessage
 }

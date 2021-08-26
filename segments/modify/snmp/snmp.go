@@ -61,10 +61,16 @@ func (segment SNMPInterface) New(config map[string]string) segments.Segment {
 	} else {
 		log.Println("[info] SNMPInterface: 'regex' set to default '^(.*)$'.")
 	}
+	compiledRegex, err := regexp.Compile(regex)
+	if err != nil {
+		log.Printf("[error] SNMPInterface: Configuration error, regex does not compile: %v", err)
+		return nil
+	}
 	return &SNMPInterface{
-		Community: community,
-		Regex:     regex,
-		ConnLimit: connLimit,
+		Community:     community,
+		Regex:         regex,
+		ConnLimit:     connLimit,
+		compiledRegex: compiledRegex,
 	}
 }
 
@@ -78,12 +84,6 @@ func (segment *SNMPInterface) Run(wg *sync.WaitGroup) {
 	segment.snmpCache = cache.New(1*time.Hour, 1*time.Hour) // TODO: make configurable
 	// init semaphore for connection limit
 	segment.connLimitSemaphore = make(chan struct{}, segment.ConnLimit)
-
-	var err error
-	segment.compiledRegex, err = regexp.Compile(segment.Regex)
-	if err != nil {
-		log.Printf("[error] SNMPInterface: Configuration error, regex does not compile: %v", err)
-	}
 
 	for msg := range segment.In {
 		router := net.IP(msg.SamplerAddress).String()

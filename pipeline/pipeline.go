@@ -14,7 +14,7 @@ import (
 // egress channel of the last segment in its SegmentList.
 type Pipeline struct {
 	In          chan *flow.FlowMessage
-	Out         chan *flow.FlowMessage
+	Out         <-chan *flow.FlowMessage
 	wg          *sync.WaitGroup
 	SegmentList []segments.Segment `yaml: segments`
 }

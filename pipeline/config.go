@@ -58,16 +58,12 @@ func NewFromConfig(config []byte) *Pipeline {
 	segmentList := make([]segments.Segment, len(*pipelineRepr))
 	for i, segmentrepr := range *pipelineRepr {
 		segmenttype := segments.LookupSegment(segmentrepr.Name) // a typed nil instance
-		if segmenttype == nil {
-			os.Exit(1)
-		}
 		// the Segment's New method knows how to handle our config
 		segment := segmenttype.New(segmentrepr.ExpandedConfig())
 		if segment != nil {
 			segmentList[i] = segment
 		} else {
-			log.Printf("[error] Configured segment '%s' could not be initialized properly, see previous messages.", segmentrepr.Name)
-			os.Exit(1)
+			log.Fatalf("[error] Configured segment '%s' could not be initialized properly, see previous messages.", segmentrepr.Name)
 		}
 	}
 	return New(segmentList...)

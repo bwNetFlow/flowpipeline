@@ -17,13 +17,13 @@ type PrintDots struct {
 
 func (segment PrintDots) New(config map[string]string) segments.Segment {
 	var fpd uint64 = 5000
-	if parsedFpd, err := strconv.ParseUint(config["flows_per_dot"], 10, 32); err == nil {
+	if parsedFpd, err := strconv.ParseUint(config["flowsperdot"], 10, 32); err == nil {
 		fpd = parsedFpd
 	} else {
-		if config["flows_per_dot"] != "" {
-			log.Println("[error] PrintDots: Could not parse 'flows_per_dot' parameter, using default 5000.")
+		if config["flowsperdot"] != "" {
+			log.Println("[error] PrintDots: Could not parse 'flowsperdot' parameter, using default 5000.")
 		} else {
-			log.Println("[info] PrintDots: 'flows_per_dot' set to default '5000'.")
+			log.Println("[info] PrintDots: 'flowsperdot' set to default '5000'.")
 		}
 	}
 	return &PrintDots{

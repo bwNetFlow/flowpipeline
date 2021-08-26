@@ -6,7 +6,6 @@ package segments
 
 import (
 	"log"
-	"os"
 	"sync"
 
 	flow "github.com/bwNetFlow/protobuf/go"
@@ -23,8 +22,7 @@ var (
 func RegisterSegment(name string, s Segment) {
 	_, ok := registeredSegments[name]
 	if ok {
-		log.Printf("[error] Segments: Tried to register conflicting segment name '%s'.", name)
-		os.Exit(1)
+		log.Fatalf("[error] Segments: Tried to register conflicting segment name '%s'.", name)
 	}
 	lock.Lock()
 	registeredSegments[name] = s
@@ -38,8 +36,7 @@ func LookupSegment(name string) Segment {
 	segment, ok := registeredSegments[name]
 	lock.RUnlock()
 	if !ok {
-		log.Printf("[error] Segments: Could not find a segment named '%s'.", name)
-		os.Exit(1)
+		log.Fatalf("[error] Segments: Could not find a segment named '%s'.", name)
 	}
 	return segment
 }
@@ -48,8 +45,7 @@ func LookupSegment(name string) Segment {
 func TestSegment(name string, config map[string]string, msg *flow.FlowMessage) *flow.FlowMessage {
 	segment := LookupSegment(name).New(config)
 	if segment == nil {
-		log.Printf("[error] Segments: There was an error instanciating the segment '%s', exiting.", name)
-		os.Exit(1)
+		log.Fatalf("[error] Configured segment '%s' could not be initialized properly, see previous messages.", name)
 	}
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)

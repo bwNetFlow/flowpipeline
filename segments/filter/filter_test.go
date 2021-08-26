@@ -36,3 +36,11 @@ func TestSegment_FlowFilter_deny(t *testing.T) {
 		t.Error("Segment FlowFilter accepted a flow incorrectly.")
 	}
 }
+
+func TestSegment_FlowFilter_syntax(t *testing.T) {
+	filter := &FlowFilter{}
+	result := filter.New(map[string]string{"filter": "protoo 4"})
+	if result != nil {
+		t.Error("Segment FlowFilter did something with a syntax error present.")
+	}
+}

@@ -5,7 +5,6 @@ package kafkaconsumer
 
 import (
 	"log"
-	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -91,8 +90,7 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 
 	err := kafkaConn.StartConsumer(segment.Server, strings.Split(segment.Topic, ","), segment.Group, -1)
 	if err != nil {
-		log.Println("[error] KafkaConsumer: Error starting consumer, this usually indicates a misconfiguration (auth).")
-		os.Exit(1)
+		log.Fatalln("[error] KafkaConsumer: Error starting consumer, this usually indicates a misconfiguration (auth).")
 	}
 
 	// receive flows in a loop

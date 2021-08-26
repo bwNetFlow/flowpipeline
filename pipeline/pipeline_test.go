@@ -30,7 +30,8 @@ func TestPipelineConfigSuccess(t *testing.T) {
 	pipeline := NewFromConfig([]byte(`---
 - segment: noop
   config:
-    foo: $baz`))
+    foo: $baz
+    bar: $0`))
 	pipeline.In <- &flow.FlowMessage{Type: 3}
 	fmsg := <-pipeline.Out
 	if fmsg.Type != 3 {

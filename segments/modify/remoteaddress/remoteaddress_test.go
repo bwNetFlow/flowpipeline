@@ -22,9 +22,17 @@ func TestMain(m *testing.M) {
 
 // RemoteAddress Segment testing is basically checking whether switch/case is working okay...
 func TestSegment_RemoteAddress(t *testing.T) {
-	result := segments.TestSegment("remoteaddress", map[string]string{"flowsrc": "border"},
+	result := segments.TestSegment("remoteaddress", map[string]string{"policy": "border"},
 		&flow.FlowMessage{FlowDirection: 0})
 	if result.RemoteAddr != 1 {
 		t.Error("Segment RemoteAddress is not determining RemoteAddr correctly.")
+	}
+}
+
+func TestSegment_RemoteAddress_localAddrIsDst(t *testing.T) {
+	result := segments.TestSegment("remoteaddress", map[string]string{"policy": "cidr", "filename": "../../../examples/enricher/customer_subnets.csv"},
+		&flow.FlowMessage{SrcAddr: []byte{192, 168, 88, 42}})
+	if result.RemoteAddr != 1 {
+		t.Error("Segment RemoteAddress is not determining the local address correctly by 'cidr'.")
 	}
 }

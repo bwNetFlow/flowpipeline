@@ -22,19 +22,12 @@
 # address is the remote address, thus also allowing the inference which one
 # will be the local one.
 #
-# The different options are:
-# 1. "border", which assumes all flows are collected on the network border
-#    interfaces, thus making ingress flows into that interface have a remote
-#    source address, and vice versa.
-# 2. "user", which assumes all flows are collected on a user interface, thus
-#    making ingress flows have a remote destination address. In this case,
-#    remote from the user's point of view (not the network operators pov), as
-#    the flow could have had another user as its destination.
-# 3. "mixed", as we can't make any assumptions in this case, all remote address
-#    information is cleared from all flows in this mode.
+# In this case, the policy used is "border", which assumes all flows are
+# collected on the network border interfaces, thus making ingress flows into
+# that interface have a remote source address, and vice versa.
 - segment: remoteaddress
   config:
-    flowsrc: "border"
+    policy: "border"
 
 ###############################################################################
 # Add a customer id field to all flows by CIDR match. As this works on local

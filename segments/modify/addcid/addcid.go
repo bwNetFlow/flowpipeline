@@ -70,6 +70,9 @@ func (segment *AddCid) Run(wg *sync.WaitGroup) {
 			retCid, _ := segment.trieV4.Lookup(laddress).(int64) // try to get a CID
 			msg.Cid = uint32(retCid)
 		}
+		if segment.DropUnmatched && msg.Cid == 0 {
+			continue
+		}
 		segment.Out <- msg
 	}
 }

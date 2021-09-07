@@ -73,7 +73,8 @@ instance.
 
 As for which Segments are available and what their configuration options are,
 please refer to the
-[documentation](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline).
+[relevant documentation](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline#section-directories)
+(and click expand all).
 
 ## Contributing
 

@@ -23,7 +23,7 @@ import (
 
 type Goflow struct {
 	segments.BaseSegment
-	ListenAddresses string // optional, default is "sflow://:6343,netflow://:2055"
+	ListenAddresses []url.URL // optional, default config value for this slice is "sflow://:6343,netflow://:2055"
 
 	goflow_in chan *flow.FlowMessage
 }
@@ -36,8 +36,30 @@ func (segment Goflow) New(config map[string]string) segments.Segment {
 		log.Printf("[info] Goflow: starting listeners for %s", listenAddresses)
 	}
 
+	var listenAddressesSlice []url.URL
+	for _, listenAddress := range strings.Split(listenAddresses, ",") {
+		listenAddrUrl, err := url.Parse(listenAddress)
+		if err != nil {
+			log.Printf("[error] Goflow: error parsing listenAddresses: %e", err)
+		}
+		// Check if given Port can be parsed to int
+		_, err = strconv.ParseUint(listenAddrUrl.Port(), 10, 64)
+		if err != nil {
+			log.Printf("[error] Goflow: Port %s could not be converted to integer", listenAddrUrl.Port())
+		}
+
+		switch listenAddrUrl.Scheme {
+		case "netflow", "sflow", "nfl":
+			log.Printf("[info] Goflow: Scheme %s supported.", listenAddrUrl.Scheme)
+		default:
+			log.Fatalf("[error] Goflow: Scheme %s not supported.", listenAddrUrl.Scheme)
+		}
+
+		listenAddressesSlice = append(listenAddressesSlice, *listenAddrUrl)
+	}
+
 	return &Goflow{
-		ListenAddresses: listenAddresses,
+		ListenAddresses: listenAddressesSlice,
 	}
 }
 
@@ -104,21 +126,18 @@ func (segment *Goflow) startGoFlow(transport transport.TransportInterface) {
 	wg := &sync.WaitGroup{}
 	formatter := &myProtobufDriver{}
 
-	for _, listenAddress := range strings.Split(segment.ListenAddresses, ",") {
+	for _, listenAddrUrl := range segment.ListenAddresses {
 		wg.Add(1)
-		go func(listenAddress string) {
+		go func(listenAddrUrl url.URL) {
 			defer wg.Done()
-			listenAddrUrl, err := url.Parse(listenAddress)
-			if err != nil {
-				log.Fatal(err)
-			}
 
 			hostname := listenAddrUrl.Hostname()
 			port, err := strconv.ParseUint(listenAddrUrl.Port(), 10, 64)
 			if err != nil {
+				// This will never be thrown, because we checked already
 				log.Printf("[error] Goflow: Port %s could not be converted to integer", listenAddrUrl.Port())
-				return
 			}
+
 			switch scheme := listenAddrUrl.Scheme; scheme {
 			case "netflow":
 				sNF := &utils.StateNetFlow{
@@ -139,17 +158,14 @@ func (segment *Goflow) startGoFlow(transport transport.TransportInterface) {
 					Format:    formatter,
 					Transport: transport,
 				}
-				log.Printf("[info] Goflow: Listening for sflow on port %d...", port)
+				log.Printf("[info] Goflow: Listening for netflow legacy on port %d...", port)
 				err = sNFL.FlowRoutine(1, hostname, int(port), false)
-			default:
-				log.Printf("[error] Goflow: scheme %s does not exist", listenAddrUrl.Scheme)
-				return
 			}
 			if err != nil {
-				log.Fatal(err)
+				log.Fatalf("[error] Goflow: %e", err)
 			}
 
-		}(listenAddress)
+		}(listenAddrUrl)
 	}
 	wg.Wait()
 }

@@ -1,14 +1,16 @@
 // Captures Netflow v9 and feeds flows to the following segments. Currently,
-// this segment only uses a limited subset of goflow2 functionality, namely the
-// NFv9 collector.
+// this segment only uses a limited subset of goflow2 functionality.
+// If no configuration option is provided a sflow and a netflow collector will be started.
+// netflowLagcy is also built in but currently not tested.
 package goflow
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"os"
+	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -21,24 +23,21 @@ import (
 
 type Goflow struct {
 	segments.BaseSegment
-	Port uint64 // optional, default is 2055
+	ListenAddresses string // optional, default is "sflow://:6343,netflow://:2055"
 
 	goflow_in chan *flow.FlowMessage
 }
 
 func (segment Goflow) New(config map[string]string) segments.Segment {
-	var port uint64 = 2055
-	if config["port"] != "" {
-		if parsedPort, err := strconv.ParseUint(config["port"], 10, 32); err == nil {
-			port = parsedPort
-		} else {
-			log.Println("[error] Goflow: Could not parse 'port' parameter, using default 2055.")
-		}
-	} else {
-		log.Println("[info] Goflow: 'port' set to default '2055'.")
+
+	var listenAddresses = "sflow://:6343,netflow://:2055"
+	if config["listenAddresses"] != "" {
+		listenAddresses = config["listenAddresses"]
+		log.Printf("[info] Goflow: starting listeners for %s", listenAddresses)
 	}
+
 	return &Goflow{
-		Port: port,
+		ListenAddresses: listenAddresses,
 	}
 }
 
@@ -102,18 +101,57 @@ func (d *myProtobufDriver) Prepare() error             { return nil }
 func (d *myProtobufDriver) Init(context.Context) error { return nil }
 
 func (segment *Goflow) startGoFlow(transport transport.TransportInterface) {
+	wg := &sync.WaitGroup{}
 	formatter := &myProtobufDriver{}
-	sNF := &utils.StateNetFlow{
-		Format:    formatter,
-		Transport: transport,
-	}
 
-	log.Printf("[info] Goflow: Listening for Netflow v9 on port %d...", segment.Port)
-	err := sNF.FlowRoutine(1, "", int(segment.Port), false)
-	if err != nil {
-		log.Printf("[error] Goflow: Could not listen to UDP (%v)", err)
-		os.Exit(1)
+	for _, listenAddress := range strings.Split(segment.ListenAddresses, ",") {
+		wg.Add(1)
+		go func(listenAddress string) {
+			defer wg.Done()
+			listenAddrUrl, err := url.Parse(listenAddress)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			hostname := listenAddrUrl.Hostname()
+			port, err := strconv.ParseUint(listenAddrUrl.Port(), 10, 64)
+			if err != nil {
+				log.Printf("[error] Goflow: Port %s could not be converted to integer", listenAddrUrl.Port())
+				return
+			}
+			switch scheme := listenAddrUrl.Scheme; scheme {
+			case "netflow":
+				sNF := &utils.StateNetFlow{
+					Format:    formatter,
+					Transport: transport,
+				}
+				log.Printf("[info] Goflow: Listening for Netflow v9 on port %d...", port)
+				err = sNF.FlowRoutine(1, hostname, int(port), false)
+			case "sflow":
+				sSFlow := &utils.StateSFlow{
+					Format:    formatter,
+					Transport: transport,
+				}
+				log.Printf("[info] Goflow: Listening for sflow on port %d...", port)
+				err = sSFlow.FlowRoutine(1, hostname, int(port), false)
+			case "nfl":
+				sNFL := &utils.StateNFLegacy{
+					Format:    formatter,
+					Transport: transport,
+				}
+				log.Printf("[info] Goflow: Listening for sflow on port %d...", port)
+				err = sNFL.FlowRoutine(1, hostname, int(port), false)
+			default:
+				log.Printf("[error] Goflow: scheme %s does not exist", listenAddrUrl.Scheme)
+				return
+			}
+			if err != nil {
+				log.Fatal(err)
+			}
+
+		}(listenAddress)
 	}
+	wg.Wait()
 }
 
 func init() {

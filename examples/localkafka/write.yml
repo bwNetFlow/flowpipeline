@@ -3,7 +3,7 @@
 # Receive Netflow v9 using Goflow on a local port.
 - segment: goflow
   config:
-    port: 2055
+    listenAddresses: "sflow://:6343,netflow://:2055"
 
 ###############################################################################
 # Produce flow messages to a local cluster for further pipelines. TLS and auth

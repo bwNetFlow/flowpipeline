@@ -52,7 +52,8 @@ func (segment Goflow) New(config map[string]string) segments.Segment {
 		case "netflow", "sflow", "nfl":
 			log.Printf("[info] Goflow: Scheme %s supported.", listenAddrUrl.Scheme)
 		default:
-			log.Fatalf("[error] Goflow: Scheme %s not supported.", listenAddrUrl.Scheme)
+			log.Printf("[error] Goflow: Scheme %s not supported.", listenAddrUrl.Scheme)
+			return nil
 		}
 
 		listenAddressesSlice = append(listenAddressesSlice, *listenAddrUrl)
@@ -132,12 +133,9 @@ func (segment *Goflow) startGoFlow(transport transport.TransportInterface) {
 			defer wg.Done()
 
 			hostname := listenAddrUrl.Hostname()
-			port, err := strconv.ParseUint(listenAddrUrl.Port(), 10, 64)
-			if err != nil {
-				// This will never be thrown, because we checked already
-				log.Printf("[error] Goflow: Port %s could not be converted to integer", listenAddrUrl.Port())
-			}
+			port, _ := strconv.ParseUint(listenAddrUrl.Port(), 10, 64)
 
+			var err error
 			switch scheme := listenAddrUrl.Scheme; scheme {
 			case "netflow":
 				sNF := &utils.StateNetFlow{

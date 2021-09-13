@@ -78,6 +78,9 @@ func format_flow(flowmsg *flow.FlowMessage) string {
 	if proto == "" {
 		proto = fmt.Sprintf("UNKOWN (%d)", flowmsg.Proto)
 	}
+	if proto == "ICMP" && flowmsg.DstPort != 0 {
+		proto = fmt.Sprintf("ICMP (type %d, code %d)", flowmsg.DstPort/256, flowmsg.DstPort%256)
+	}
 	duration := flowmsg.TimeFlowEnd - flowmsg.TimeFlowStart
 	if duration == 0 {
 		duration += 1

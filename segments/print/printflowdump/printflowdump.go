@@ -40,7 +40,7 @@ func format_flow(flowmsg *flow.FlowMessage) string {
 	dst := net.IP(flowmsg.DstAddr)
 	router := net.IP(flowmsg.SamplerAddress)
 	proto := flowmsg.ProtoName
-	if flowmsg.ProtoName == ("") {
+	if flowmsg.ProtoName == "" {
 		proto = fmt.Sprint(flowmsg.Proto)
 	}
 	duration := flowmsg.TimeFlowEnd - flowmsg.TimeFlowStart

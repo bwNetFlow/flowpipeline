@@ -6,17 +6,21 @@ package printflowdump
 
 import (
 	"fmt"
+	"log"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
+	"github.com/bwNetFlow/flowpipeline/segments/modify/protomap"
 	flow "github.com/bwNetFlow/protobuf/go"
 	"github.com/dustin/go-humanize"
 )
 
 type PrintFlowdump struct {
 	segments.BaseSegment
+	UseProtoname bool // optional, default is true
 }
 
 func (segment *PrintFlowdump) Run(wg *sync.WaitGroup) {
@@ -25,24 +29,42 @@ func (segment *PrintFlowdump) Run(wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 	for msg := range segment.In {
-		fmt.Println(format_flow(msg))
+		fmt.Println(segment.format_flow(msg))
 		segment.Out <- msg
 	}
 }
 
 func (segment PrintFlowdump) New(config map[string]string) segments.Segment {
-	return &PrintFlowdump{}
+	var useProtoname bool = true
+	if config["useprotoname"] != "" {
+		if parsedUseProtoname, err := strconv.ParseBool(config["useprotoname"]); err == nil {
+			useProtoname = parsedUseProtoname
+		} else {
+			log.Println("[error] PrintFlowdump: Could not parse 'useprotoname' parameter, using default true.")
+		}
+	} else {
+		log.Println("[info] PrintFlowdump: 'useprotoname' set to default true.")
+	}
+	return &PrintFlowdump{UseProtoname: useProtoname}
 }
 
-func format_flow(flowmsg *flow.FlowMessage) string {
+func (segment PrintFlowdump) format_flow(flowmsg *flow.FlowMessage) string {
 	timestamp := time.Unix(int64(flowmsg.TimeFlowEnd), 0).Format("15:04:05")
 	src := net.IP(flowmsg.SrcAddr)
 	dst := net.IP(flowmsg.DstAddr)
 	router := net.IP(flowmsg.SamplerAddress)
-	proto := flowmsg.ProtoName
-	if flowmsg.ProtoName == "" {
+	var proto string
+	if segment.UseProtoname {
+		if flowmsg.ProtoName != "" {
+			proto = flowmsg.ProtoName
+		} else {
+			// use function from another segment, as it is just a lookup.
+			proto = protomap.ProtoNumToString(flowmsg.Proto)
+		}
+	} else {
 		proto = fmt.Sprint(flowmsg.Proto)
 	}
+
 	duration := flowmsg.TimeFlowEnd - flowmsg.TimeFlowStart
 	if duration == 0 {
 		duration += 1

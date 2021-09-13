@@ -28,3 +28,12 @@ func TestSegment_protomap_passthrough(t *testing.T) {
 		t.Error("Segment protomap is not passing through flows.")
 	}
 }
+
+// Protomap Segment test, passthrough test only
+func TestSegment_protomap_tcp(t *testing.T) {
+	result := segments.TestSegment("protomap", map[string]string{},
+		&flow.FlowMessage{Proto: 6})
+	if result.ProtoName != "TCP" {
+		t.Error("Segment protomap is not tagging ProtoName correctly.")
+	}
+}

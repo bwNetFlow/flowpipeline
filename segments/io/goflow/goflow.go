@@ -1,14 +1,16 @@
 // Captures Netflow v9 and feeds flows to the following segments. Currently,
-// this segment only uses a limited subset of goflow2 functionality, namely the
-// NFv9 collector.
+// this segment only uses a limited subset of goflow2 functionality.
+// If no configuration option is provided a sflow and a netflow collector will be started.
+// netflowLagcy is also built in but currently not tested.
 package goflow
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"os"
+	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -21,24 +23,63 @@ import (
 
 type Goflow struct {
 	segments.BaseSegment
-	Port uint64 // optional, default is 2055
+	Listen  []url.URL // optional, default config value for this slice is "sflow://:6343,netflow://:2055"
+	Workers uint64    // optional, amunt of workers to spawn for each endpoint, default is 1
 
 	goflow_in chan *flow.FlowMessage
 }
 
 func (segment Goflow) New(config map[string]string) segments.Segment {
-	var port uint64 = 2055
-	if config["port"] != "" {
-		if parsedPort, err := strconv.ParseUint(config["port"], 10, 32); err == nil {
-			port = parsedPort
+
+	var listen = "sflow://:6343,netflow://:2055"
+	if config["listen"] != "" {
+		listen = config["listen"]
+		log.Printf("[info] Goflow: starting listeners for %s", listen)
+	}
+
+	var listenAddressesSlice []url.URL
+	for _, listenAddress := range strings.Split(listen, ",") {
+		listenAddrUrl, err := url.Parse(listenAddress)
+		if err != nil {
+			log.Printf("[error] Goflow: error parsing listenAddresses: %e", err)
+			return nil
+		}
+		// Check if given Port can be parsed to int
+		_, err = strconv.ParseUint(listenAddrUrl.Port(), 10, 64)
+		if err != nil {
+			log.Printf("[error] Goflow: Port %s could not be converted to integer", listenAddrUrl.Port())
+			return nil
+		}
+
+		switch listenAddrUrl.Scheme {
+		case "netflow", "sflow", "nfl":
+			log.Printf("[info] Goflow: Scheme %s supported.", listenAddrUrl.Scheme)
+		default:
+			log.Printf("[error] Goflow: Scheme %s not supported.", listenAddrUrl.Scheme)
+			return nil
+		}
+
+		listenAddressesSlice = append(listenAddressesSlice, *listenAddrUrl)
+	}
+
+	var workers uint64 = 1
+	if config["workers"] != "" {
+		if parsedWorkers, err := strconv.ParseUint(config["workers"], 10, 32); err == nil {
+			workers = parsedWorkers
+			if workers == 0 {
+				log.Println("[error] Goflow: Limiting workers to 0 will not work. Remove this segment or use a higher value >= 1.")
+				return nil
+			}
 		} else {
-			log.Println("[error] Goflow: Could not parse 'port' parameter, using default 2055.")
+			log.Println("[error] Goflow: Could not parse 'workers' parameter, using default 1.")
 		}
 	} else {
-		log.Println("[info] Goflow: 'port' set to default '2055'.")
+		log.Println("[info] Goflow: 'workers' set to default '1'.")
 	}
+
 	return &Goflow{
-		Port: port,
+		Listen:  listenAddressesSlice,
+		Workers: workers,
 	}
 }
 
@@ -48,7 +89,7 @@ func (segment *Goflow) Run(wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 	segment.goflow_in = make(chan *flow.FlowMessage)
-	go segment.startGoFlow(&channelDriver{segment.goflow_in})
+	segment.startGoFlow(&channelDriver{segment.goflow_in})
 	for {
 		select {
 		case msg, ok := <-segment.goflow_in:
@@ -71,7 +112,7 @@ type channelDriver struct {
 
 func (d *channelDriver) Send(key, data []byte) error {
 	msg := &flow.FlowMessage{}
-	// TODO: can we shave of this Unmarshal here and the Marshal in line 95
+	// TODO: can we shave of this Unmarshal here and the Marshal in line 138
 	if err := proto.Unmarshal(data, msg); err != nil {
 		log.Println("[error] Goflow: Conversion error for received flow.")
 		return nil
@@ -93,7 +134,7 @@ func (d *myProtobufDriver) Format(data interface{}) ([]byte, []byte, error) {
 	if !ok {
 		return nil, nil, fmt.Errorf("message is not protobuf")
 	}
-	// TODO: can we shave of this Marshal here and the Unmarshal in line 72
+	// TODO: can we shave of this Marshal here and the Unmarshal in line 116
 	b, err := proto.Marshal(msg)
 	return nil, b, err
 }
@@ -103,16 +144,42 @@ func (d *myProtobufDriver) Init(context.Context) error { return nil }
 
 func (segment *Goflow) startGoFlow(transport transport.TransportInterface) {
 	formatter := &myProtobufDriver{}
-	sNF := &utils.StateNetFlow{
-		Format:    formatter,
-		Transport: transport,
-	}
 
-	log.Printf("[info] Goflow: Listening for Netflow v9 on port %d...", segment.Port)
-	err := sNF.FlowRoutine(1, "", int(segment.Port), false)
-	if err != nil {
-		log.Printf("[error] Goflow: Could not listen to UDP (%v)", err)
-		os.Exit(1)
+	for _, listenAddrUrl := range segment.Listen {
+		go func(listenAddrUrl url.URL) {
+
+			hostname := listenAddrUrl.Hostname()
+			port, _ := strconv.ParseUint(listenAddrUrl.Port(), 10, 64)
+
+			var err error
+			switch scheme := listenAddrUrl.Scheme; scheme {
+			case "netflow":
+				sNF := &utils.StateNetFlow{
+					Format:    formatter,
+					Transport: transport,
+				}
+				log.Printf("[info] Goflow: Listening for Netflow v9 on port %d...", port)
+				err = sNF.FlowRoutine(int(segment.Workers), hostname, int(port), false)
+			case "sflow":
+				sSFlow := &utils.StateSFlow{
+					Format:    formatter,
+					Transport: transport,
+				}
+				log.Printf("[info] Goflow: Listening for sflow on port %d...", port)
+				err = sSFlow.FlowRoutine(int(segment.Workers), hostname, int(port), false)
+			case "nfl":
+				sNFL := &utils.StateNFLegacy{
+					Format:    formatter,
+					Transport: transport,
+				}
+				log.Printf("[info] Goflow: Listening for netflow legacy on port %d...", port)
+				err = sNFL.FlowRoutine(int(segment.Workers), hostname, int(port), false)
+			}
+			if err != nil {
+				log.Fatalf("[error] Goflow: %s", err.Error())
+			}
+
+		}(listenAddrUrl)
 	}
 }
 

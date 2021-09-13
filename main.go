@@ -29,6 +29,7 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/dropfields"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/geolocation"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/normalize"
+	_ "github.com/bwNetFlow/flowpipeline/segments/modify/protomap"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/remoteaddress"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/snmp"
 

@@ -18,7 +18,7 @@ type Prometheus struct {
 func (segment Prometheus) New(config map[string]string) segments.Segment {
 	var endpoint string = ":8080"
 	if config["endpoint"] == "" {
-		log.Println("[error] prometheus: Missing configuration parameter 'endpoint'. Using default port \":8080\"")
+		log.Println("[info] prometheus: Missing configuration parameter 'endpoint'. Using default port \":8080\"")
 	} else {
 		endpoint = config["endpoint"]
 	}

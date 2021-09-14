@@ -40,6 +40,7 @@ require (
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/klauspost/compress v1.13.4 // indirect
 	github.com/libp2p/go-reuseport v0.0.2 // indirect
+	github.com/mattn/go-sqlite3 v1.14.8 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect

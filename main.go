@@ -22,6 +22,7 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/io/goflow"
 	_ "github.com/bwNetFlow/flowpipeline/segments/io/kafkaconsumer"
 	_ "github.com/bwNetFlow/flowpipeline/segments/io/kafkaproducer"
+	_ "github.com/bwNetFlow/flowpipeline/segments/io/sqlite"
 	_ "github.com/bwNetFlow/flowpipeline/segments/io/stdin"
 	_ "github.com/bwNetFlow/flowpipeline/segments/io/stdout"
 

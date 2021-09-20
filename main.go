@@ -15,6 +15,8 @@ import (
 	"github.com/bwNetFlow/flowpipeline/pipeline"
 	"github.com/hashicorp/logutils"
 
+	_ "github.com/bwNetFlow/flowpipeline/segments/alert/http"
+
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/prometheus"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/filter"

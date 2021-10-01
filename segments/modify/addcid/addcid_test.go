@@ -52,3 +52,11 @@ func TestSegment_AddCid_localAddrIsSrc(t *testing.T) {
 		t.Error("Segment AddCid is not adding a Cid when the local address is the source address.")
 	}
 }
+
+func TestSegment_AddCid_bothAddrs(t *testing.T) {
+	result := segments.TestSegment("addcid", map[string]string{"matchboth": "1", "filename": "../../../examples/enricher/customer_subnets.csv"},
+		&flow.FlowMessage{SrcAddr: []byte{192, 168, 88, 142}})
+	if result.Cid != 1 {
+		t.Error("Segment AddCid is not adding a Cid when the local address is the source address.")
+	}
+}

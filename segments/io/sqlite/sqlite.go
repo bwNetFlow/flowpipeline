@@ -56,6 +56,7 @@ func (segment *Sqlite) Run(wg *sync.WaitGroup) {
 	sqlStmt := `CREATE TABLE IF NOT EXISTS flows (
 		Type TEXT not null,
 		TimeReceived INTEGER,
+		SequenceNum INTEGER,
 	        SamplingRate INTEGER,
 		SamplerAddress TEXT,
 	        TimeFlowStart INTEGER,
@@ -88,8 +89,7 @@ func (segment *Sqlite) Run(wg *sync.WaitGroup) {
 	        DstIfDesc TEXT,
 	        DstIfSpeed INTEGER,
 	        ProtoName TEXT,
-	        RemoteCountry TEXT,
-		PRIMARY KEY (SrcAddr, DstAddr, Proto, SrcPort, DstPort, InIf, IPTos));`
+	        RemoteCountry TEXT);`
 	tx, err := segment.db.Begin()
 	if err != nil {
 		log.Panicf("[error] Sqlite: Could not start initiation transaction with error: %v", err)
@@ -103,7 +103,7 @@ func (segment *Sqlite) Run(wg *sync.WaitGroup) {
 	for msg := range segment.In {
 		sqlStmt := fmt.Sprintf(`INSERT INTO flows VALUES (
 			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-		  	?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+		  	?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 
 		tx, err := segment.db.Begin()
 		if err != nil {
@@ -115,11 +115,12 @@ func (segment *Sqlite) Run(wg *sync.WaitGroup) {
 		if err != nil {
 			log.Printf("[warning] Sqlite: Could not prepare statement with error: %v", err) // should never happen, indicates an error in above insert statement
 			tx.Rollback()
+			segment.Out <- msg
 			continue
 		}
 		defer stmt.Close()
 
-		_, err = stmt.Exec(msg.Type, msg.TimeReceived, msg.SamplingRate,
+		_, err = stmt.Exec(msg.Type, msg.TimeReceived, msg.SequenceNum, msg.SamplingRate,
 			fmt.Sprint(net.IP(msg.SamplerAddress)), msg.TimeFlowStart, msg.TimeFlowEnd, msg.Bytes,
 			msg.Packets, fmt.Sprint(net.IP(msg.SrcAddr)), fmt.Sprint(net.IP(msg.DstAddr)), msg.Etype, msg.Proto, msg.SrcPort,
 			msg.DstPort, msg.InIf, msg.OutIf, msg.IngressVrfID, msg.EgressVrfID,
@@ -130,6 +131,7 @@ func (segment *Sqlite) Run(wg *sync.WaitGroup) {
 		if err != nil {
 			log.Printf("[warning] Sqlite: Could not insert flow data with error: %v", err)
 			tx.Rollback()
+			segment.Out <- msg
 			continue
 		}
 		tx.Commit()

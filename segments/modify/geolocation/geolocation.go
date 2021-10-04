@@ -1,4 +1,6 @@
-// Enriches flows with a geolocation. Results are written to CountryCode field.
+// Enriches flows with a geolocation. By default requires RemoteAddr to be set
+// as it populates the RemoteCountry field. Optionally matches both addresses
+// and writes the results to the Src and DstCountry fields.
 package geolocation
 
 import (
@@ -15,6 +17,7 @@ type GeoLocation struct {
 	segments.BaseSegment
 	FileName      string // required
 	DropUnmatched bool   // optional, default is false, determines whether flows are dropped when location is indeterminate
+	MatchBoth     bool   // optional, default is false, determines whether both addresses are matched
 
 	dbHandle *maxmind.Reader
 }
@@ -24,6 +27,10 @@ func (segment GeoLocation) New(config map[string]string) segments.Segment {
 	if err != nil {
 		log.Println("[info] GeoLocation: 'dropunmatched' set to default 'false'.")
 	}
+	both, err := strconv.ParseBool(config["matchboth"])
+	if err != nil {
+		log.Println("[info] GeoLocation: 'matchboth' set to default 'false'.")
+	}
 	if config["filename"] == "" {
 		log.Println("[error] GeoLocation: This segment requires the 'filename' parameter.")
 		return nil
@@ -31,6 +38,7 @@ func (segment GeoLocation) New(config map[string]string) segments.Segment {
 	newSegment := &GeoLocation{
 		FileName:      config["filename"],
 		DropUnmatched: drop,
+		MatchBoth:     both,
 	}
 	newSegment.dbHandle, err = maxmind.Open(segments.ContainerVolumePrefix + config["filename"])
 	if err != nil {
@@ -57,24 +65,39 @@ func (segment *GeoLocation) Run(wg *sync.WaitGroup) {
 	}
 
 	for msg := range segment.In {
-		var raddress net.IP
-		switch {
-		case msg.RemoteAddr == 1: // 1 indicates SrcAddr is the RemoteAddr
-			raddress = msg.SrcAddr
-		case msg.RemoteAddr == 2: // 2 indicates DstAddr is the RemoteAddr
-			raddress = msg.DstAddr
-		default:
-			if !segment.DropUnmatched {
-				segment.Out <- msg
+		if !segment.MatchBoth {
+			var raddress net.IP
+			switch {
+			case msg.RemoteAddr == 1: // 1 indicates SrcAddr is the RemoteAddr
+				raddress = msg.SrcAddr
+			case msg.RemoteAddr == 2: // 2 indicates DstAddr is the RemoteAddr
+				raddress = msg.DstAddr
+			default:
+				if !segment.DropUnmatched {
+					segment.Out <- msg
+				}
+				continue
 			}
-			continue
-		}
 
-		err := segment.dbHandle.Lookup(raddress, &dbrecord)
-		if err == nil {
-			msg.RemoteCountry = dbrecord.Country.ISOCode
+			err := segment.dbHandle.Lookup(raddress, &dbrecord)
+			if err == nil {
+				msg.RemoteCountry = dbrecord.Country.ISOCode
+			} else {
+				log.Printf("[error] GeoLocation: Lookup of remote address failed: %v", err)
+			}
 		} else {
-			log.Printf("[error] GeoLocation: Lookup of remote address failed: %v", err)
+			err := segment.dbHandle.Lookup(msg.SrcAddr, &dbrecord)
+			if err == nil {
+				msg.SrcCountry = dbrecord.Country.ISOCode
+			} else {
+				log.Printf("[error] GeoLocation: Lookup of source address failed: %v", err)
+			}
+			err = segment.dbHandle.Lookup(msg.DstAddr, &dbrecord)
+			if err == nil {
+				msg.DstCountry = dbrecord.Country.ISOCode
+			} else {
+				log.Printf("[error] GeoLocation: Lookup of destination address failed: %v", err)
+			}
 		}
 		segment.Out <- msg
 	}

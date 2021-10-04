@@ -3,6 +3,7 @@ package noop
 import (
 	"log"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -27,4 +28,22 @@ func TestSegment_NoOp_passthrough(t *testing.T) {
 	if result.Type != 3 {
 		t.Error("Segment NoOp is not working.")
 	}
+}
+
+// NoOp Segment benchmark passthrough
+func BenchmarkNoOp(b *testing.B) {
+	segment := NoOp{}
+
+	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	segment.Rewire(in, out)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go segment.Run(wg)
+
+	for n := 0; n < b.N; n++ {
+		in <- &flow.FlowMessage{}
+		_ = <-out
+	}
+	close(in)
 }

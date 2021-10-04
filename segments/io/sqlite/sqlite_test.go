@@ -3,6 +3,7 @@ package sqlite
 import (
 	"log"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -27,4 +28,22 @@ func TestSegment_Sqlite_passthrough(t *testing.T) {
 	if result == nil {
 		t.Error("Segment Sqlite is not passing through flows.")
 	}
+}
+
+// NoOp Segment benchmark passthrough
+func BenchmarkSqlite(b *testing.B) {
+	segment := Sqlite{FileName: "bench.sqlite"}
+
+	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	segment.Rewire(in, out)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go segment.Run(wg)
+
+	for n := 0; n < b.N; n++ {
+		in <- &flow.FlowMessage{Proto: 45}
+		_ = <-out
+	}
+	close(in)
 }

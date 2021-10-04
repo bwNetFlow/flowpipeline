@@ -3,6 +3,7 @@ package stdout
 import (
 	"log"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -27,4 +28,23 @@ func TestSegment_StdOut_passthrough(t *testing.T) {
 	if result == nil {
 		t.Error("Segment StdOut is not passing through flows.")
 	}
+}
+
+// StdOut Segment benchmark passthrough
+func BenchmarkStdOut(b *testing.B) {
+	segment := StdOut{}
+	os.Stdout, _ = os.Open(os.DevNull)
+
+	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	segment.Rewire(in, out)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go segment.Run(wg)
+
+	for n := 0; n < b.N; n++ {
+		in <- &flow.FlowMessage{}
+		_ = <-out
+	}
+	close(in)
 }

@@ -8,7 +8,7 @@ require (
 	github.com/bwNetFlow/flowfilter v0.0.0-20210817095615-3e1c3a6c906c
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04
 	github.com/bwNetFlow/kafkaconnector v0.0.0-20210817091537-cdd6f54695a0
-	github.com/bwNetFlow/protobuf/go v0.0.0-20211001143014-9b07683b408d
+	github.com/bwNetFlow/protobuf/go v0.0.0-20211004083441-61e193b4b342
 	github.com/dustin/go-humanize v1.0.0
 	github.com/hashicorp/logutils v1.0.0
 	github.com/mattn/go-sqlite3 v1.14.8
@@ -51,5 +51,9 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/net v0.0.0-20210929193557-e81a3d93ecf6 // indirect
-	golang.org/x/sys v0.0.0-20211001092434-39dca1131b70 // indirect
+	golang.org/x/sys v0.0.0-20211003122950-b1ebd4e1001c // indirect
+	gopkg.in/jcmturner/aescts.v1 v1.0.1 // indirect
+	gopkg.in/jcmturner/dnsutils.v1 v1.0.1 // indirect
+	gopkg.in/jcmturner/gokrb5.v7 v7.5.0 // indirect
+	gopkg.in/jcmturner/rpc.v1 v1.1.0 // indirect
 )

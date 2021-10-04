@@ -52,3 +52,11 @@ func TestSegment_GeoLocation_remoteAddrIsDst(t *testing.T) {
 		t.Error("Segment GeoLocation is not adding RemoteCountry when the remote address is the destination address.")
 	}
 }
+
+func TestSegment_GeoLocation_both(t *testing.T) {
+	result := segments.TestSegment("geolocation", map[string]string{"filename": "../../../examples/enricher/GeoLite2-Country-Test.mmdb", "matchboth": "1"},
+		&flow.FlowMessage{DstAddr: []byte{2, 125, 160, 218}})
+	if result == nil || result.DstCountry != "GB" {
+		t.Error("Segment GeoLocation is not adding DstCountry correctly.")
+	}
+}

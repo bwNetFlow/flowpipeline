@@ -52,7 +52,7 @@ func New(segmentList ...segments.Segment) *Pipeline {
 	wg := sync.WaitGroup{}
 	for i, segment := range segmentList {
 		channels[i+1] = make(chan *flow.FlowMessage)
-		segment.Rewire(channels[i], channels[i+1])
+		segment.Rewire(channels, uint(i), uint(i+1))
 		wg.Add(1)
 		go segment.Run(&wg)
 	}

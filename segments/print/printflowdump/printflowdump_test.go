@@ -1,6 +1,7 @@
 package printflowdump
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
 	"sync"
@@ -32,8 +33,10 @@ func TestSegment_PrintFlowdump_passthrough(t *testing.T) {
 
 // PrintFlowdump Segment benchmark passthrough
 func BenchmarkPrintFlowdump(b *testing.B) {
-	segment := PrintFlowdump{}
+	log.SetOutput(ioutil.Discard)
 	os.Stdout, _ = os.Open(os.DevNull)
+
+	segment := PrintFlowdump{}
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
 	segment.Rewire(in, out)

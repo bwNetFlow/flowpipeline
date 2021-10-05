@@ -1,6 +1,7 @@
 package noop
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
 	"sync"
@@ -32,6 +33,9 @@ func TestSegment_NoOp_passthrough(t *testing.T) {
 
 // NoOp Segment benchmark passthrough
 func BenchmarkNoOp(b *testing.B) {
+	log.SetOutput(ioutil.Discard)
+	os.Stdout, _ = os.Open(os.DevNull)
+
 	segment := NoOp{}
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)

@@ -1,8 +1,11 @@
 package flowfilter
 
 import (
+	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -43,4 +46,25 @@ func TestSegment_FlowFilter_syntax(t *testing.T) {
 	if result != nil {
 		t.Error("Segment FlowFilter did something with a syntax error present.")
 	}
+}
+
+// FlowFilter Segment benchmark passthrough
+func BenchmarkFlowFilter(b *testing.B) {
+	log.SetOutput(ioutil.Discard)
+	os.Stdout, _ = os.Open(os.DevNull)
+
+	segment := FlowFilter{}.New(map[string]string{"filter": "port <50"})
+
+	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	segment.Rewire(in, out)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go segment.Run(wg)
+
+	for n := 0; n < b.N; n++ {
+		in <- &flow.FlowMessage{SrcPort: uint32(rand.Intn(100))}
+		_ = <-out
+	}
+	close(in)
 }

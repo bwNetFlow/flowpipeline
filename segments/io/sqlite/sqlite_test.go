@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
 	"sync"
@@ -32,6 +33,9 @@ func TestSegment_Sqlite_passthrough(t *testing.T) {
 
 // NoOp Segment benchmark passthrough
 func BenchmarkSqlite(b *testing.B) {
+	log.SetOutput(ioutil.Discard)
+	os.Stdout, _ = os.Open(os.DevNull)
+
 	segment := Sqlite{FileName: "bench.sqlite"}
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)

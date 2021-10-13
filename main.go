@@ -21,6 +21,7 @@ import (
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/filter"
 
+	_ "github.com/bwNetFlow/flowpipeline/segments/io/bpf"
 	_ "github.com/bwNetFlow/flowpipeline/segments/io/goflow"
 	_ "github.com/bwNetFlow/flowpipeline/segments/io/kafkaconsumer"
 	_ "github.com/bwNetFlow/flowpipeline/segments/io/kafkaproducer"

@@ -1,4 +1,4 @@
-FROM golang:latest AS builder
+FROM golang:1.17 AS builder
 RUN apt-get update
 
 # CGO deps

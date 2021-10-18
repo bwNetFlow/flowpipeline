@@ -6,7 +6,6 @@ import (
 	"log"
 	"sync"
 
-	"github.com/bwNetFlow/consumer_prometheus/exporter"
 	"github.com/bwNetFlow/flowpipeline/segments"
 )
 
@@ -34,7 +33,7 @@ func (segment *Prometheus) Run(wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 
-	var promExporter = exporter.Exporter{}
+	var promExporter = Exporter{}
 	promExporter.Initialize()
 	promExporter.ServeEndpoints(segment.Endpoint)
 

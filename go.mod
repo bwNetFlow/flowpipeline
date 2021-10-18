@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/alouca/gosnmp v0.0.0-20170620005048-04d83944c9ab
-	github.com/bwNetFlow/bpf_flowexport v0.0.0-20211013140728-cfd474c213b2
+	github.com/bwNetFlow/bpf_flowexport v0.0.0-20211018125328-20169ef0d217
 	github.com/bwNetFlow/consumer_prometheus v0.0.0-20210316091512-7f2ac713da39
 	github.com/bwNetFlow/flowfilter v0.0.0-20210817095615-3e1c3a6c906c
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04
@@ -27,6 +27,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bwNetFlow/protobuf_helpers v0.0.0-20201023100003-d8f865edf256 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cilium/ebpf v0.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/deathowl/go-metrics-prometheus v0.0.0-20200518174047-74482eab5bfb // indirect
 	github.com/eapache/go-resiliency v1.2.0 // indirect

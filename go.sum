@@ -76,6 +76,14 @@ github.com/bwNetFlow/bpf_flowexport v0.0.0-20211013112855-8b6ee4ac614d h1:nBe8iS
 github.com/bwNetFlow/bpf_flowexport v0.0.0-20211013112855-8b6ee4ac614d/go.mod h1:xyzAsEZw1QL2e9Y6LWvujQ6YDV+Qxr1/rgZaI8T9ffk=
 github.com/bwNetFlow/bpf_flowexport v0.0.0-20211013140728-cfd474c213b2 h1:cqacRXKd7NfnoBHsNXdZP/nypkPrTOkLDxttWYFMoGY=
 github.com/bwNetFlow/bpf_flowexport v0.0.0-20211013140728-cfd474c213b2/go.mod h1:xyzAsEZw1QL2e9Y6LWvujQ6YDV+Qxr1/rgZaI8T9ffk=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20211018123248-2e57bd66f725 h1:odRzmHC9nt9UMRqhmaVsdXhd0APKNSbNEtuGEIW3xMk=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20211018123248-2e57bd66f725/go.mod h1:YlcCUIDUdFJeOj2Rzj9O02bmMlmgi/SK2TSAvQl1TNg=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20211018124130-561d057402a1 h1:fhuLScOP11II3Tz5f9wO5YRNbYBhZcfsEo0kR+AxeVc=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20211018124130-561d057402a1/go.mod h1:YlcCUIDUdFJeOj2Rzj9O02bmMlmgi/SK2TSAvQl1TNg=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20211018124852-4f86df1ee2ac h1:IHVnMaVH67WBSG9txpBwPuRGa9mv9yEzV/s6D5lBl8M=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20211018124852-4f86df1ee2ac/go.mod h1:YlcCUIDUdFJeOj2Rzj9O02bmMlmgi/SK2TSAvQl1TNg=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20211018125328-20169ef0d217 h1:s7pfnA7hohRXW9z/zMjD6QJTmGbkGHyyF8Cd2CtvDjU=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20211018125328-20169ef0d217/go.mod h1:YlcCUIDUdFJeOj2Rzj9O02bmMlmgi/SK2TSAvQl1TNg=
 github.com/bwNetFlow/bpfdump v0.0.0-20211012144215-af7317fdbe20/go.mod h1:uiKL5SAoNwzhIopivgWmsVtWiSZ6ZzTvKTmXt1tETxM=
 github.com/bwNetFlow/consumer_prometheus v0.0.0-20210316091512-7f2ac713da39 h1:yd9FOzt2PuBlOuTKa0hz4GgdAkGGOopggRrOXQi21yE=
 github.com/bwNetFlow/consumer_prometheus v0.0.0-20210316091512-7f2ac713da39/go.mod h1:qZQgQ7tw5hd01MuL/ZAEZx2kY7uc1bSQ4PCMydiQ2rg=
@@ -102,6 +110,8 @@ github.com/cespare/xxhash/v2 v2.1.2/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XL
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
+github.com/cilium/ebpf v0.7.0 h1:1k/q3ATgxSXRdrmPfH8d7YK0GfqVsEKZAX9dQZvs56k=
+github.com/cilium/ebpf v0.7.0/go.mod h1:/oI2+1shJiTGAMgl6/RgJr36Eo1jzrRcAWbcXO2usCA=
 github.com/clbanning/x2j v0.0.0-20191024224557-825249438eec/go.mod h1:jMjuTZXRI4dUb/I5gc9Hdhagfvm9+RyrPryS/auMzxE=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
@@ -629,6 +639,7 @@ golang.org/x/sys v0.0.0-20210309074719-68d13333faf2/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20210423082822-04245dca01da/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.0.0-20210906170528-6f6e22806c34/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20211003122950-b1ebd4e1001c h1:EyJTLQbOxvk8V6oDdD8ILR1BOs3nEJXThD6aqsiPNkM=
 golang.org/x/sys v0.0.0-20211003122950-b1ebd4e1001c/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=

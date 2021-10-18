@@ -6,15 +6,15 @@ import (
 	"sync"
 	"time"
 
-	bpfdump "github.com/bwNetFlow/bpf_flowexport/bpf"
 	"github.com/bwNetFlow/bpf_flowexport/flowexport"
+	"github.com/bwNetFlow/bpf_flowexport/packetdump"
 	"github.com/bwNetFlow/flowpipeline/segments"
 )
 
 type Bpf struct {
 	segments.BaseSegment
 
-	dumper   *bpfdump.PacketDumper
+	dumper   *packetdump.PacketDumper
 	exporter *flowexport.FlowExporter
 
 	Device          string // required, the name of the device to capture, e.g. "eth0"
@@ -33,7 +33,7 @@ func (segment Bpf) New(config map[string]string) segments.Segment {
 	}
 
 	// setup bpf dumping
-	newsegment.dumper = &bpfdump.PacketDumper{}
+	newsegment.dumper = &packetdump.PacketDumper{}
 	err := newsegment.dumper.Setup(newsegment.Device)
 	if err != nil {
 		log.Printf("[error] Bpf: error setting up BPF dumping: %s", err)

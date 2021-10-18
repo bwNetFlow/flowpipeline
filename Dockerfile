@@ -1,25 +1,12 @@
 FROM golang:1.17 AS builder
 RUN apt-get update
 
-# CGO deps
-RUN apt-get install -y --no-install-recommends \
-    g++ \
-    gcc \
-    libc6-dev \
-    make \
-    pkg-config
-
-# our deps, bcc in debian
-RUN apt-get install -y --no-install-recommends \
-    libbpfcc \
-    libbpfcc-dev
-
 # add local repo into the builder
 ADD . /opt/build
 WORKDIR /opt/build
 
 # build the binary there
-RUN CGO_ENABLED=1 go build -tags container -o fpl -v
+RUN CGO_ENABLED=0 go build -tags container -o fpl -v
 
 # begin new container
 FROM alpine

@@ -94,7 +94,11 @@ func (segment *Goflow) Run(wg *sync.WaitGroup) {
 		select {
 		case msg, ok := <-segment.goflow_in:
 			if !ok {
-				return
+				// do not return here, as this might leave the
+				// segment.In channel blocking in our
+				// predecessor segment
+				segment.goflow_in = nil // make unavailable for select
+				// TODO: think about restarting goflow?
 			}
 			segment.Out <- msg
 		case msg, ok := <-segment.In:

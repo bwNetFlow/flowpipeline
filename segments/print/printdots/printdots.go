@@ -23,7 +23,7 @@ func (segment PrintDots) New(config map[string]string) segments.Segment {
 		if config["flowsperdot"] != "" {
 			log.Println("[error] PrintDots: Could not parse 'flowsperdot' parameter, using default 5000.")
 		} else {
-			log.Println("[info] PrintDots: 'flowsperdot' set to default '5000'.")
+			log.Println("[info] PrintDots: 'flowsperdot' set to default 5000.")
 		}
 	}
 	return &PrintDots{

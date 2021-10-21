@@ -53,6 +53,11 @@ func (segment Skip) New(config map[string]string) segments.Segment {
 		log.Printf("[error] Skip: Syntax error in condition expression: %v", err)
 		return nil
 	}
+	filter := &visitors.Filter{}
+	if _, err := filter.CheckFlow(newSegment.expression, &flow.FlowMessage{}); err != nil {
+		log.Printf("[error] Skip: Semantic error in filter expression: %v", err)
+		return nil
+	}
 	return newSegment
 }
 
@@ -64,11 +69,7 @@ func (segment *Skip) Run(wg *sync.WaitGroup) {
 
 	filter := &visitors.Filter{}
 	for msg := range segment.In {
-		if match, err := filter.CheckFlow(segment.expression, msg); match != segment.Invert || err != nil {
-			if err != nil {
-				log.Printf("[error] FlowFilter: Semantic error in filter expression: %v", err)
-				return // TODO: this will block the pipeline... find a way to tear down nicely
-			}
+		if match, _ := filter.CheckFlow(segment.expression, msg); match != segment.Invert {
 			segment.AltOut <- msg
 		} else {
 			segment.Out <- msg

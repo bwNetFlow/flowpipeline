@@ -64,10 +64,10 @@ func (segment *Skip) Run(wg *sync.WaitGroup) {
 
 	filter := &visitors.Filter{}
 	for msg := range segment.In {
-		if match, err := filter.CheckFlow(segment.expression, msg); match != segment.Invert {
+		if match, err := filter.CheckFlow(segment.expression, msg); match != segment.Invert || err != nil {
 			if err != nil {
 				log.Printf("[error] FlowFilter: Semantic error in filter expression: %v", err)
-				continue // TODO: introduce option on-error action, current state equals 'drop'
+				return // TODO: this will block the pipeline... find a way to tear down nicely
 			}
 			segment.AltOut <- msg
 		} else {

@@ -47,11 +47,16 @@ func (pipeline Pipeline) Close() {
 // therein. Initialization includes creating any intermediate channels and
 // wiring up the segments in the segmentList with them.
 func New(segmentList ...segments.Segment) *Pipeline {
+	wg := sync.WaitGroup{}
+	// the following loops need to be split so that Rewire can work with
+	// non-nil channels from further ahead in the pipeline... important for
+	// skip segments
 	channels := make([]chan *flow.FlowMessage, len(segmentList)+1)
 	channels[0] = make(chan *flow.FlowMessage)
-	wg := sync.WaitGroup{}
-	for i, segment := range segmentList {
+	for i, _ := range segmentList {
 		channels[i+1] = make(chan *flow.FlowMessage)
+	}
+	for i, segment := range segmentList {
 		segment.Rewire(channels, uint(i), uint(i+1))
 		wg.Add(1)
 		go segment.Run(&wg)

@@ -12,24 +12,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var (
-	// Meta Monitoring Data, to be added to default /metrics
-
-	// Flow Data, to be exported on /flowdata
-	labels = []string{
-		// "src_port",
-		// "dst_port",
-		"router",
-		"ipversion",
-		"application",
-		"protoname",
-		"direction",
-		"peer",
-		"remoteas",
-		"remotecountry",
-	}
-)
-
 // Exporter provides export features to Prometheus
 type Exporter struct {
 	FlowReg *prometheus.Registry
@@ -37,10 +19,14 @@ type Exporter struct {
 	kafkaMessageCount prometheus.Counter
 	kafkaOffsets      *prometheus.CounterVec
 	flowBits          *prometheus.CounterVec
+
+	labels []string
 }
 
 // Initialize Prometheus Exporter
-func (e *Exporter) Initialize() {
+func (e *Exporter) Initialize(labels []string) {
+	e.labels = labels
+
 	// The Kafka metrics are added to the global registry.
 	e.kafkaMessageCount = prometheus.NewCounter(
 		prometheus.CounterOpts{
@@ -66,15 +52,25 @@ func (e *Exporter) Initialize() {
 
 }
 
-// listen on addr with path /metrics and /flowdata
-func (e *Exporter) ServeEndpoints(addr string) {
-	http.Handle("/metrics", promhttp.Handler())
-	http.Handle("/flowdata", promhttp.HandlerFor(e.FlowReg, promhttp.HandlerOpts{}))
+// listen on given endpoint addr with Handler for metricPath and flowdataPath
+func (e *Exporter) ServeEndpoints(segment *Prometheus) {
+	http.Handle(segment.MetricsPath, promhttp.Handler())
+	http.Handle(segment.FlowdataPath, promhttp.HandlerFor(e.FlowReg, promhttp.HandlerOpts{}))
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`<html>
+			<head><title>Flow Exporter</title></head>
+			<body>
+			<h1>Flow Exporter</h1>
+			<p><a href="` + segment.MetricsPath + `">Metrics</p>
+			<p><a href="` + segment.FlowdataPath + `">Flow Data</p>
+			</body>
+		</html>`))
+	})
 
 	go func() {
-		http.ListenAndServe(addr, nil)
+		http.ListenAndServe(segment.Endpoint, nil)
 	}()
-	log.Println("Enabled Prometheus /metrics and /flowdata endpoints.")
+	log.Printf("Enabled Prometheus %s and %s endpoints.", segment.MetricsPath, segment.FlowdataPath)
 }
 
 func (e *Exporter) Increment(flow *flow.FlowMessage) {
@@ -97,21 +93,40 @@ func (e *Exporter) Increment(flow *flow.FlowMessage) {
 		remoteAS = nameThatAS(flow.GetDstAS())
 	}
 
-	labels := prometheus.Labels{
-		// "src_port":      fmt.Sprint(srcPort),
-		// "dst_port":      fmt.Sprint(dstPort),
-		"router":        net.IP(flow.GetSamplerAddress()).String(),
-		"ipversion":     hflow.IPVersionString(),
-		"application":   application,
-		"protoname":     fmt.Sprint(flow.GetProtoName()),
-		"direction":     hflow.FlowDirectionString(),
-		"peer":          peer,
-		"remoteas":      remoteAS,
-		"remotecountry": flow.GetRemoteCountry(),
+	labels := prometheus.Labels{}
+	for _, l := range e.labels {
+		switch l {
+		case "router":
+			labels[l] = net.IP(flow.GetSamplerAddress()).String()
+		case "ipversion":
+			labels[l] = hflow.IPVersionString()
+		case "application":
+			labels[l] = application
+		case "protoname":
+			labels[l] = fmt.Sprint(flow.GetProtoName())
+		case "direction":
+			labels[l] = hflow.FlowDirectionString()
+		case "peer":
+			labels[l] = peer
+		case "remoteas":
+			labels[l] = remoteAS
+		case "remotecountry":
+			labels[l] = flow.GetRemoteCountry()
+		case "src_port":
+			labels[l] = fmt.Sprint(flow.SrcPort)
+		case "dst_port":
+			labels[l] = fmt.Sprint(flow.DstPort)
+		case "src_addr":
+			labels[l] = fmt.Sprint(flow.SrcAddr)
+		case "dst_addr":
+			labels[l] = fmt.Sprint(flow.DstAddr)
+		default:
+			labels[l] = ""
+		}
 	}
 
 	e.kafkaMessageCount.Inc()
-	// flowNumber.With(labels).Add(float64(flow.GetSamplingRate()))
+	// e.flowNumber.With(labels).Inc()
 	// flowPackets.With(labels).Add(float64(flow.GetPackets()))
 	e.flowBits.With(labels).Add(float64(flow.GetBytes()) * 8)
 }

@@ -60,6 +60,10 @@ func (segment *Influx) Run(wg *sync.WaitGroup) {
 	for msg := range segment.In {
 		segment.Out <- msg
 		datapoint := connector.CreatePoint(msg)
+		if datapoint == nil {
+			// just ignore raised warnings if flow cannot be converted or unmarshalled
+			continue
+		}
 		// async write
 		writeAPI.WritePoint(datapoint)
 	}

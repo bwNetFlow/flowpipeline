@@ -2,15 +2,15 @@ package influx
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
-	"net"
 	"time"
 
 	flow "github.com/bwNetFlow/protobuf/go"
-	flow_helper "github.com/bwNetFlow/protobuf_helpers/go"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // Connector provides export features to Influx
@@ -31,8 +31,6 @@ func (c *Connector) Initialize() {
 		c.Token,
 		influxdb2.DefaultOptions().SetBatchSize(uint(c.Batchsize)))
 
-	defer c.influxClient.Close() // TODO: needed? <--- das war blöd
-
 	c.checkBucket()
 }
 
@@ -48,25 +46,34 @@ func (c *Connector) checkBucket() {
 }
 
 func (c *Connector) CreatePoint(flow *flow.FlowMessage) *write.Point {
+	// write tags for datapoint
+	// TODO: add more tags e.g. CID
+	tags := map[string]string{
+		"origin": "belwue",
+		"cid":    fmt.Sprint(flow.Cid),
+	}
 
-	hflow := flow_helper.NewFlowHelper(flow)
-	peer := hflow.Peer()
+	// marshall protobuf to json
+	data, err := protojson.Marshal(flow)
+	if err != nil {
+		log.Printf("[warning] influx: Skipping a flow, failed to recode protobuf as JSON: %v", err)
+		return nil
+	}
+
+	// convert json []byte to insert in influx
+	fields := make(map[string]interface{})
+	err = json.Unmarshal([]byte(data), &fields)
+	if err != nil {
+		log.Printf("[warning] influx: Skipping a flow, failed to unmarshall JSON: %v", err)
+		return nil
+	}
+
 	// create point
 	p := influxdb2.NewPoint(
 		"flowdata",
-		map[string]string{
-			"id": "belwue",
-		},
-		map[string]interface{}{
-			"router":    net.IP(flow.GetSamplerAddress()).String(),
-			"ipversion": hflow.IPVersionString(),
-			// "application":   application,
-			"protoname": fmt.Sprint(flow.GetProtoName()),
-			"direction": hflow.FlowDirectionString(),
-			"peer":      peer,
-			// "remoteas":      remoteAS,
-			"remotecountry": flow.GetRemoteCountry(),
-		}, time.Now())
+		tags,
+		fields,
+		time.Now())
 	return p
 
 }

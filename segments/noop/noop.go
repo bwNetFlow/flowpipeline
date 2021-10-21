@@ -23,8 +23,13 @@ func (segment NoOp) New(config map[string]string) segments.Segment {
 }
 
 // The main goroutine of any Segment. Any Run method must:
-// 1. close(segment.Out) when done, usually when segment.In is closed by the previous segment or the Pipeline itself.
+// 1. close(segment.Out) when the In channel is closed by the previous segment or the Pipeline itself
 // 2. call wg.Done() before exiting
+// 3. if exiting for any other reason, use os.Exit or just continue to pass from In to Out
+//
+// Usually, when using a range over In in combination with below defer, nothing
+// will go wrong. However, some segments have a legitimate use case for using
+// `for {}`, in which case care must be taken to keep draining In.
 func (segment *NoOp) Run(wg *sync.WaitGroup) {
 	defer func() {
 		// This defer clause is important and needs to be present in

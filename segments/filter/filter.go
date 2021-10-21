@@ -9,6 +9,8 @@ import (
 	"github.com/bwNetFlow/flowfilter/parser"
 	"github.com/bwNetFlow/flowfilter/visitors"
 	"github.com/bwNetFlow/flowpipeline/segments"
+
+	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 type FlowFilter struct {

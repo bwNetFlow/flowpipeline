@@ -9,6 +9,8 @@ import (
 	"github.com/bwNetFlow/flowfilter/parser"
 	"github.com/bwNetFlow/flowfilter/visitors"
 	"github.com/bwNetFlow/flowpipeline/segments"
+
+	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 type FlowFilter struct {
@@ -30,6 +32,11 @@ func (segment FlowFilter) New(config map[string]string) segments.Segment {
 		log.Printf("[error] FlowFilter: Syntax error in filter expression: %v", err)
 		return nil
 	}
+	filter := &visitors.Filter{}
+	if _, err := filter.CheckFlow(newSegment.expression, &flow.FlowMessage{}); err != nil {
+		log.Printf("[error] FlowFilter: Semantic error in filter expression: %v", err)
+		return nil
+	}
 	return newSegment
 }
 
@@ -43,11 +50,7 @@ func (segment *FlowFilter) Run(wg *sync.WaitGroup) {
 
 	filter := &visitors.Filter{}
 	for msg := range segment.In {
-		if match, err := filter.CheckFlow(segment.expression, msg); match {
-			if err != nil {
-				log.Printf("[error] FlowFilter: Semantic error in filter expression: %v", err)
-				continue // TODO: introduce option on-error action, current state equals 'drop'
-			}
+		if match, _ := filter.CheckFlow(segment.expression, msg); match {
 			segment.Out <- msg
 		}
 	}

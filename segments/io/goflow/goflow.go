@@ -34,7 +34,6 @@ func (segment Goflow) New(config map[string]string) segments.Segment {
 	var listen = "sflow://:6343,netflow://:2055"
 	if config["listen"] != "" {
 		listen = config["listen"]
-		log.Printf("[info] Goflow: starting listeners for %s", listen)
 	}
 
 	var listenAddressesSlice []url.URL
@@ -61,6 +60,7 @@ func (segment Goflow) New(config map[string]string) segments.Segment {
 
 		listenAddressesSlice = append(listenAddressesSlice, *listenAddrUrl)
 	}
+	log.Printf("[info] Goflow: Configured for for %s", listen)
 
 	var workers uint64 = 1
 	if config["workers"] != "" {

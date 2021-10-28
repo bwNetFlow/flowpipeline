@@ -10,15 +10,15 @@ import (
 	flow "github.com/bwNetFlow/protobuf/go"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
-	"google.golang.org/protobuf/encoding/protojson"
 )
 
 // Connector provides export features to Influx
 type Connector struct {
-	URL          string
+	Address      string
 	Org          string
 	Bucket       string
 	Token        string
+	Tag          string
 	ExportFreq   int
 	Batchsize    int
 	influxClient influxdb2.Client
@@ -27,7 +27,7 @@ type Connector struct {
 // Initialize a connection to Influxdb
 func (c *Connector) Initialize() {
 	c.influxClient = influxdb2.NewClientWithOptions(
-		c.URL,
+		c.Address,
 		c.Token,
 		influxdb2.DefaultOptions().SetBatchSize(uint(c.Batchsize)))
 
@@ -38,8 +38,8 @@ func (c *Connector) Initialize() {
 func (c *Connector) checkBucket() {
 	bucket, err := c.influxClient.BucketsAPI().FindBucketByName(context.Background(), c.Bucket)
 	if err != nil {
-		// TODO: init bucket if not found? Maybe create one?
-		log.Printf("[warning] influx: Given bucket %s not found", bucket.Name)
+		// The bucket should be created by the Influxdb admin.
+		log.Printf("[warning] influx: Given bucket %s not found.", c.Bucket)
 	} else {
 		log.Printf("[info] influx: Bucket found with result: %s", bucket.Name)
 	}
@@ -47,14 +47,14 @@ func (c *Connector) checkBucket() {
 
 func (c *Connector) CreatePoint(flow *flow.FlowMessage) *write.Point {
 	// write tags for datapoint
-	// TODO: add more tags e.g. CID
+	// TODO: make tags configurable
 	tags := map[string]string{
-		"origin": "belwue",
+		"origin": c.Tag,
 		"cid":    fmt.Sprint(flow.Cid),
 	}
 
 	// marshall protobuf to json
-	data, err := protojson.Marshal(flow)
+	data, err := json.Marshal(flow)
 	if err != nil {
 		log.Printf("[warning] influx: Skipping a flow, failed to recode protobuf as JSON: %v", err)
 		return nil

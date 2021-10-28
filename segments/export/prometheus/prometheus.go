@@ -59,7 +59,7 @@ func (segment Prometheus) New(config map[string]string) segments.Segment {
 		"remotecountry",
 	}
 	if config["labels"] == "" {
-		log.Println("[info] prometheus: Missing configuration parameter 'labels'. Using default labels to export")
+		log.Println("[info] prometheus: Configuration parameter 'labels' not set. Using default labels to export")
 	} else {
 		// TODO: maybe validate for supported labels, anyway they will be empty
 		labels = []string{}

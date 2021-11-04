@@ -19,4 +19,4 @@
     org: "my-org"
     bucket: "my-bucket"
     token: "my-secure-token"
-    tag: "my-location"
+    tags: "Cid,ProtoName,RemoteCountry,SamplerAddress"

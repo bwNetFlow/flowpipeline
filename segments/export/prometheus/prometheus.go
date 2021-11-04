@@ -1,4 +1,4 @@
-// Collects and serves statistics about flows. Reuses the exporter package from
+// Collects and serves statistics about flows.
 // Configuration options for this segments are:
 // The endoint field can be configured:
 // <host>:8080/flowdata

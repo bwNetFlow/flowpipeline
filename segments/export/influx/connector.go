@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"time"
 
 	flow "github.com/bwNetFlow/protobuf/go"
@@ -14,13 +15,14 @@ import (
 
 // Connector provides export features to Influx
 type Connector struct {
-	Address      string
-	Org          string
-	Bucket       string
-	Token        string
-	Tag          string
-	ExportFreq   int
-	Batchsize    int
+	Address    string
+	Org        string
+	Bucket     string
+	Token      string
+	ExportFreq int
+	Batchsize  int
+
+	tags         []string
 	influxClient influxdb2.Client
 }
 
@@ -39,18 +41,35 @@ func (c *Connector) checkBucket() {
 	bucket, err := c.influxClient.BucketsAPI().FindBucketByName(context.Background(), c.Bucket)
 	if err != nil {
 		// The bucket should be created by the Influxdb admin.
-		log.Printf("[warning] influx: Given bucket %s not found.", c.Bucket)
+		log.Printf("[warning] Influx: Given bucket %s not found.", c.Bucket)
 	} else {
-		log.Printf("[info] influx: Bucket found with result: %s", bucket.Name)
+		log.Printf("[info] Influx: Bucket found with result: %s", bucket.Name)
 	}
 }
 
 func (c *Connector) CreatePoint(flow *flow.FlowMessage) *write.Point {
-	// write tags for datapoint
-	// TODO: make tags configurable
-	tags := map[string]string{
-		"origin": c.Tag,
-		"cid":    fmt.Sprint(flow.Cid),
+	// write tags for datapoint and drop them to not insert as fields
+	// TODO: maybe we will add more fields from the Protobuf Definition to be used as Tags
+	tags := map[string]string{}
+	for index, t := range c.tags {
+		switch t {
+		case "Cid":
+			tags[t] = fmt.Sprint(flow.Cid)
+		case "ProtoName":
+			tags[t] = fmt.Sprint(flow.GetProtoName())
+		case "RemoteCountry":
+			tags[t] = flow.GetRemoteCountry()
+		case "SamplerAddress":
+			tags[t] = net.IP(flow.GetSamplerAddress()).String()
+		case "SrcIfDesc":
+			tags[t] = fmt.Sprint(flow.SrcIfDesc)
+		case "DstIfDesc":
+			tags[t] = fmt.Sprint(flow.DstIfDesc)
+		default:
+			log.Printf("[info] Influx: Chosen Tag not supported. ignoring tag %s", t)
+			// delete not supported tags
+			c.tags = append(c.tags[:index], c.tags[index+1:]...)
+		}
 	}
 
 	// marshall protobuf to json
@@ -68,6 +87,11 @@ func (c *Connector) CreatePoint(flow *flow.FlowMessage) *write.Point {
 		return nil
 	}
 
+	//remove used tags from fields
+	for _, tag := range c.tags {
+		delete(fields, tag)
+	}
+
 	// create point
 	p := influxdb2.NewPoint(
 		"flowdata",
@@ -75,5 +99,4 @@ func (c *Connector) CreatePoint(flow *flow.FlowMessage) *write.Point {
 		fields,
 		time.Now())
 	return p
-
 }

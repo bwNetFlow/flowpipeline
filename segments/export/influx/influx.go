@@ -1,9 +1,15 @@
 // Collects and exports all flows to influxdb for long term storage.
+// Tags to configure for Influxdb are from the protobuf definition.
+// Supported Tags are:
+// Cid,ProtoName,RemoteCountry,SamplerAddress,SrcIfDesc,DstIfDesc
+// If no Tags are provided 'ProtoName' will be the onyl Tag ued by default.
 package influx
 
 import (
 	"log"
 	"net/url"
+	"sort"
+	"strings"
 	"sync"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -11,11 +17,11 @@ import (
 
 type Influx struct {
 	segments.BaseSegment
-	Address string // URL for influxdb endpoint
-	Org     string // influx org name
-	Bucket  string // influx bucket
-	Token   string // influx access token
-	Tag     string // optional, tag for Datapoints to insert in influx
+	Address string   // URL for influxdb endpoint
+	Org     string   // influx org name
+	Bucket  string   // influx bucket
+	Token   string   // influx access token
+	Tags    []string // optional, list of Tags to be created. Recommended to keep this to a
 	// 	Batchsize  uint32 // set the batch size for the writer
 	// 	ExportFreq uint32 // set the frequency for the writer
 }
@@ -56,20 +62,28 @@ func (segment Influx) New(config map[string]string) segments.Segment {
 		token = config["token"]
 	}
 
-	var tag = "my-custom-tag"
-	if config["tag"] == "" {
-		log.Println("[info] Influx: Missing configuration parameter 'tag'. Using default tag 'origin' with value 'my-custom-tag'")
-	} else {
-		tag = config["tag"]
-		log.Printf("[info] Influx: Using Tag 'origin' with given vaule '%s'", tag)
+	// set default Tags if not configured
+	var tags = []string{
+		"ProtoName",
 	}
+	if config["tags"] == "" {
+		log.Println("[info] Influx: Configuration parameter 'tags' not set. Using default tag 'ProtoName' to export")
+	} else {
+		tags = []string{}
+		for _, tag := range strings.Split(config["tags"], ",") {
+			log.Printf("[info] Influx: custom tag found: %s", tag)
+			tags = append(tags, tag)
+		}
+	}
+	// sort tags in alphabetical order
+	sort.Strings(tags)
 
 	return &Influx{
 		Address: address,
 		Org:     org,
 		Bucket:  bucket,
 		Token:   token,
-		Tag:     tag,
+		Tags:    tags,
 	}
 }
 
@@ -80,8 +94,8 @@ func (segment *Influx) Run(wg *sync.WaitGroup) {
 		Bucket:    segment.Bucket,
 		Org:       segment.Org,
 		Token:     segment.Token,
-		Tag:       segment.Tag,
 		Batchsize: 5000,
+		tags:      segment.Tags,
 	}
 
 	// initialize Influx endpoint

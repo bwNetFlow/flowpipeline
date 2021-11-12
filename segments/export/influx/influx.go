@@ -2,7 +2,7 @@
 // Tags to configure for Influxdb are from the protobuf definition.
 // Supported Tags are:
 // Cid,ProtoName,RemoteCountry,SamplerAddress,SrcIfDesc,DstIfDesc
-// If no Tags are provided 'ProtoName' will be the onyl Tag ued by default.
+// If no Tags are provided 'ProtoName' will be the only Tag used by default.
 package influx
 
 import (

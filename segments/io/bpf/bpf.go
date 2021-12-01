@@ -33,7 +33,7 @@ func (segment Bpf) New(config map[string]string) segments.Segment {
 	}
 
 	// setup bpf dumping
-	newsegment.dumper = &packetdump.PacketDumper{}
+	newsegment.dumper = &packetdump.PacketDumper{BufSize: (4 * os.Getpagesize())}
 	err := newsegment.dumper.Setup(newsegment.Device)
 	if err != nil {
 		log.Printf("[error] Bpf: error setting up BPF dumping: %s", err)

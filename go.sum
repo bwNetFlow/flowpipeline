@@ -86,6 +86,8 @@ github.com/bwNetFlow/bpf_flowexport v0.0.0-20211018125328-20169ef0d217 h1:s7pfnA
 github.com/bwNetFlow/bpf_flowexport v0.0.0-20211018125328-20169ef0d217/go.mod h1:YlcCUIDUdFJeOj2Rzj9O02bmMlmgi/SK2TSAvQl1TNg=
 github.com/bwNetFlow/bpf_flowexport v0.0.0-20211201110802-e814f6beb5dc h1:dWQx5QFi1WglPVlLwB69cFlOdrcC9DFZWK+tw7lhJYY=
 github.com/bwNetFlow/bpf_flowexport v0.0.0-20211201110802-e814f6beb5dc/go.mod h1:YlcCUIDUdFJeOj2Rzj9O02bmMlmgi/SK2TSAvQl1TNg=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20211201133414-8284a255f582 h1:iDL+bUg3DLBTLXLMjx2pWGOIpvRIeGOhQnkfcIV26DU=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20211201133414-8284a255f582/go.mod h1:YlcCUIDUdFJeOj2Rzj9O02bmMlmgi/SK2TSAvQl1TNg=
 github.com/bwNetFlow/bpfdump v0.0.0-20211012144215-af7317fdbe20/go.mod h1:uiKL5SAoNwzhIopivgWmsVtWiSZ6ZzTvKTmXt1tETxM=
 github.com/bwNetFlow/consumer_prometheus v0.0.0-20210316091512-7f2ac713da39 h1:yd9FOzt2PuBlOuTKa0hz4GgdAkGGOopggRrOXQi21yE=
 github.com/bwNetFlow/consumer_prometheus v0.0.0-20210316091512-7f2ac713da39/go.mod h1:qZQgQ7tw5hd01MuL/ZAEZx2kY7uc1bSQ4PCMydiQ2rg=

@@ -4,15 +4,15 @@ go 1.17
 
 require (
 	github.com/alouca/gosnmp v0.0.0-20170620005048-04d83944c9ab
-	github.com/bwNetFlow/bpf_flowexport v0.0.0-20211018125328-20169ef0d217
+	github.com/bwNetFlow/bpf_flowexport v0.0.0-20211201110802-e814f6beb5dc
 	github.com/bwNetFlow/consumer_prometheus v0.0.0-20210316091512-7f2ac713da39
-	github.com/bwNetFlow/flowfilter v0.0.0-20210817095615-3e1c3a6c906c
+	github.com/bwNetFlow/flowfilter v0.0.0-20211021081612-db6c2ea23131
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04
 	github.com/bwNetFlow/kafkaconnector v0.0.0-20210817091537-cdd6f54695a0
 	github.com/bwNetFlow/protobuf/go v0.0.0-20211004083441-61e193b4b342
 	github.com/dustin/go-humanize v1.0.0
 	github.com/hashicorp/logutils v1.0.0
-	github.com/mattn/go-sqlite3 v1.14.8
+	github.com/mattn/go-sqlite3 v1.14.9
 	github.com/netsampler/goflow2 v1.0.4
 	github.com/oschwald/maxminddb-golang v1.8.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
@@ -48,10 +48,10 @@ require (
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/prometheus/client_golang v1.11.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
-	github.com/prometheus/common v0.31.1 // indirect
+	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
-	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
-	golang.org/x/net v0.0.0-20210929193557-e81a3d93ecf6 // indirect
-	golang.org/x/sys v0.0.0-20211003122950-b1ebd4e1001c // indirect
+	golang.org/x/crypto v0.0.0-20211117183948-ae814b36b871 // indirect
+	golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9 // indirect
+	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881 // indirect
 )

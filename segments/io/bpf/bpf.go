@@ -3,6 +3,7 @@ package bpf
 import (
 	"log"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -20,6 +21,7 @@ type Bpf struct {
 	Device          string // required, the name of the device to capture, e.g. "eth0"
 	ActiveTimeout   string // optional, default is 30m
 	InactiveTimeout string // optional, default is 15s
+	BufferSize      int    // optional, default is 16384 (16kB)
 }
 
 func (segment Bpf) New(config map[string]string) segments.Segment {
@@ -32,8 +34,24 @@ func (segment Bpf) New(config map[string]string) segments.Segment {
 		return nil
 	}
 
+	newsegment.BufferSize = 16384
+	if config["buffersize"] != "" {
+		if parsedBufferSize, err := strconv.ParseInt(config["connlimit"], 10, 32); err == nil {
+			newsegment.BufferSize = int(parsedBufferSize)
+			if newsegment.BufferSize <= 0 {
+				log.Println("[error] Bpf: Buffer size needs to be at least 1 and will be rounded up to the nearest multiple of the current page size.")
+				return nil
+			}
+		} else {
+			log.Println("[error] Bpf: Could not parse 'buffersize' parameter, using default 16384 (16kB).")
+		}
+	} else {
+		log.Println("[info] Bpf: 'buffersize' set to default 16384 (16kB).")
+	}
+
 	// setup bpf dumping
-	newsegment.dumper = &packetdump.PacketDumper{BufSize: (4 * os.Getpagesize())}
+	newsegment.dumper = &packetdump.PacketDumper{BufSize: newsegment.BufferSize}
+
 	err := newsegment.dumper.Setup(newsegment.Device)
 	if err != nil {
 		log.Printf("[error] Bpf: error setting up BPF dumping: %s", err)

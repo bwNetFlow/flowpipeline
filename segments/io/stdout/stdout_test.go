@@ -39,7 +39,7 @@ func BenchmarkStdOut(b *testing.B) {
 	segment := StdOut{}
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
-	segment.Rewire(in, out)
+	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

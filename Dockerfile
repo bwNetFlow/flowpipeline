@@ -1,14 +1,17 @@
 FROM golang:1.17 AS builder
+RUN apt-get update
 
-# Add your files into the container
+# add local repo into the builder
 ADD . /opt/build
 WORKDIR /opt/build
 
-# build the binary
+# build the binary there
 RUN CGO_ENABLED=0 go build -tags container -o fpl -v
+
+# begin new container
 FROM alpine
 WORKDIR /
 
-# COPY binary from previous stage to your desired location
+# copy binary from builder to your desired location
 COPY --from=builder /opt/build/fpl .
 ENTRYPOINT /fpl -c config/config.yml $0

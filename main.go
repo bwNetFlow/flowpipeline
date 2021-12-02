@@ -17,11 +17,14 @@ import (
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/alert/http"
 
+	_ "github.com/bwNetFlow/flowpipeline/segments/controlflow/skip"
+
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/influx"
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/prometheus"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/filter"
 
+	_ "github.com/bwNetFlow/flowpipeline/segments/io/bpf"
 	_ "github.com/bwNetFlow/flowpipeline/segments/io/goflow"
 	_ "github.com/bwNetFlow/flowpipeline/segments/io/kafkaconsumer"
 	_ "github.com/bwNetFlow/flowpipeline/segments/io/kafkaproducer"

@@ -34,7 +34,6 @@ func (segment Goflow) New(config map[string]string) segments.Segment {
 	var listen = "sflow://:6343,netflow://:2055"
 	if config["listen"] != "" {
 		listen = config["listen"]
-		log.Printf("[info] Goflow: starting listeners for %s", listen)
 	}
 
 	var listenAddressesSlice []url.URL
@@ -61,6 +60,7 @@ func (segment Goflow) New(config map[string]string) segments.Segment {
 
 		listenAddressesSlice = append(listenAddressesSlice, *listenAddrUrl)
 	}
+	log.Printf("[info] Goflow: Configured for for %s", listen)
 
 	var workers uint64 = 1
 	if config["workers"] != "" {
@@ -94,7 +94,11 @@ func (segment *Goflow) Run(wg *sync.WaitGroup) {
 		select {
 		case msg, ok := <-segment.goflow_in:
 			if !ok {
-				return
+				// do not return here, as this might leave the
+				// segment.In channel blocking in our
+				// predecessor segment
+				segment.goflow_in = nil // make unavailable for select
+				// TODO: think about restarting goflow?
 			}
 			segment.Out <- msg
 		case msg, ok := <-segment.In:

@@ -45,7 +45,8 @@ func (segment KafkaProducer) New(config map[string]string) segments.Segment {
 		fmsg := reflect.ValueOf(flow.FlowMessage{})
 		field := fmsg.FieldByName(config["topicsuffix"])
 		if !field.IsValid() {
-			log.Println("[error] KafkaProducer: The 'topicsuffix' is not a valid FlowMessage field. Disabling this feature.")
+			log.Println("[error] KafkaProducer: The 'topicsuffix' is not a valid FlowMessage field.")
+			return nil
 		}
 	} else {
 		log.Println("[info] KafkaProducer: 'topicsuffix' set to default disabled.")

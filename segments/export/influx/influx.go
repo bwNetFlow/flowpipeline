@@ -44,6 +44,7 @@ func (segment Influx) New(config map[string]string) segments.Segment {
 	var org string
 	if config["org"] == "" {
 		log.Println("[error] Influx: Missing configuration parameter 'org'. Please set the organization to use.")
+		return nil
 	} else {
 		org = config["org"]
 	}
@@ -51,6 +52,7 @@ func (segment Influx) New(config map[string]string) segments.Segment {
 	var bucket string
 	if config["bucket"] == "" {
 		log.Println("[error] Influx: Missing configuration parameter 'bucket'. Please set the bucket to use.")
+		return nil
 	} else {
 		bucket = config["bucket"]
 	}
@@ -58,6 +60,7 @@ func (segment Influx) New(config map[string]string) segments.Segment {
 	var token string
 	if config["token"] == "" {
 		log.Println("[error] Influx: Missing configuration parameter 'token'. Please set the token to use.")
+		return nil
 	} else {
 		token = config["token"]
 	}

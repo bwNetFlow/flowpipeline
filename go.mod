@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/alouca/gosnmp v0.0.0-20170620005048-04d83944c9ab
-	github.com/bwNetFlow/bpf_flowexport v0.0.0-20211018125328-20169ef0d217
+	github.com/bwNetFlow/bpf_flowexport v0.0.0-20211201133414-8284a255f582
 	github.com/bwNetFlow/consumer_prometheus v0.0.0-20210316091512-7f2ac713da39
 	github.com/bwNetFlow/flowfilter v0.0.0-20210817095615-3e1c3a6c906c
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04

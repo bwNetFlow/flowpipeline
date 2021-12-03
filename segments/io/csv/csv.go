@@ -71,6 +71,7 @@ func (segment Csv) New(config map[string]string) segments.Segment {
 			newsegment.fieldTypes[i-3] = field.Type.String()
 			heading = append(heading, field.Name)
 		}
+		newsegment.Fields = config["fields"]
 	}
 
 	newsegment.writer = csv.NewWriter(file)

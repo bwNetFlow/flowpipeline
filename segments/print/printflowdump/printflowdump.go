@@ -61,13 +61,12 @@ func (segment PrintFlowdump) format_flow(flowmsg *flow.FlowMessage) string {
 			// use function from another segment, as it is just a lookup.
 			proto = protomap.ProtoNumToString(flowmsg.Proto)
 		}
-    if proto == "ICMP" && flowmsg.DstPort != 0 {
-		  proto = fmt.Sprintf("ICMP (type %d, code %d)", flowmsg.DstPort/256, flowmsg.DstPort%256)
-	  }
+		if proto == "ICMP" && flowmsg.DstPort != 0 {
+			proto = fmt.Sprintf("ICMP (type %d, code %d)", flowmsg.DstPort/256, flowmsg.DstPort%256)
+		}
 	} else {
 		proto = fmt.Sprint(flowmsg.Proto)
 	}
-
 
 	duration := flowmsg.TimeFlowEnd - flowmsg.TimeFlowStart
 	if duration == 0 {

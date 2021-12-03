@@ -15,7 +15,7 @@ import (
 type Anonymize struct {
 	segments.BaseSegment
 	EncryptionKey string   // required, key for anonymization by cryptopan
-	fields        []string // optional, list of Fields to anonymize their IP address. Default if nmot set are all available fields: SrcAddr, DstAddr, SamplerAddress
+	Fields        []string // optional, list of Fields to anonymize their IP address. Default if nmot set are all available fields: SrcAddr, DstAddr, SamplerAddress
 
 	anonymizer *cryptopan.Cryptopan
 }
@@ -55,7 +55,7 @@ func (segments Anonymize) New(config map[string]string) segments.Segment {
 	return &Anonymize{
 		EncryptionKey: encryptionKey,
 		anonymizer:    anon,
-		fields:        fields,
+		Fields:        fields,
 	}
 }
 
@@ -66,7 +66,7 @@ func (segment *Anonymize) Run(wg *sync.WaitGroup) {
 	}()
 
 	for msg := range segment.In {
-		for _, field := range segment.fields {
+		for _, field := range segment.Fields {
 			switch field {
 			case "SrcAddr":
 				msg.SrcAddr = segment.anonymizer.Anonymize(msg.SrcAddr)

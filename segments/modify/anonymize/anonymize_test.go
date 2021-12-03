@@ -45,7 +45,7 @@ func BenchmarkAnonymize(b *testing.B) {
 	segment := Anonymize{
 		EncryptionKey: "testkey123jfh789fhj456ezhskila73",
 		anonymizer:    anon,
-		fields:        fields,
+		Fields:        fields,
 	}
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)

@@ -179,7 +179,7 @@ Roadmap:
     buffersize: 65536
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/bpf)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/input/bpf)
 [examples using this segment](https://github.com/search?q=%22segment%3A+bpf%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### goflow
@@ -201,7 +201,7 @@ exporters, for instance your network devices.
 ```
 
 [goflow2 fields](https://github.com/netsampler/goflow2/blob/main/docs/protocols.md)
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/goflow)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/input/goflow)
 [examples using this segment](https://github.com/search?q=%22segment%3A+goflow%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### kafkaconsumer
@@ -227,7 +227,7 @@ them into different Kafka topics. See the examples this particular usage.
     pass: mypassword
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/kafkaconsumer)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/input/kafkaconsumer)
 [examples using this segment](https://github.com/search?q=%22segment%3A+kafkaconsumer%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 ##### BelWü-connected Entities
@@ -251,7 +251,7 @@ segment, which allows flowpipelines to be piped into each other.
 - segment: stdin
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/stdin)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/input/stdin)
 [examples using this segment](https://github.com/search?q=%22segment%3A+stdin%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 ### Modify Group
@@ -295,6 +295,23 @@ Roadmap:
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/addcid)
 [examples using this segment](https://github.com/search?q=%22segment%3A+addcid%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
+#### anonymize
+The `anonymize` segment anonymizes IP addresses occuring in flows using the
+Crypto-PAn algorithm. By default all possible IP address fields are targeted,
+this can be configured using the fields parameter.
+
+```
+- segment: anonymize
+  config:
+    encryptionkey: "abcdef"
+    # the lines below are optional and set to default
+    fields: "SrcAddr,DstAddr,SamplerAddress"
+```
+
+[any additional links](https://bwnet.belwue.de)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/anonymize)
+[examples using this segment](https://github.com/search?q=%22segment%3A+anonymize%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### dropfields
 The segment `dropfields` deletes fields from flows as they pass through this
@@ -491,7 +508,7 @@ number of other things.
     topicsuffix: ""
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/kafkaproducer)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/kafkaproducer)
 [examples using this segment](https://github.com/search?q=%22segment%3A+kafkaproducer%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### sqlite
@@ -503,7 +520,7 @@ TODO: major rewrite incoming with MR #18 output/csv
 
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/sqlite)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/sqlite)
 [examples using this segment](https://github.com/search?q=%22segment%3A+sqlite%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### stdout
@@ -516,7 +533,7 @@ dump.
 - segment: stdout
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/stdout)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/stdout)
 [examples using this segment](https://github.com/search?q=%22segment%3A+stdout%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 ### Print Group
@@ -613,4 +630,3 @@ Roadmap:
 [any additional links](https://bwnet.belwue.de)
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/noop)
 [examples using this segment](https://github.com/search?q=%22segment%3A+noop%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
-

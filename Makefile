@@ -10,4 +10,4 @@ bench:
 	@go test -bench=. -benchtime=1ns ./segments/noop | grep "cpu:"
 	@echo "results:"
 	@go test -bench=. -run=Bench ./... | grep -E "^Bench" | awk '{fps = 1/(($$3)/1e9); sub(/Benchmark/, "", $$1); sub(/-.*/, "", $$1); printf("%15s: %8s ns/flow, %7.0f flows/s\n", tolower($$1), $$3, fps)}'
-	@rm segments/io/sqlite/bench.sqlite
+	@rm segments/output/sqlite/bench.sqlite

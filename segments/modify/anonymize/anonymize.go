@@ -1,0 +1,86 @@
+// Anonymize uses the CryptoPan prefix-preserving IP address sanitization as specified by J. Fan, J. Xu, M. Ammar, and S. Moon.
+// By default this segment is anonymizing the SrcAddr, DstAddr and SamplerAddress fields in the flowmessage.
+// The required encryption key has to be created with the length of 32 chars.
+package anonymize
+
+import (
+	"log"
+	"strings"
+	"sync"
+
+	cryptopan "github.com/Yawning/cryptopan"
+	"github.com/bwNetFlow/flowpipeline/segments"
+)
+
+type Anonymize struct {
+	segments.BaseSegment
+	EncryptionKey string   // required, key for anonymization by cryptopan
+	Fields        []string // optional, list of Fields to anonymize their IP address. Default if nmot set are all available fields: SrcAddr, DstAddr, SamplerAddress
+
+	anonymizer *cryptopan.Cryptopan
+}
+
+func (segments Anonymize) New(config map[string]string) segments.Segment {
+	var encryptionKey string
+	if config["key"] == "" {
+		log.Println("[error] Anonymize: Missing configuration parameter 'key'. Please set the key to use for anonymization of IP addresses.")
+		return nil
+	} else {
+		encryptionKey = config["key"]
+	}
+
+	// set default fields with IPs to anonymize
+	var fields = []string{
+		"SrcAddr",
+		"DstAddr",
+		"SamplerAddress",
+	}
+	if config["fields"] == "" {
+		log.Printf("[info] Anonymize: Missing configuration parameter 'fields'. Using default fields '%s' to anonymize.", fields)
+	} else {
+		fields = []string{}
+		for _, field := range strings.Split(config["fields"], ",") {
+			log.Printf("[info] Anonymize: custom field found: %s", field)
+			fields = append(fields, field)
+		}
+	}
+
+	ekb := []byte(encryptionKey)
+	anon, err := cryptopan.New(ekb)
+	if err != nil {
+		log.Printf("[error] Anonymize: error creating anonymizer: %e", err)
+		return nil
+	}
+
+	return &Anonymize{
+		EncryptionKey: encryptionKey,
+		anonymizer:    anon,
+		Fields:        fields,
+	}
+}
+
+func (segment *Anonymize) Run(wg *sync.WaitGroup) {
+	defer func() {
+		close(segment.Out)
+		wg.Done()
+	}()
+
+	for msg := range segment.In {
+		for _, field := range segment.Fields {
+			switch field {
+			case "SrcAddr":
+				msg.SrcAddr = segment.anonymizer.Anonymize(msg.SrcAddr)
+			case "DstAddr":
+				msg.DstAddr = segment.anonymizer.Anonymize(msg.DstAddr)
+			case "SamplerAddress":
+				msg.SamplerAddress = segment.anonymizer.Anonymize(msg.SamplerAddress)
+			}
+		}
+		segment.Out <- msg
+	}
+}
+
+func init() {
+	segment := &Anonymize{}
+	segments.RegisterSegment("anonymize", segment)
+}

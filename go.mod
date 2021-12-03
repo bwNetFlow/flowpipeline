@@ -3,6 +3,7 @@ module github.com/bwNetFlow/flowpipeline
 go 1.17
 
 require (
+	github.com/Yawning/cryptopan v0.0.0-20170504040949-65bca51288fe
 	github.com/alouca/gosnmp v0.0.0-20170620005048-04d83944c9ab
 	github.com/bwNetFlow/bpf_flowexport v0.0.0-20211201133414-8284a255f582
 	github.com/bwNetFlow/flowfilter v0.0.0-20211021081612-db6c2ea23131

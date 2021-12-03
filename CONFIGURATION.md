@@ -296,6 +296,23 @@ Roadmap:
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/addcid)
 [examples using this segment](https://github.com/search?q=%22segment%3A+addcid%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
+#### anonymize
+The `anonymize` segment anonymizes IP addresses occuring in flows using the
+Crypto-PAn algorithm. By default all possible IP address fields are targeted,
+this can be configured using the fields parameter.
+
+```
+- segment: anonymize
+  config:
+    encryptionkey: "abcdef"
+    # the lines below are optional and set to default
+    fields: "SrcAddr,DstAddr,SamplerAddress"
+```
+
+[any additional links](https://bwnet.belwue.de)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/anonymize)
+[examples using this segment](https://github.com/search?q=%22segment%3A+anonymize%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
 #### dropfields
 The segment `dropfields` deletes fields from flows as they pass through this
 segment. To this end, this segment requires a policy parameter to be set to
@@ -638,4 +655,3 @@ Roadmap:
 [any additional links](https://bwnet.belwue.de)
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/noop)
 [examples using this segment](https://github.com/search?q=%22segment%3A+noop%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
-

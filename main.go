@@ -33,6 +33,7 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/io/stdout"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/addcid"
+	_ "github.com/bwNetFlow/flowpipeline/segments/modify/anonymize"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/dropfields"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/geolocation"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/normalize"

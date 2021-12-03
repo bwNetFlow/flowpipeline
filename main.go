@@ -22,15 +22,12 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/influx"
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/prometheus"
 
-	_ "github.com/bwNetFlow/flowpipeline/segments/filter"
+	_ "github.com/bwNetFlow/flowpipeline/segments/filter/flowfilter"
 
-	_ "github.com/bwNetFlow/flowpipeline/segments/io/bpf"
-	_ "github.com/bwNetFlow/flowpipeline/segments/io/goflow"
-	_ "github.com/bwNetFlow/flowpipeline/segments/io/kafkaconsumer"
-	_ "github.com/bwNetFlow/flowpipeline/segments/io/kafkaproducer"
-	_ "github.com/bwNetFlow/flowpipeline/segments/io/sqlite"
-	_ "github.com/bwNetFlow/flowpipeline/segments/io/stdin"
-	_ "github.com/bwNetFlow/flowpipeline/segments/io/stdout"
+	_ "github.com/bwNetFlow/flowpipeline/segments/input/bpf"
+	_ "github.com/bwNetFlow/flowpipeline/segments/input/goflow"
+	_ "github.com/bwNetFlow/flowpipeline/segments/input/kafkaconsumer"
+	_ "github.com/bwNetFlow/flowpipeline/segments/input/stdin"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/addcid"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/dropfields"
@@ -41,6 +38,10 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/snmp"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/noop"
+
+	_ "github.com/bwNetFlow/flowpipeline/segments/output/kafkaproducer"
+	_ "github.com/bwNetFlow/flowpipeline/segments/output/sqlite"
+	_ "github.com/bwNetFlow/flowpipeline/segments/output/stdout"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/print/count"
 	_ "github.com/bwNetFlow/flowpipeline/segments/print/printdots"

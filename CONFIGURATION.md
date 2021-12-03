@@ -519,7 +519,7 @@ dump.
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/stdout)
 [examples using this segment](https://github.com/search?q=%22segment%3A+stdout%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
-# Print Group
+### Print Group
 Segments in this group serve to print flows immediately to the user. This is intended for ad-hoc applications and instant feedback use cases.
 
 #### count

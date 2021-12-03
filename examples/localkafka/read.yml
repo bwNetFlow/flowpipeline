@@ -6,9 +6,9 @@
   config:
     server: localhost:9092
     topic: flows
-    group: test
-    notls: 1
-    noauth: 1
+    group: test-consumer-group
+    tls: 0
+    auth: 0
 
 ###############################################################################
 # Print the flow stream, or do whatever else.

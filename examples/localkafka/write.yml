@@ -14,5 +14,5 @@
     server: localhost:9092
     topic: flows
     group: test
-    notls: 1
-    noauth: 1
+    tls: 0
+    auth: 0

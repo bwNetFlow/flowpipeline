@@ -19,6 +19,9 @@
 # default endpoints are:
 # <host>:8080/flowdata
 # <host>:8080/metrics
+# the given labels in this example are the default ones. 
+# They are also applied if the labels field is omitted.
 - segment: prometheus
   config:
     endpoint: ":8080"
+    labels: "router,ipversion,application,protoname,direction,peer,remoteas,remotecountry"

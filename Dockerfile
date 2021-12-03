@@ -14,4 +14,4 @@ WORKDIR /
 
 # copy binary from builder to your desired location
 COPY --from=builder /opt/build/fpl .
-ENTRYPOINT /fpl -c config/config.yml
+ENTRYPOINT /fpl -c config/config.yml $0

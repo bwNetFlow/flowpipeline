@@ -3,6 +3,7 @@ package bpf
 import (
 	"log"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -20,6 +21,7 @@ type Bpf struct {
 	Device          string // required, the name of the device to capture, e.g. "eth0"
 	ActiveTimeout   string // optional, default is 30m
 	InactiveTimeout string // optional, default is 15s
+	BufferSize      int    // optional, default is 65536 (64kB)
 }
 
 func (segment Bpf) New(config map[string]string) segments.Segment {
@@ -32,8 +34,24 @@ func (segment Bpf) New(config map[string]string) segments.Segment {
 		return nil
 	}
 
+	newsegment.BufferSize = 65536
+	if config["buffersize"] != "" {
+		if parsedBufferSize, err := strconv.ParseInt(config["buffersize"], 10, 32); err == nil {
+			newsegment.BufferSize = int(parsedBufferSize)
+			if newsegment.BufferSize <= 0 {
+				log.Println("[error] Bpf: Buffer size needs to be at least 1 and will be rounded up to the nearest multiple of the current page size.")
+				return nil
+			}
+		} else {
+			log.Println("[error] Bpf: Could not parse 'buffersize' parameter, using default 65536 (64kB).")
+		}
+	} else {
+		log.Println("[info] Bpf: 'buffersize' set to default 65536 (64kB).")
+	}
+
 	// setup bpf dumping
-	newsegment.dumper = &packetdump.PacketDumper{}
+	newsegment.dumper = &packetdump.PacketDumper{BufSize: newsegment.BufferSize}
+
 	err := newsegment.dumper.Setup(newsegment.Device)
 	if err != nil {
 		log.Printf("[error] Bpf: error setting up BPF dumping: %s", err)
@@ -49,7 +67,11 @@ func (segment Bpf) New(config map[string]string) segments.Segment {
 			log.Println("[warning] Bpf: 'activetimeout' was invalid, fallback to default '30m'.")
 		}
 		newsegment.ActiveTimeout = "30m"
+	} else {
+		newsegment.ActiveTimeout = config["activetimeout"]
+		log.Printf("[info] Bpf: 'activetimeout' set to '%s'.", config["activetimeout"])
 	}
+
 	_, err = time.ParseDuration(config["inactivetimeout"])
 	if err != nil {
 		if config["inactivetimeout"] == "" {
@@ -58,10 +80,15 @@ func (segment Bpf) New(config map[string]string) segments.Segment {
 			log.Println("[warning] Bpf: 'inactivetimeout' was invalid, fallback to default '15s'.")
 		}
 		newsegment.InactiveTimeout = "15s"
+	} else {
+		newsegment.ActiveTimeout = config["inactivetimeout"]
+		log.Printf("[info] Bpf: 'inactivetimeout' set to '%s'.", config["inactivetimeout"])
 	}
+
 	newsegment.exporter, err = flowexport.NewFlowExporter(newsegment.ActiveTimeout, newsegment.InactiveTimeout)
 	if err != nil {
 		log.Printf("[error] Bpf: error setting up exporter: %s", err)
+		return nil
 	}
 	return newsegment
 }

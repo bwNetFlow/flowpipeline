@@ -1,1 +1,6 @@
 config.yml
+config
+
+.vscode
+flowpipeline
+*.sqlite

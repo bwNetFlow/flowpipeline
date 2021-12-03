@@ -39,6 +39,7 @@ import (
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/noop"
 
+	_ "github.com/bwNetFlow/flowpipeline/segments/output/csv"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/kafkaproducer"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/sqlite"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/stdout"

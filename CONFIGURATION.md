@@ -179,7 +179,7 @@ Roadmap:
     buffersize: 65536
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/bpf)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/input/bpf)
 [examples using this segment](https://github.com/search?q=%22segment%3A+bpf%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### goflow
@@ -201,7 +201,7 @@ exporters, for instance your network devices.
 ```
 
 [goflow2 fields](https://github.com/netsampler/goflow2/blob/main/docs/protocols.md)
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/goflow)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/input/goflow)
 [examples using this segment](https://github.com/search?q=%22segment%3A+goflow%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### kafkaconsumer
@@ -227,7 +227,7 @@ them into different Kafka topics. See the examples this particular usage.
     pass: mypassword
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/kafkaconsumer)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/input/kafkaconsumer)
 [examples using this segment](https://github.com/search?q=%22segment%3A+kafkaconsumer%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 ##### BelWü-connected Entities
@@ -251,7 +251,7 @@ segment, which allows flowpipelines to be piped into each other.
 - segment: stdin
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/stdin)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/input/stdin)
 [examples using this segment](https://github.com/search?q=%22segment%3A+stdin%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 ### Modify Group
@@ -458,6 +458,27 @@ Roadmap:
 [examples using this segment](https://github.com/search?q=%22segment%3A+snmp%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 ### Output Group
+Segments in this group export flows, usually while keeping all information
+unless instructed otherwise. As all other segments do, these still forward
+incoming flows to the next segment, i.e. multiple output segments can be used in
+sequence to export to different places.
+
+#### csv
+The `csv` segment provides an CSV output option. It uses stdout by default, but
+can be instructed to write to file using the filename parameter. The fields
+parameter can be used to limit which fields will be exported.
+
+```
+- segment: csv
+  # the lines below are optional and set to default
+  config:
+    filename: ""
+    fields: ""
+```
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/csv)
+[examples using this segment](https://github.com/search?q=%22segment%3A+csv%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
 
 #### kafkaproducer
 The `kafkaproducer` segment produces flows to a Kafka topic. All settings are
@@ -491,19 +512,23 @@ number of other things.
     topicsuffix: ""
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/kafkaproducer)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/kafkaproducer)
 [examples using this segment](https://github.com/search?q=%22segment%3A+kafkaproducer%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### sqlite
-TODO: major rewrite incoming with MR #18 output/csv
+The `sqlite` segment provides a SQLite output option. All parameters are
+required and there are currently no parameters to configure the output.
+
+Roadmap:
+* use the same mechanism as output/csv for configurable field output
 
 ```
 - segment: sqlite
   config:
-
+    filename: dump.sqlite
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/sqlite)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/sqlite)
 [examples using this segment](https://github.com/search?q=%22segment%3A+sqlite%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### stdout
@@ -516,7 +541,7 @@ dump.
 - segment: stdout
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/io/stdout)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/stdout)
 [examples using this segment](https://github.com/search?q=%22segment%3A+stdout%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 ### Print Group

@@ -21,6 +21,7 @@ serve any function:
 * writing to and reading from Kafka ([examples/localkafka](https://github.com/bwNetFlow/flowpipeline/tree/master/examples/localkafka))
 * dumping flows to cli (e.g. [flowdump](https://github.com/bwNetFlow/flowpipeline/tree/master/examples/flowdump))
 * providing metrics and insights ([examples/prometheus](https://github.com/bwNetFlow/flowpipeline/tree/master/examples/prometheus))
+* and many more...
 
 ## Getting Started
 
@@ -54,11 +55,12 @@ docker run -v ./examples/xy:/config flowpipeline
 
 ## Configuration
 
-By looking at the examples you should be able to get a good idea what the
-config looks like in detail and what the possible applications are. For sake of
-completeness, here's another minimal example which starts listening for Netflow
-v9 on port 2055, applies the filter given as first argument, and then prints it
-out in a `tcpdump`-style format.
+Refer to [CONFIGURATION.md](https://github.com/bwNetFlow/flowpipeline/blob/master/CONFIGURATION.md)
+for the full guide. Other than that, looking at the examples should give you a
+good idea what the config looks like in detail and what the possible
+applications are. For sake of completeness, here's another minimal example
+which starts listening for Netflow v9 on port 2055, applies the filter given as
+first argument, and then prints it out in a `tcpdump`-style format.
 
 ```yaml
 - segment: goflow
@@ -70,11 +72,6 @@ out in a `tcpdump`-style format.
 
 You'd call it with `./flowpipeline "proto tcp and (port 80 or port 443)"`., for
 instance.
-
-As for which Segments are available and what their configuration options are,
-please refer to the
-[relevant documentation](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline#section-directories)
-(and click expand all).
 
 ## Contributing
 

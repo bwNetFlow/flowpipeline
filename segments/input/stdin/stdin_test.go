@@ -1,9 +1,9 @@
 package stdin
 
 import (
+	"bufio"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"os"
 	"sync"
 	"testing"
@@ -32,12 +32,14 @@ func TestSegment_StdIn_passthrough(t *testing.T) {
 	}
 }
 
-// StdIn Segment benchmark passthrough
-func BenchmarkStdIn(b *testing.B) {
+// Stdin Segment benchmark passthrough
+func BenchmarkStdin(b *testing.B) {
 	log.SetOutput(ioutil.Discard)
 	os.Stdout, _ = os.Open(os.DevNull)
 
-	segment := StdIn{}.New(map[string]string{})
+	segment := StdIn{
+		scanner: bufio.NewScanner(os.Stdin),
+	}
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
 	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
@@ -47,7 +49,7 @@ func BenchmarkStdIn(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &flow.FlowMessage{SrcPort: uint32(rand.Intn(100))}
+		in <- &flow.FlowMessage{}
 		_ = <-out
 	}
 	close(in)

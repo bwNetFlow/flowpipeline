@@ -243,12 +243,15 @@ interfaces. This can be limited according to the data protection requirements
 set forth by the universities.
 
 #### stdin
-The `stdin` segment reads JSON encoded flows from stdin and introduces this
+The `stdin` segment reads JSON encoded flows from stdin or a given file and introduces this
 into the pipeline. This is intended to be used in conjunction with the `stdout`
 segment, which allows flowpipelines to be piped into each other.
 
 ```
 - segment: stdin
+  # the lines below are optional and set to default
+  config:
+    filename: ""
 ```
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/input/stdin)
@@ -554,7 +557,6 @@ It uses stdout by default, but can be instructed to write to file using the file
 This is intended to be able to pipe flows between instances of flowpipeline, but it is
 also very useful when debugging flowpipelines or to create a quick plaintext
 dump.
-
 ```
 - segment: stdout
   # the lines below are optional and set to default

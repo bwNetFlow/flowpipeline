@@ -31,6 +31,7 @@ func (segment StdIn) New(config map[string]string) segments.Segment {
 		file, err = os.Open(config["filename"])
 		if err != nil {
 			log.Printf("[error] StdIn: File specified in 'filename' is not accessible: %s", err)
+			return nil
 		}
 		filename = config["filename"]
 	} else {
@@ -38,6 +39,7 @@ func (segment StdIn) New(config map[string]string) segments.Segment {
 		log.Println("[info] StdIn: 'filename' unset, using stdIn.")
 	}
 	newsegment.scanner = bufio.NewScanner(file)
+
 	newsegment.FileName = filename
 
 	return newsegment
@@ -59,7 +61,9 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 			if len(segment.scanner.Text()) == 0 {
 				continue
 			}
-			fromStdin <- segment.scanner.Bytes()
+			// we need to get full representation of text and cast it to []byte
+			// because scanner.Bytes doesn't return all content.
+			fromStdin <- []byte(segment.scanner.Text())
 		}
 	}()
 	for {

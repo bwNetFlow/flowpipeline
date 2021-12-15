@@ -78,7 +78,6 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 			err := protojson.Unmarshal(line, msg)
 			if err != nil {
 				log.Printf("[warning] StdIn: Skipping a flow, failed to recode input to protobuf: %v", err)
-				log.Print(string(line))
 				continue
 			}
 			segment.Out <- msg

@@ -1,4 +1,4 @@
-package stdout
+package json
 
 import (
 	"io/ioutil"
@@ -22,21 +22,21 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-// StdOut Segment test, passthrough test only
-func TestSegment_StdOut_passthrough(t *testing.T) {
+// Json Segment test, passthrough test only
+func TestSegment_Json_passthrough(t *testing.T) {
 	result := segments.TestSegment("stdout", map[string]string{},
 		&flow.FlowMessage{})
 	if result == nil {
-		t.Error("Segment StdOut is not passing through flows.")
+		t.Error("Segment Json is not passing through flows.")
 	}
 }
 
-// StdOut Segment benchmark passthrough
-func BenchmarkStdOut(b *testing.B) {
+// Json Segment benchmark passthrough
+func BenchmarkJson(b *testing.B) {
 	log.SetOutput(ioutil.Discard)
 	os.Stdout, _ = os.Open(os.DevNull)
 
-	segment := StdOut{}
+	segment := Json{}.New(map[string]string{})
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
 	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)

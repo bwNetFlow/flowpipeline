@@ -1,26 +1,48 @@
-// Receives flows from stdin in JSON format, as exported by the stdout segment.
+// Receives flows from stdin in JSON format, as exported by the json segment.
+// This segment can also read from a file with flows in json format per each line
 package stdin
 
 import (
 	"bufio"
-	"bytes"
 	"log"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
 	flow "github.com/bwNetFlow/protobuf/go"
 	"google.golang.org/protobuf/encoding/protojson"
 
-	"io"
 	"os"
 	"sync"
 )
 
 type StdIn struct {
 	segments.BaseSegment
+	scanner *bufio.Scanner
+
+	FileName string // optional, default is empty which means read from stdin
 }
 
 func (segment StdIn) New(config map[string]string) segments.Segment {
-	return &StdIn{}
+	newsegment := &StdIn{}
+
+	var filename string = "stdout"
+	var file *os.File
+	var err error
+	if config["filename"] != "" {
+		file, err = os.Open(config["filename"])
+		if err != nil {
+			log.Printf("[error] StdIn: File specified in 'filename' is not accessible: %s", err)
+			return nil
+		}
+		filename = config["filename"]
+	} else {
+		file = os.Stdin
+		log.Println("[info] StdIn: 'filename' unset, using stdIn.")
+	}
+	newsegment.scanner = bufio.NewScanner(file)
+
+	newsegment.FileName = filename
+
+	return newsegment
 }
 
 func (segment *StdIn) Run(wg *sync.WaitGroup) {
@@ -31,16 +53,17 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 	fromStdin := make(chan []byte)
 	go func() {
 		for {
-			rdr := bufio.NewReader(os.Stdin)
-			line, err := rdr.ReadBytes('\n')
-			if err != io.EOF {
+			segment.scanner.Scan()
+			if err := segment.scanner.Err(); err != nil {
 				log.Printf("[warning] StdIn: Skipping a flow, could not read line from stdin: %v", err)
 				continue
 			}
-			if len(line) == 0 {
+			if len(segment.scanner.Text()) == 0 {
 				continue
 			}
-			fromStdin <- bytes.TrimSuffix(line, []byte("\n"))
+			// we need to get full representation of text and cast it to []byte
+			// because scanner.Bytes doesn't return all content.
+			fromStdin <- []byte(segment.scanner.Text())
 		}
 	}()
 	for {
@@ -54,7 +77,7 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 			msg := &flow.FlowMessage{}
 			err := protojson.Unmarshal(line, msg)
 			if err != nil {
-				log.Printf("[warning] StdIn: Skipping a flow, failed to recode stdin to protobuf: %v", err)
+				log.Printf("[warning] StdIn: Skipping a flow, failed to recode input to protobuf: %v", err)
 				continue
 			}
 			segment.Out <- msg

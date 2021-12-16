@@ -243,12 +243,15 @@ interfaces. This can be limited according to the data protection requirements
 set forth by the universities.
 
 #### stdin
-The `stdin` segment reads JSON encoded flows from stdin and introduces this
+The `stdin` segment reads JSON encoded flows from stdin or a given file and introduces this
 into the pipeline. This is intended to be used in conjunction with the `stdout`
 segment, which allows flowpipelines to be piped into each other.
 
 ```
 - segment: stdin
+  # the lines below are optional and set to default
+  config:
+    filename: ""
 ```
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/input/stdin)
@@ -548,18 +551,21 @@ Roadmap:
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/sqlite)
 [examples using this segment](https://github.com/search?q=%22segment%3A+sqlite%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
-#### stdout
-The `stdout` segment exports all flows passing it as JSON on stdout. This is
-intended to be able to pipe flows between instances of flowpipeline, but it is
+#### json
+The `json` segment provides a JSON output option. 
+It uses stdout by default, but can be instructed to write to file using the filename parameter.
+This is intended to be able to pipe flows between instances of flowpipeline, but it is
 also very useful when debugging flowpipelines or to create a quick plaintext
 dump.
-
 ```
 - segment: stdout
+  # the lines below are optional and set to default
+  config:
+    filename: ""
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/stdout)
-[examples using this segment](https://github.com/search?q=%22segment%3A+stdout%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/json)
+[examples using this segment](https://github.com/search?q=%22segment%3A+json%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 ### Print Group
 Segments in this group serve to print flows immediately to the user. This is intended for ad-hoc applications and instant feedback use cases.

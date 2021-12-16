@@ -1,8 +1,10 @@
 package protomap
 
 import (
+	"io/ioutil"
 	"log"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -36,4 +38,25 @@ func TestSegment_protomap_tcp(t *testing.T) {
 	if result.ProtoName != "TCP" {
 		t.Error("Segment protomap is not tagging ProtoName correctly.")
 	}
+}
+
+// Protomap Segment benchmark passthrough
+func BenchmarkProtomap(b *testing.B) {
+	log.SetOutput(ioutil.Discard)
+	os.Stdout, _ = os.Open(os.DevNull)
+
+	segment := Protomap{}.New(map[string]string{})
+
+	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go segment.Run(wg)
+
+	for n := 0; n < b.N; n++ {
+		in <- &flow.FlowMessage{Proto: 6}
+		_ = <-out
+	}
+	close(in)
 }

@@ -1,8 +1,11 @@
 package stdin
 
 import (
+	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
+	"sync"
 	"testing"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -27,4 +30,25 @@ func TestSegment_StdIn_passthrough(t *testing.T) {
 	if result == nil {
 		t.Error("Segment StdIn is not passing through flows.")
 	}
+}
+
+// StdIn Segment benchmark passthrough
+func BenchmarkStdIn(b *testing.B) {
+	log.SetOutput(ioutil.Discard)
+	os.Stdout, _ = os.Open(os.DevNull)
+
+	segment := StdIn{}.New(map[string]string{})
+
+	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go segment.Run(wg)
+
+	for n := 0; n < b.N; n++ {
+		in <- &flow.FlowMessage{SrcPort: uint32(rand.Intn(100))}
+		_ = <-out
+	}
+	close(in)
 }

@@ -533,16 +533,25 @@ number of other things.
 [examples using this segment](https://github.com/search?q=%22segment%3A+kafkaproducer%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### sqlite
-The `sqlite` segment provides a SQLite output option. All parameters are
-required and there are currently no parameters to configure the output.
+The `sqlite` segment provides a SQLite output option. It is intended for use as
+an ad-hoc dump method to answer questions on live traffic, i.e. average packet
+size for a specific class of traffic. The fields parameter optionally takes a
+string of comma-separated fieldnames, e.g. `SrcAddr,Bytes,Packets`.
 
-Roadmap:
-* use the same mechanism as output/csv for configurable field output
+The batchsize parameter determines the number of flows stored in memory before
+writing them to the database in a transaction made up from as many insert
+statements. For the default value of 1000 in-memory flows, benchmarks show that
+this should be an okay value for processing at least 1000 flows per second on
+most szenarios, i.e. flushing to disk once per second. Mind the expected flow
+throughput when setting this parameter.
 
 ```
 - segment: sqlite
   config:
     filename: dump.sqlite
+    # the lines below are optional and set to default
+    fields: ""
+    batchsize: 1000
 ```
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/sqlite)

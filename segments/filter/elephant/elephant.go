@@ -17,6 +17,7 @@ type Elephant struct {
 	Aspect     string  // optional, one of "bytes", "bps", "packets", or "pps", default is "bytes", determines which aspect qualifies a flow as an elephant
 	Percentile float64 // optional, default is 99.00, determines the cutoff percentile for flows being dropped by this segment, i.e. 95.00 corresponds to outputting the top 5% only
 	Exact      bool    // optional, default is false, determines whether to use percentiles that are exact or generated using the P-square estimation algorithm
+	Window     int     // optional, default is 300, sets the number of seconds used as a sliding window size
 }
 
 func (segment Elephant) New(config map[string]string) segments.Segment {
@@ -57,10 +58,26 @@ func (segment Elephant) New(config map[string]string) segments.Segment {
 		log.Println("[info] Elephant: 'exact' set to default false.")
 	}
 
+	var window = 300
+	if config["window"] != "" {
+		if parsedWindow, err := strconv.ParseInt(config["window"], 10, 64); err == nil {
+			window = int(parsedWindow)
+			if window <= 0 {
+				log.Println("[error] Elephant: Window has to be >0.")
+				return nil
+			}
+		} else {
+			log.Println("[error] Elephant: Could not parse 'window' parameter, using default 300.")
+		}
+	} else {
+		log.Println("[info] Elephant: 'window' set to default 300.")
+	}
+
 	return &Elephant{
 		Aspect:     aspect,
 		Percentile: percentile,
 		Exact:      exact,
+		Window:     window,
 	}
 }
 
@@ -69,7 +86,7 @@ func (segment *Elephant) Run(wg *sync.WaitGroup) {
 		close(segment.Out)
 		wg.Done()
 	}()
-	var window = rolling.NewTimePolicy(rolling.NewWindow(60), time.Second) // 300s == 5min TODO
+	var window = rolling.NewTimePolicy(rolling.NewWindow(segment.Window), time.Second)
 	for msg := range segment.In {
 		var threshold float64
 		if segment.Exact {

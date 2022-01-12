@@ -22,6 +22,7 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/influx"
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/prometheus"
 
+	_ "github.com/bwNetFlow/flowpipeline/segments/filter/elephant"
 	_ "github.com/bwNetFlow/flowpipeline/segments/filter/flowfilter"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/input/bpf"

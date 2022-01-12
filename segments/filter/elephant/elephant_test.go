@@ -24,11 +24,26 @@ func TestMain(m *testing.M) {
 
 // Elephant Segment test, passthrough test
 func TestSegment_Elephant_passthrough(t *testing.T) {
-	result := segments.TestSegment("elephant", map[string]string{},
-		&flow.FlowMessage{Type: 3})
-	if result.Type != 3 {
+	segment := segments.LookupSegment("elephant").New(map[string]string{})
+	if segment == nil {
+		log.Fatal("[error] Configured segment 'elephant' could not be initialized properly, see previous messages.")
+	}
+
+	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go segment.Run(wg)
+
+	in <- &flow.FlowMessage{Bytes: 10}
+	in <- &flow.FlowMessage{Bytes: 100}
+	result := <-out
+	if result.Bytes != 100 {
 		t.Error("Segment Elephant is not working.")
 	}
+	close(in)
+	wg.Wait()
 }
 
 // Elephant Segment benchmark passthrough

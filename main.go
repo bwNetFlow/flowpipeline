@@ -53,11 +53,11 @@ import (
 
 func main() {
 	configfile := flag.String("c", "config.yml", "location of the config file in yml format")
-	loglevel := flag.String("l", "warning", "loglevel: one of 'info', 'warning' or 'error'")
+	loglevel := flag.String("l", "warning", "loglevel: one of 'debug', 'info', 'warning' or 'error'")
 	flag.Parse()
 
 	log.SetOutput(&logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"info", "warning", "error"},
+		Levels:   []logutils.LogLevel{"debug", "info", "warning", "error"},
 		MinLevel: logutils.LogLevel(*loglevel),
 		Writer:   os.Stderr,
 	})

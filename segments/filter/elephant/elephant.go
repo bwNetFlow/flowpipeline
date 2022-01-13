@@ -16,8 +16,9 @@ type Elephant struct {
 	segments.BaseSegment
 	Aspect     string  // optional, one of "bytes", "bps", "packets", or "pps", default is "bytes", determines which aspect qualifies a flow as an elephant
 	Percentile float64 // optional, default is 99.00, determines the cutoff percentile for flows being dropped by this segment, i.e. 95.00 corresponds to outputting the top 5% only
-	Exact      bool    // optional, default is false, determines whether to use percentiles that are exact or generated using the P-square estimation algorithm
-	Window     int     // optional, default is 300, sets the number of seconds used as a sliding window size
+	// TODO: add option to get bottom percent?
+	Exact  bool // optional, default is false, determines whether to use percentiles that are exact or generated using the P-square estimation algorithm
+	Window int  // optional, default is 300, sets the number of seconds used as a sliding window size
 }
 
 func (segment Elephant) New(config map[string]string) segments.Segment {

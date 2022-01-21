@@ -430,10 +430,10 @@ Any optional parameters relate to the `cidr` policy only and behave as in the
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/remoteaddress)
 [examples using this segment](https://github.com/search?q=%22segment%3A+remoteaddress%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
-#### snmp
-The `snmp` segment annotates flows with information learned directly from
-routers using SNMP. This is a potentially perfomance impacting segment and has
-to be configured carefully.
+#### snmpinterface
+The `snmpinterface` segment annotates flows with interface information learned
+directly from routers using SNMP. This is a potentially perfomance impacting
+segment and has to be configured carefully.
 
 In principle, this segment tries to fetch a SNMP OID datapoint from the address
 in SamplerAddress, which corresponds to a router on normal flow-exporter
@@ -465,7 +465,7 @@ Roadmap:
 * cache timeout should be configurable
 
 ```
-- segment: snmp
+- segment: snmpinterface
   # the lines below are optional and set to default
   config:
     community: public
@@ -552,7 +552,7 @@ Roadmap:
 [examples using this segment](https://github.com/search?q=%22segment%3A+sqlite%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### json
-The `json` segment provides a JSON output option. 
+The `json` segment provides a JSON output option.
 It uses stdout by default, but can be instructed to write to file using the filename parameter.
 This is intended to be able to pipe flows between instances of flowpipeline, but it is
 also very useful when debugging flowpipelines or to create a quick plaintext

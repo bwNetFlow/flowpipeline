@@ -72,10 +72,16 @@ func (segment PrintFlowdump) format_flow(flowmsg *flow.FlowMessage) string {
 	if duration == 0 {
 		duration += 1
 	}
-	return fmt.Sprintf("%s: %s:%d -> %s:%d [%s → @%s → %s], %s, %ds, %s, %s",
+
+	var dropString string
+	if flowmsg.ForwardingStatus&0b10000000 == 0b10000000 {
+		dropString = fmt.Sprintf("DROP/%d", flowmsg.ForwardingStatus)
+	}
+
+	return fmt.Sprintf("%s: %s:%d -> %s:%d [%s → @%s → %s%s], %s, %ds, %s, %s",
 		timestamp, src, flowmsg.SrcPort, dst, flowmsg.DstPort,
-		flowmsg.SrcIfDesc, router, flowmsg.DstIfDesc, proto,
-		duration, humanize.SI(float64(flowmsg.Bytes*8/duration),
+		flowmsg.SrcIfDesc, router, flowmsg.DstIfDesc, dropString,
+		proto, duration, humanize.SI(float64(flowmsg.Bytes*8/duration),
 			"bps"), humanize.SI(float64(flowmsg.Packets/duration), "pps"))
 }
 

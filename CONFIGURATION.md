@@ -213,6 +213,10 @@ This segment can be used in conjunction with the `kafkaproducer` segment to
 enrich, reduce, or filter flows in transit between Kafka topics, or even sort
 them into different Kafka topics. See the examples this particular usage.
 
+The startat configuration sets whether to start at the newest or oldest
+available flow (i.e. Kafka offset). It only takes effect if Kafka has no stored
+state for this specific user/topic/consumergroup combination.
+
 ```
 - segment: kafkaconsumer
   config:
@@ -225,6 +229,8 @@ them into different Kafka topics. See the examples this particular usage.
     # required if auth is true
     user: myusername
     pass: mypassword
+    # the lines below are optional and set to default
+    startat: newest
 ```
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/input/kafkaconsumer)

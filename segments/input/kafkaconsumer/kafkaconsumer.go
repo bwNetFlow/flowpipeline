@@ -15,19 +15,26 @@ import (
 
 type KafkaConsumer struct {
 	segments.BaseSegment
-	Server string // required
-	Topic  string // required
-	Group  string // required
-	User   string // required if auth is true
-	Pass   string // required if auth is true
-	Tls    bool   // optional, default is true
-	Auth   bool   // optional, default is true
+	Server         string // required
+	Topic          string // required
+	Group          string // required
+	User           string // required if auth is true
+	Pass           string // required if auth is true
+	Tls            bool   // optional, default is true
+	Auth           bool   // optional, default is true
+	StartAt        string // optional, one of "oldest" or "newest", default is "newest"
+	startingOffset int64  // optional, default is -1
 }
 
 func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
+	newsegment := &KafkaConsumer{}
 	if config["server"] == "" || config["topic"] == "" || config["group"] == "" {
 		log.Println("[error] KafkaConsumer: Missing required configuration parameters.")
 		return nil
+	} else {
+		newsegment.Server = config["server"]
+		newsegment.Topic = config["topic"]
+		newsegment.Group = config["group"]
 	}
 
 	var tls bool = true
@@ -40,6 +47,7 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 	} else {
 		log.Println("[info] KafkaConsumer: 'tls' set to default true.")
 	}
+	newsegment.Tls = tls
 
 	var auth bool = true
 	if config["auth"] != "" {
@@ -51,21 +59,31 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 	} else {
 		log.Println("[info] KafkaConsumer: 'auth' set to default true.")
 	}
+	newsegment.Auth = auth
 
 	if auth && (config["user"] == "" || config["pass"] == "") {
 		log.Println("[error] KafkaConsumer: Missing required configuration parameters for auth.")
 		return nil
+	} else {
+		newsegment.User = config["user"]
+		newsegment.Pass = config["pass"]
 	}
 
-	return &KafkaConsumer{
-		Server: config["server"],
-		Topic:  config["topic"],
-		Group:  config["group"],
-		User:   config["user"],
-		Pass:   config["pass"],
-		Tls:    tls,
-		Auth:   auth,
+	startAt := "newest"
+	var startingOffset int64 = -1 // see sarama const OffsetNewest
+	if config["startat"] != "" {
+		if strings.ToLower(config["startat"]) == "oldest" {
+			startAt = "oldest"
+			startingOffset = -2 // see sarama const OffsetOldest
+		} else if strings.ToLower(config["startat"]) != "newest" {
+			log.Println("[error] KafkaConsumer: Could not parse 'startat' parameter, using default 'newest'.")
+		}
+	} else {
+		log.Println("[info] KafkaConsumer: 'startat' set to default 'newest'.")
 	}
+	newsegment.startingOffset = startingOffset
+	newsegment.StartAt = startAt
+	return newsegment
 }
 
 func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
@@ -88,7 +106,7 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 		log.Printf("[info] KafkaConsumer: Authenticating as user '%s'.", segment.User)
 	}
 
-	err := kafkaConn.StartConsumer(segment.Server, strings.Split(segment.Topic, ","), segment.Group, -1)
+	err := kafkaConn.StartConsumer(segment.Server, strings.Split(segment.Topic, ","), segment.Group, segment.startingOffset)
 	if err != nil {
 		log.Fatalln("[error] KafkaConsumer: Error starting consumer, this usually indicates a misconfiguration (auth).")
 	}

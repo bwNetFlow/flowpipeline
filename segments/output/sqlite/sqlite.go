@@ -7,24 +7,35 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"reflect"
+	"strconv"
+	"strings"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
+	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 type Sqlite struct {
 	segments.BaseSegment
-	db *sql.DB
+	db              *sql.DB
+	fieldTypes      []string
+	fieldNames      []string
+	createStatement string
+	insertStatement string
 
-	FileName string // required
+	FileName  string // required
+	Fields    string // optional comma-separated list of fields to export, default is "", meaning all fields
+	BatchSize int    // optional how many flows to hold in memory between INSERTs, default is 1000
 }
 
 // Every Segment must implement a New method, even if there isn't any config
 // it is interested in.
 func (segment Sqlite) New(config map[string]string) segments.Segment {
-	// do config stuff here, add it to fields maybe
+	newsegment := &Sqlite{}
+
 	if config["filename"] == "" {
 		log.Println("[error] Sqlite: This segment requires a 'filename' parameter.")
 		return nil
@@ -34,10 +45,72 @@ func (segment Sqlite) New(config map[string]string) segments.Segment {
 		log.Printf("[error] Sqlite: Could not open DB file at %s.", config["filename"])
 		return nil
 	}
+	newsegment.FileName = config["filename"]
 
-	return &Sqlite{
-		FileName: config["filename"],
+	newsegment.BatchSize = 1000
+	if config["batchsize"] != "" {
+		if parsedBatchSize, err := strconv.ParseUint(config["batchsize"], 10, 32); err == nil {
+			if parsedBatchSize == 0 {
+				log.Println("[error] Sqlite: Batch size 0 is not allowed. Set this in relation to the expected flows per second.")
+				return nil
+			}
+			newsegment.BatchSize = int(parsedBatchSize)
+		} else {
+			log.Println("[error] Sqlite: Could not parse 'batchsize' parameter, using default 1000.")
+		}
+	} else {
+		log.Println("[info] Sqlite: 'batchsize' set to default '1000'.")
 	}
+
+	// determine field set
+	if config["fields"] != "" {
+		protofields := reflect.TypeOf(flow.FlowMessage{})
+		conffields := strings.Split(config["fields"], ",")
+		for _, field := range conffields {
+			protofield, found := protofields.FieldByName(field)
+			if !found {
+				log.Printf("[error] Csv: Field specified in 'fields' does not exist.")
+				return nil
+			}
+			newsegment.fieldNames = append(newsegment.fieldNames, field)
+			newsegment.fieldTypes = append(newsegment.fieldTypes, protofield.Type.String())
+		}
+	} else {
+		protofields := reflect.TypeOf(flow.FlowMessage{})
+		// +-3 skips over protobuf state, sizeCache and unknownFields
+		newsegment.fieldNames = make([]string, protofields.NumField()-3)
+		newsegment.fieldTypes = make([]string, protofields.NumField()-3)
+		for i := 3; i < protofields.NumField(); i++ {
+			field := protofields.Field(i)
+			newsegment.fieldNames[i-3] = field.Name
+			newsegment.fieldTypes[i-3] = field.Type.String()
+		}
+		newsegment.Fields = config["fields"]
+	}
+
+	// use field set to pre-gen statements
+	// create
+	var fields []string
+	for i, fieldname := range newsegment.fieldNames {
+		switch newsegment.fieldTypes[i] {
+		case "uint64", "uint32":
+			fields = append(fields, fieldname+" INTEGER")
+		default:
+			fields = append(fields, fieldname+" TEXT")
+		}
+	}
+	newsegment.createStatement = fmt.Sprintf(`CREATE TABLE IF NOT EXISTS flows (%s);`, strings.Join(fields, ","))
+
+	// insert
+	qmList := make([]string, 0, len(newsegment.fieldNames))
+	for i := 0; i < len(newsegment.fieldNames); i++ {
+		qmList = append(qmList, "?")
+	}
+	valueStrings := make([]string, 0, len(newsegment.fieldNames))
+	valueStrings = append(valueStrings, fmt.Sprintf("(%s)", strings.Join(qmList, ",")))
+	newsegment.insertStatement = fmt.Sprintf("INSERT INTO flows (%s) VALUES %s", strings.Join(newsegment.fieldNames, ","), strings.Join(valueStrings, ","))
+
+	return newsegment
 }
 
 func (segment *Sqlite) Run(wg *sync.WaitGroup) {
@@ -53,90 +126,65 @@ func (segment *Sqlite) Run(wg *sync.WaitGroup) {
 	}
 	defer segment.db.Close()
 
-	sqlStmt := `CREATE TABLE IF NOT EXISTS flows (
-		Type TEXT not null,
-		TimeReceived INTEGER,
-		SequenceNum INTEGER,
-	        SamplingRate INTEGER,
-		SamplerAddress TEXT,
-	        TimeFlowStart INTEGER,
-	        TimeFlowEnd INTEGER,
-	        Bytes INTEGER,
-	        Packets INTEGER,
-	        SrcAddr TEXT not null,
-	        DstAddr TEXT not null,
-	        Etype INTEGER,
-	        Proto INTEGER not null,
-	        SrcPort INTEGER not null,
-	        DstPort INTEGER not null,
-	        InIf INTEGER not null,
-	        OutIf INTEGER,
-	        IngressVrfID INTEGER,
-	        EgressVrfID INTEGER,
-		IPTos INTEGER,
-	        ForwardingStatus INTEGER,
-	        TCPFlags INTEGER,
-	        SrcAS INTEGER,
-	        NextHop TEXT,
-	        SrcNet INTEGER,
-	        DstNet INTEGER,
-	        Cid INTEGER,
-	        Normalized TEXT,
-	        SrcIfName TEXT,
-	        SrcIfDesc TEXT,
-	        SrcIfSpeed INTEGER,
-	        DstIfName TEXT,
-	        DstIfDesc TEXT,
-	        DstIfSpeed INTEGER,
-	        ProtoName TEXT,
-	        RemoteCountry TEXT);`
 	tx, err := segment.db.Begin()
 	if err != nil {
-		log.Panicf("[error] Sqlite: Could not start initiation transaction with error: %v", err)
+		log.Panicf("[error] Sqlite: Could not start initiation transaction with error: %+v", err)
 	}
-	_, err = tx.Exec(sqlStmt)
+	_, err = tx.Exec(segment.createStatement)
 	if err != nil {
-		log.Panicf("%+v", err) // this should never occur, as it would indicate an error in above create table statement
+		log.Panicf("[error] Sqlite: Could not create database, check field configuration: %+v", err)
 	}
 	tx.Commit()
 
+	var unsaved []*flow.FlowMessage
+
 	for msg := range segment.In {
-		sqlStmt := fmt.Sprintf(`INSERT INTO flows VALUES (
-			?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-		  	?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-
-		tx, err := segment.db.Begin()
-		if err != nil {
-			log.Printf("[warning] Sqlite: Could not start transaction with error: %v", err)
-			continue
+		unsaved = append(unsaved, msg)
+		if len(unsaved) >= segment.BatchSize {
+			err := segment.bulkInsert(unsaved)
+			if err != nil {
+				log.Printf("[error] %s", err)
+			}
+			unsaved = []*flow.FlowMessage{}
 		}
-
-		stmt, err := tx.Prepare(sqlStmt)
-		if err != nil {
-			log.Printf("[warning] Sqlite: Could not prepare statement with error: %v", err) // should never happen, indicates an error in above insert statement
-			tx.Rollback()
-			segment.Out <- msg
-			continue
-		}
-		defer stmt.Close()
-
-		_, err = stmt.Exec(msg.Type, msg.TimeReceived, msg.SequenceNum, msg.SamplingRate,
-			fmt.Sprint(net.IP(msg.SamplerAddress)), msg.TimeFlowStart, msg.TimeFlowEnd, msg.Bytes,
-			msg.Packets, fmt.Sprint(net.IP(msg.SrcAddr)), fmt.Sprint(net.IP(msg.DstAddr)), msg.Etype, msg.Proto, msg.SrcPort,
-			msg.DstPort, msg.InIf, msg.OutIf, msg.IngressVrfID, msg.EgressVrfID,
-			msg.IPTos, msg.ForwardingStatus, msg.TCPFlags, msg.SrcAS, fmt.Sprint(net.IP(msg.NextHop)),
-			msg.SrcNet, msg.DstNet, msg.Cid, msg.Normalized, msg.SrcIfName,
-			msg.SrcIfDesc, msg.SrcIfSpeed, msg.DstIfName, msg.DstIfDesc, msg.DstIfSpeed,
-			msg.ProtoName, msg.RemoteCountry)
-		if err != nil {
-			log.Printf("[warning] Sqlite: Could not insert flow data with error: %v", err)
-			tx.Rollback()
-			segment.Out <- msg
-			continue
-		}
-		tx.Commit()
 		segment.Out <- msg
 	}
+	segment.bulkInsert(unsaved)
+}
+
+func (segment Sqlite) bulkInsert(unsavedFlows []*flow.FlowMessage) error {
+	if len(unsavedFlows) == 0 {
+		return nil
+	}
+	tx, err := segment.db.Begin()
+	if err != nil {
+		log.Printf("[error] Sqlite: Error starting transaction for current batch of %d flows: %+v", len(unsavedFlows), err)
+	}
+	for _, msg := range unsavedFlows {
+		valueArgs := make([]interface{}, 0, len(segment.fieldNames))
+		values := reflect.ValueOf(msg).Elem()
+		for i, fieldname := range segment.fieldNames {
+			protofield := values.FieldByName(fieldname)
+			switch segment.fieldTypes[i] {
+			case "[]uint8": // this is neccessary for proper formatting
+				ipstring := net.IP(protofield.Interface().([]uint8)).String()
+				if ipstring == "<nil>" {
+					ipstring = ""
+				}
+				valueArgs = append(valueArgs, ipstring)
+			case "string": // this is because doing nothing is also much faster than Sprint
+				valueArgs = append(valueArgs, protofield.Interface().(string))
+			default:
+				valueArgs = append(valueArgs, fmt.Sprint(protofield))
+			}
+		}
+		_, err := tx.Exec(segment.insertStatement, valueArgs...)
+		if err != nil {
+			log.Printf("[error] Sqlite: Error inserting flow into transaction: %+v", err)
+		}
+	}
+	tx.Commit()
+	return nil
 }
 
 func init() {

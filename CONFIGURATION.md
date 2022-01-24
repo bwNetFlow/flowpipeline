@@ -149,6 +149,7 @@ it can be useful to adjust the window size (in seconds).
     percentile: 99.00
     exact: false
     window: 300
+    rampuptime: 0
 ```
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/elephant)

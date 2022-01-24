@@ -17,8 +17,9 @@ type Elephant struct {
 	Aspect     string  // optional, one of "bytes", "bps", "packets", or "pps", default is "bytes", determines which aspect qualifies a flow as an elephant
 	Percentile float64 // optional, default is 99.00, determines the cutoff percentile for flows being dropped by this segment, i.e. 95.00 corresponds to outputting the top 5% only
 	// TODO: add option to get bottom percent?
-	Exact  bool // optional, default is false, determines whether to use percentiles that are exact or generated using the P-square estimation algorithm
-	Window int  // optional, default is 300, sets the number of seconds used as a sliding window size
+	Exact      bool // optional, default is false, determines whether to use percentiles that are exact or generated using the P-square estimation algorithm
+	Window     int  // optional, default is 300, sets the number of seconds used as a sliding window size
+	RampupTime int  // optional, default is 0, sets the time to wait for analyzing flows. All flows within this Timerange are dropped.
 }
 
 func (segment Elephant) New(config map[string]string) segments.Segment {
@@ -74,11 +75,27 @@ func (segment Elephant) New(config map[string]string) segments.Segment {
 		log.Println("[info] Elephant: 'window' set to default 300.")
 	}
 
+	var rampuptime = 0
+	if config["rampuptime"] != "" {
+		if ramptime, err := strconv.ParseInt(config["rampuptime"], 10, 64); err == nil {
+			rampuptime = int(ramptime)
+			if rampuptime <= 0 {
+				log.Println("[error] Elephant: Rampuptime has to be >0.")
+				return nil
+			}
+		} else {
+			log.Println("[error] Elephant: Could not parse 'rampuptime' parameter, using default 0.")
+		}
+	} else {
+		log.Println("[info] Elephant: 'rampuptime' set to default 0.")
+	}
+
 	return &Elephant{
 		Aspect:     aspect,
 		Percentile: percentile,
 		Exact:      exact,
 		Window:     window,
+		RampupTime: rampuptime,
 	}
 }
 
@@ -87,6 +104,8 @@ func (segment *Elephant) Run(wg *sync.WaitGroup) {
 		close(segment.Out)
 		wg.Done()
 	}()
+
+	var rampupEnd = time.Now().Add(time.Duration(segment.RampupTime) * time.Second)
 	var window = rolling.NewTimePolicy(rolling.NewWindow(segment.Window), time.Second)
 	for msg := range segment.In {
 		var threshold float64
@@ -114,9 +133,13 @@ func (segment *Elephant) Run(wg *sync.WaitGroup) {
 		case "packets":
 			aspect = float64(msg.Packets)
 		}
-		if aspect >= threshold {
-			log.Printf("[debug] Elephant: Found elephant with size %d (>=%f)", msg.Bytes, threshold)
-			segment.Out <- msg
+
+		// Wait until configured ramp up phase timed out
+		if time.Now().After(rampupEnd) {
+			if aspect >= threshold {
+				log.Printf("[debug] Elephant: Found elephant with size %d (>=%f)", msg.Bytes, threshold)
+				segment.Out <- msg
+			}
 		}
 		window.Append(aspect)
 	}

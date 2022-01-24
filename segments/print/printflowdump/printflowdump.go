@@ -22,11 +22,13 @@ type PrintFlowdump struct {
 	segments.BaseSegment
 	UseProtoname bool // optional, default is true
 	Verbose      bool // optional, default is false
+	Highlight    bool // optional, default is false
 }
 
 func (segment *PrintFlowdump) Run(wg *sync.WaitGroup) {
 	defer func() {
 		close(segment.Out)
+		fmt.Println("\033[0m") // reset color in case we're still highlighting
 		wg.Done()
 	}()
 	for msg := range segment.In {
@@ -58,7 +60,18 @@ func (segment PrintFlowdump) New(config map[string]string) segments.Segment {
 		log.Println("[info] PrintFlowdump: 'verbose' set to default false.")
 	}
 
-	return &PrintFlowdump{UseProtoname: useProtoname, Verbose: verbose}
+	var highlight bool = false
+	if config["highlight"] != "" {
+		if parsedHighlight, err := strconv.ParseBool(config["highlight"]); err == nil {
+			highlight = parsedHighlight
+		} else {
+			log.Println("[error] PrintFlowdump: Could not parse 'highlight' parameter, using default false.")
+		}
+	} else {
+		log.Println("[info] PrintFlowdump: 'highlight' set to default false.")
+	}
+
+	return &PrintFlowdump{UseProtoname: useProtoname, Verbose: verbose, Highlight: highlight}
 
 }
 
@@ -175,8 +188,15 @@ func (segment PrintFlowdump) format_flow(flowmsg *flow.FlowMessage) string {
 		dstIfDesc = fmt.Sprint(flowmsg.OutIf)
 	}
 
-	return fmt.Sprintf("%s: %s:%d -> %s:%d [%s → %s@%s → %s], %s, %ds, %s, %s",
-		timestamp, src, flowmsg.SrcPort, dst, flowmsg.DstPort,
+	var color string
+	if segment.Highlight {
+		color = "\033[31m"
+	} else {
+		color = "\033[0m"
+	}
+
+	return fmt.Sprintf("%s%s: %s:%d -> %s:%d [%s → %s@%s → %s], %s, %ds, %s, %s",
+		color, timestamp, src, flowmsg.SrcPort, dst, flowmsg.DstPort,
 		srcIfDesc, statusString, router, dstIfDesc, proto, duration,
 		humanize.SI(float64(flowmsg.Bytes*8/duration), "bps"),
 		humanize.SI(float64(flowmsg.Packets/duration), "pps"))

@@ -74,6 +74,17 @@ conditional, limiting payload data, and multiple receivers.
 Segments in this group have the ability to change the sequence of segments any
 given flow traverses.
 
+#### blackhole
+The `blackhole` segment is used to drain a pipeline, effectively starting a new
+pipeline after it. In conjunction with `skip`, this can act as a `flowfilter`.
+
+```
+- segment: blackhole
+```
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/controlflow/blackhole)
+[examples using this segment](https://github.com/search?q=%22segment%3A+blackhole%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
 #### skip
 The `skip` segment is used to conditionally skip over segments behind it. For
 instance, in front of a export segment a condition such as `proto tcp` with a

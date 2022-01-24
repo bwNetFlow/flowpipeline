@@ -261,7 +261,7 @@ set forth by the universities.
 
 #### stdin
 The `stdin` segment reads JSON encoded flows from stdin or a given file and introduces this
-into the pipeline. This is intended to be used in conjunction with the `stdout`
+into the pipeline. This is intended to be used in conjunction with the `json`
 segment, which allows flowpipelines to be piped into each other.
 
 ```
@@ -584,7 +584,7 @@ This is intended to be able to pipe flows between instances of flowpipeline, but
 also very useful when debugging flowpipelines or to create a quick plaintext
 dump.
 ```
-- segment: stdout
+- segment: json
   # the lines below are optional and set to default
   config:
     filename: ""

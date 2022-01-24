@@ -66,12 +66,12 @@ func main() {
 		log.Printf("[error] reading config file: %s", err)
 		return
 	}
-	pipeline := pipeline.NewFromConfig(config)
-	pipeline.AutoDrain()
+	pipe := pipeline.NewFromConfig(config)
+	pipe.AutoDrain()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, os.Interrupt)
 	<-sigs
 
-	pipeline.Close()
+	pipe.Close()
 }

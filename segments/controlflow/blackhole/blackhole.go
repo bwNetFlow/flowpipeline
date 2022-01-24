@@ -1,4 +1,4 @@
-package skip
+package blackhole
 
 import (
 	"sync"

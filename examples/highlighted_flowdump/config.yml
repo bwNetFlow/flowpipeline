@@ -1,0 +1,42 @@
+---
+###############################################################################
+# Consume flow messages, it's best to use an enriched topic as flowdump
+# printing involves interface descriptions.
+- segment: kafkaconsumer
+  config:
+    server: kafka01.example.com:9093
+    topic: flow-messages-enriched
+    group: myuser-flowdump
+    user: myuser
+    pass: $KAFKA_SASL_PASS
+
+###############################################################################
+# If the condition supplied as an argument does not match, we'll skip the
+# following two segments
+- segment: skip
+  config:
+    skip: 2
+    condition: not ($0)
+    # alternatively to wrapping the conditional with `not ()`, we could use:
+    # condition: $0
+    # invert: true
+
+###############################################################################
+# This printflowdump is executed conditionally. It uses a verbose format and
+# highlights it's output in red.
+- segment: printflowdump
+  config:
+    highlight: 1
+    verbose: 1
+
+###############################################################################
+# This segment is the last of the skipped segments. Blackholing ensures that
+# the following segment does not see any flows seen by this "branch". In this
+# case, it prevents flows from being printed twice, once highlighted in red and
+# once regularly.
+- segment: blackhole
+
+
+###############################################################################
+# Print flowdump for all other flows
+- segment: printflowdump

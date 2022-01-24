@@ -21,11 +21,14 @@ import (
 type PrintFlowdump struct {
 	segments.BaseSegment
 	UseProtoname bool // optional, default is true
+	Verbose      bool // optional, default is false
+	Highlight    bool // optional, default is false
 }
 
 func (segment *PrintFlowdump) Run(wg *sync.WaitGroup) {
 	defer func() {
 		close(segment.Out)
+		fmt.Println("\033[0m") // reset color in case we're still highlighting
 		wg.Done()
 	}()
 	for msg := range segment.In {
@@ -45,7 +48,31 @@ func (segment PrintFlowdump) New(config map[string]string) segments.Segment {
 	} else {
 		log.Println("[info] PrintFlowdump: 'useprotoname' set to default true.")
 	}
-	return &PrintFlowdump{UseProtoname: useProtoname}
+
+	var verbose bool = false
+	if config["verbose"] != "" {
+		if parsedVerbose, err := strconv.ParseBool(config["verbose"]); err == nil {
+			verbose = parsedVerbose
+		} else {
+			log.Println("[error] PrintFlowdump: Could not parse 'verbose' parameter, using default false.")
+		}
+	} else {
+		log.Println("[info] PrintFlowdump: 'verbose' set to default false.")
+	}
+
+	var highlight bool = false
+	if config["highlight"] != "" {
+		if parsedHighlight, err := strconv.ParseBool(config["highlight"]); err == nil {
+			highlight = parsedHighlight
+		} else {
+			log.Println("[error] PrintFlowdump: Could not parse 'highlight' parameter, using default false.")
+		}
+	} else {
+		log.Println("[info] PrintFlowdump: 'highlight' set to default false.")
+	}
+
+	return &PrintFlowdump{UseProtoname: useProtoname, Verbose: verbose, Highlight: highlight}
+
 }
 
 func (segment PrintFlowdump) format_flow(flowmsg *flow.FlowMessage) string {
@@ -73,9 +100,79 @@ func (segment PrintFlowdump) format_flow(flowmsg *flow.FlowMessage) string {
 		duration += 1
 	}
 
-	var dropString string
-	if flowmsg.ForwardingStatus&0b10000000 == 0b10000000 {
-		dropString = fmt.Sprintf("DROP/%d", flowmsg.ForwardingStatus)
+	var statusString string
+	switch flowmsg.ForwardingStatus & 0b11000000 {
+	case 0b00000000:
+		statusString = fmt.Sprintf("UNKNOWN/%d", flowmsg.ForwardingStatus)
+	case 0b01000000:
+		if segment.Verbose {
+			switch flowmsg.ForwardingStatus {
+			case 64:
+				statusString = fmt.Sprintf("FORWARD/%d (regular)", flowmsg.ForwardingStatus)
+			case 65:
+				statusString = fmt.Sprintf("FORWARD/%d (fragmented)", flowmsg.ForwardingStatus)
+			case 66:
+				statusString = fmt.Sprintf("FORWARD/%d (not fragmented)", flowmsg.ForwardingStatus)
+			}
+		} else {
+			if flowmsg.ForwardingStatus != 64 {
+				statusString = fmt.Sprintf("FORWARD/%d", flowmsg.ForwardingStatus)
+			}
+		}
+	case 0b10000000:
+		if segment.Verbose {
+			switch flowmsg.ForwardingStatus {
+			case 128:
+				statusString = fmt.Sprintf("DROP/%d (unknown)", flowmsg.ForwardingStatus)
+			case 129:
+				statusString = fmt.Sprintf("DROP/%d (ACL deny)", flowmsg.ForwardingStatus)
+			case 130:
+				statusString = fmt.Sprintf("DROP/%d (ACL drop)", flowmsg.ForwardingStatus)
+			case 131:
+				statusString = fmt.Sprintf("DROP/%d (unroutable)", flowmsg.ForwardingStatus)
+			case 132:
+				statusString = fmt.Sprintf("DROP/%d (adjacency)", flowmsg.ForwardingStatus)
+			case 133:
+				statusString = fmt.Sprintf("DROP/%d (fragmentation but DF set)", flowmsg.ForwardingStatus)
+			case 134:
+				statusString = fmt.Sprintf("DROP/%d (bad header checksum)", flowmsg.ForwardingStatus)
+			case 135:
+				statusString = fmt.Sprintf("DROP/%d (bad total length)", flowmsg.ForwardingStatus)
+			case 136:
+				statusString = fmt.Sprintf("DROP/%d (bad header length)", flowmsg.ForwardingStatus)
+			case 137:
+				statusString = fmt.Sprintf("DROP/%d (bad TTL)", flowmsg.ForwardingStatus)
+			case 138:
+				statusString = fmt.Sprintf("DROP/%d (policer)", flowmsg.ForwardingStatus)
+			case 139:
+				statusString = fmt.Sprintf("DROP/%d (WRED)", flowmsg.ForwardingStatus)
+			case 140:
+				statusString = fmt.Sprintf("DROP/%d (RPF)", flowmsg.ForwardingStatus)
+			case 141:
+				statusString = fmt.Sprintf("DROP/%d (for us)", flowmsg.ForwardingStatus)
+			case 142:
+				statusString = fmt.Sprintf("DROP/%d (bad output interface)", flowmsg.ForwardingStatus)
+			case 143:
+				statusString = fmt.Sprintf("DROP/%d (hardware)", flowmsg.ForwardingStatus)
+			}
+		} else {
+			statusString = fmt.Sprintf("DROP/%d", flowmsg.ForwardingStatus)
+		}
+	case 0b11000000:
+		if segment.Verbose {
+			switch flowmsg.ForwardingStatus {
+			case 192:
+				statusString = fmt.Sprintf("CONSUMED/%d (unknown)", flowmsg.ForwardingStatus)
+			case 193:
+				statusString = fmt.Sprintf("CONSUMED/%d (terminate punt adjacency)", flowmsg.ForwardingStatus)
+			case 194:
+				statusString = fmt.Sprintf("CONSUMED/%d (terminate incomplete adjacency)", flowmsg.ForwardingStatus)
+			case 195:
+				statusString = fmt.Sprintf("CONSUMED/%d (terminate for us)", flowmsg.ForwardingStatus)
+			}
+		} else {
+			statusString = fmt.Sprintf("CONSUMED/%d", flowmsg.ForwardingStatus)
+		}
 	}
 
 	var srcIfDesc string
@@ -91,9 +188,16 @@ func (segment PrintFlowdump) format_flow(flowmsg *flow.FlowMessage) string {
 		dstIfDesc = fmt.Sprint(flowmsg.OutIf)
 	}
 
-	return fmt.Sprintf("%s: %s:%d -> %s:%d [%s → @%s → %s%s], %s, %ds, %s, %s",
-		timestamp, src, flowmsg.SrcPort, dst, flowmsg.DstPort,
-		srcIfDesc, router, dstIfDesc, dropString, proto, duration,
+	var color string
+	if segment.Highlight {
+		color = "\033[31m"
+	} else {
+		color = "\033[0m"
+	}
+
+	return fmt.Sprintf("%s%s: %s:%d -> %s:%d [%s → %s@%s → %s], %s, %ds, %s, %s",
+		color, timestamp, src, flowmsg.SrcPort, dst, flowmsg.DstPort,
+		srcIfDesc, statusString, router, dstIfDesc, proto, duration,
 		humanize.SI(float64(flowmsg.Bytes*8/duration), "bps"),
 		humanize.SI(float64(flowmsg.Packets/duration), "pps"))
 }

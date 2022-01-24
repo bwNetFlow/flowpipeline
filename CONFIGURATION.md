@@ -74,6 +74,17 @@ conditional, limiting payload data, and multiple receivers.
 Segments in this group have the ability to change the sequence of segments any
 given flow traverses.
 
+#### blackhole
+The `blackhole` segment is used to drain a pipeline, effectively starting a new
+pipeline after it. In conjunction with `skip`, this can act as a `flowfilter`.
+
+```
+- segment: blackhole
+```
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/controlflow/blackhole)
+[examples using this segment](https://github.com/search?q=%22segment%3A+blackhole%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
 #### skip
 The `skip` segment is used to conditionally skip over segments behind it. For
 instance, in front of a export segment a condition such as `proto tcp` with a
@@ -250,7 +261,7 @@ set forth by the universities.
 
 #### stdin
 The `stdin` segment reads JSON encoded flows from stdin or a given file and introduces this
-into the pipeline. This is intended to be used in conjunction with the `stdout`
+into the pipeline. This is intended to be used in conjunction with the `json`
 segment, which allows flowpipelines to be piped into each other.
 
 ```
@@ -573,7 +584,7 @@ This is intended to be able to pipe flows between instances of flowpipeline, but
 also very useful when debugging flowpipelines or to create a quick plaintext
 dump.
 ```
-- segment: stdout
+- segment: json
   # the lines below are optional and set to default
   config:
     filename: ""
@@ -642,11 +653,19 @@ This segment is commonly used as a pipeline with some input provider and the
 even more versatile when using `$0` as a placeholder in `flowfilter` to use the
 flowpipeline invocation's first argument as a filter.
 
+The parameter `verbose` changes some output elements, it will for instance add
+the decoded forwarding status (Cisco-style) in a human-readable manner. The
+`highlight` parameter causes the output of this segment to be printed in red,
+see the [relevant example](https://github.com/bwNetFlow/flowpipeline/tree/master/examples/highlighted_flowdump)
+for an application.
+
 ```
 - segment: printflowdump
   # the lines below are optional and set to default
   config:
     useprotoname: true
+    verbose: false
+    highlight: false
 
 ```
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/print/printflowdump)

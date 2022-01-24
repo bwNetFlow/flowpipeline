@@ -653,11 +653,19 @@ This segment is commonly used as a pipeline with some input provider and the
 even more versatile when using `$0` as a placeholder in `flowfilter` to use the
 flowpipeline invocation's first argument as a filter.
 
+The parameter `verbose` changes some output elements, it will for instance add
+the decoded forwarding status (Cisco-style) in a human-readable manner. The
+`highlight` parameter causes the output of this segment to be printed in red,
+see the [relevant example](https://github.com/bwNetFlow/flowpipeline/tree/master/examples/highlighted_flowdump)
+for an application.
+
 ```
 - segment: printflowdump
   # the lines below are optional and set to default
   config:
     useprotoname: true
+    verbose: false
+    highlight: false
 
 ```
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/print/printflowdump)

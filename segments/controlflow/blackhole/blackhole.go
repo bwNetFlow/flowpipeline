@@ -26,5 +26,5 @@ func (segment *Blackhole) Run(wg *sync.WaitGroup) {
 
 func init() {
 	segment := &Blackhole{}
-	segments.RegisterSegment("skip", segment)
+	segments.RegisterSegment("blackhole", segment)
 }

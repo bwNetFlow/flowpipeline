@@ -17,6 +17,7 @@ import (
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/alert/http"
 
+	_ "github.com/bwNetFlow/flowpipeline/segments/controlflow/blackhole"
 	_ "github.com/bwNetFlow/flowpipeline/segments/controlflow/skip"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/influx"

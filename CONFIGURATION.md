@@ -140,6 +140,7 @@ regard to flow duration. By default, it drops the lower 99% of flows with
 regard to the configured aspect and does not use exact percentile matching,
 instead relying on the much faster P-square estimation. For quick ad-hoc usage,
 it can be useful to adjust the window size (in seconds).
+The ramp up time defults to 0 (disabled), but can be configured to wait for analyzing flows. All flows within this Timerange are dropped after the start of the pipeline.
 
 ```
 - segment: elephant

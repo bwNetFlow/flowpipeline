@@ -142,6 +142,31 @@ Segments in this group all drop flows, i.e. remove them from the pipeline from
 this segment on. Fields in individual flows are never modified, only used as
 criteria.
 
+#### elephant
+The `elephant` segment uses a configurable sliding window to determine flow
+statistics at runtime and filter out unremarkable flows from the pipeline. This
+segment can be configured to look at different aspects of single flows, i.e.
+either the plain byte/packet counts or the average of those per second with
+regard to flow duration. By default, it drops the lower 99% of flows with
+regard to the configured aspect and does not use exact percentile matching,
+instead relying on the much faster P-square estimation. For quick ad-hoc usage,
+it can be useful to adjust the window size (in seconds).
+The ramp up time defults to 0 (disabled), but can be configured to wait for analyzing flows. All flows within this Timerange are dropped after the start of the pipeline.
+
+```
+- segment: elephant
+  # the lines below are optional and set to default
+  config:
+    aspect: "bytes"
+    percentile: 99.00
+    exact: false
+    window: 300
+    rampuptime: 0
+```
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/elephant)
+[examples using this segment](https://github.com/search?q=%22segment%3A+elephant%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
 #### flowfilter
 The `flowfilter` segment uses
 [flowfilter syntax](https://github.com/bwNetFlow/flowfilter) to drop flows
@@ -156,7 +181,7 @@ flow passing through this segment.
 
 [flowfilter syntax](https://github.com/bwNetFlow/flowfilter)
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/filter)
-[examples using this segment](https://github.com/search?q=%22segment%3A+filter%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+[examples using this segment](https://github.com/search?q=%22segment%3A+flowfilter%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 ### Input Group
 Segments in this group import or collect flows and provide them to all

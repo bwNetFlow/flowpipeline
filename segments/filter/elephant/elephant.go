@@ -105,15 +105,15 @@ func (segment *Elephant) Run(wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 
-	var rampupEnd = time.Now().Add(time.Duration(segment.RampupTime) * time.Second)
+	var inRampup bool
+	var rampupEnd time.Time
+	if segment.RampupTime > 0 {
+		inRampup = true
+		rampupEnd = time.Now().Add(time.Duration(segment.RampupTime) * time.Second)
+	}
 	var window = rolling.NewTimePolicy(rolling.NewWindow(segment.Window), time.Second)
 	for msg := range segment.In {
-		var threshold float64
-		if segment.Exact {
-			threshold = window.Reduce(rolling.Percentile(segment.Percentile))
-		} else {
-			threshold = window.Reduce(rolling.FastPercentile(segment.Percentile))
-		}
+		// always determine a flow's aspect to append to the window
 		var aspect float64
 		switch segment.Aspect {
 		case "bytes":
@@ -133,15 +133,31 @@ func (segment *Elephant) Run(wg *sync.WaitGroup) {
 		case "packets":
 			aspect = float64(msg.Packets)
 		}
+		window.Append(aspect)
 
-		// Wait until configured ramp up phase timed out
-		if time.Now().After(rampupEnd) {
+		// Check if ramp up phase is over. Shortcircuiting avoids
+		// permanent checks against time.Now().
+		if inRampup && time.Now().After(rampupEnd) {
+			inRampup = false
+			log.Println("[info] Elephant: RampupTime complete, passing through flows now.")
+		}
+		// Only do expensive threshold calculation when out of ramp up
+		// phase.
+		// This checks inRampup a second time instead of just using
+		// else with the previous if to ensure the first flow after
+		// rampupEnd is considered.
+		if !inRampup {
+			var threshold float64
+			if segment.Exact {
+				threshold = window.Reduce(rolling.Percentile(segment.Percentile))
+			} else {
+				threshold = window.Reduce(rolling.FastPercentile(segment.Percentile))
+			}
 			if aspect >= threshold {
 				log.Printf("[debug] Elephant: Found elephant with size %d (>=%f)", msg.Bytes, threshold)
 				segment.Out <- msg
 			}
 		}
-		window.Append(aspect)
 	}
 }
 

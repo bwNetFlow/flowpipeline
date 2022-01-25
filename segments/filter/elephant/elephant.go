@@ -79,8 +79,8 @@ func (segment Elephant) New(config map[string]string) segments.Segment {
 	if config["rampuptime"] != "" {
 		if ramptime, err := strconv.ParseInt(config["rampuptime"], 10, 64); err == nil {
 			rampuptime = int(ramptime)
-			if rampuptime <= 0 {
-				log.Println("[error] Elephant: Rampuptime has to be >0.")
+			if rampuptime < 0 {
+				log.Println("[error] Elephant: Rampuptime has to be >= 0.")
 				return nil
 			}
 		} else {

@@ -4,3 +4,4 @@ config
 .vscode
 flowpipeline
 *.sqlite
+csvs

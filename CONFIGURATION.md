@@ -260,12 +260,12 @@ state for this specific user/topic/consumergroup combination.
     server: some.kafka.server.example.com:9092
     topic: flow-topic-name
     group: consumer-group-name
-    tls: true
-    auth: true
     # required if auth is true
     user: myusername
     pass: mypassword
     # the lines below are optional and set to default
+    tls: true
+    auth: true
     startat: newest
 ```
 
@@ -564,13 +564,12 @@ number of other things.
     # required fields
     server: some.kafka.server.example.com:9092
     topic: flow-topic-name
-    group: consumer-group-name
-    tls: true
-    auth: true
     # required if auth is true
     user: myusername
     pass: mypassword
     # the lines below are optional and set to default
+    tls: true
+    auth: true
     topicsuffix: ""
 ```
 

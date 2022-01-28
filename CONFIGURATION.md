@@ -349,7 +349,7 @@ this can be configured using the fields parameter.
 ```
 - segment: anonymize
   config:
-    encryptionkey: "abcdef"
+    key: "abcdef"
     # the lines below are optional and set to default
     fields: "SrcAddr,DstAddr,SamplerAddress"
 ```

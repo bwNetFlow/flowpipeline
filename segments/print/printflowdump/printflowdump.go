@@ -205,7 +205,7 @@ func (segment PrintFlowdump) format_flow(flowmsg *flow.FlowMessage) string {
 		color = "\033[0m"
 	}
 
-	return fmt.Sprintf("%s%s: %s%s:%d -> %s%s:%d [%s → %s@%s → %s], %s, %ds, %s, %s",
+	return fmt.Sprintf("%s%s: %s%s:%d → %s%s:%d [%s → %s@%s → %s], %s, %ds, %s, %s",
 		color, timestamp, srcas, src, flowmsg.SrcPort, dstas, dst,
 		flowmsg.DstPort, srcIfDesc, statusString, router, dstIfDesc,
 		proto, duration,

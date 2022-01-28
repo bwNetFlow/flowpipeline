@@ -1,14 +1,11 @@
 ---
 ###############################################################################
-# Consume flow messages, it's best to use an enriched topic as flowdump
-# printing involves interface descriptions.
-- segment: kafkaconsumer
+# Generate flow messages from packet headers. This uses a eBPF program and a
+# custom flow cache. Requires root or the correct capabilities as specified by
+# the projects README.md
+- segment: bpf
   config:
-    server: kafka01.example.com:9093
-    topic: flow-messages-enriched
-    group: myuser-flowdump
-    user: myuser
-    pass: $KAFKA_SASL_PASS
+    device: eth0
 
 ###############################################################################
 # Filter flows dynamically, i.e. via commandline argument. This makes for a
@@ -16,10 +13,6 @@
 - segment: flowfilter
   config:
     filter: $0  # this refers to the first arg.
-
-###############################################################################
-# Add human readable protocol names to any flow message
-- segment: protomap
 
 ###############################################################################
 # Print flowdump, this is a predefined format that is not configurable at this

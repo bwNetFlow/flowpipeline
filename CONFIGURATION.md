@@ -354,7 +354,7 @@ this can be configured using the fields parameter.
     fields: "SrcAddr,DstAddr,SamplerAddress"
 ```
 
-[any additional links](https://bwnet.belwue.de)
+[CryptoPan module](https://github.com/Yawning/cryptopan)
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/anonymize)
 [examples using this segment](https://github.com/search?q=%22segment%3A+anonymize%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
@@ -529,6 +529,8 @@ sequence to export to different places.
 The `csv` segment provides an CSV output option. It uses stdout by default, but
 can be instructed to write to file using the filename parameter. The fields
 parameter can be used to limit which fields will be exported.
+If no filename is provided or empty, the output goes to stdout.
+By default all fields are exported. To reduce them, use a valid comma seperated list of fields.
 
 ```
 - segment: csv

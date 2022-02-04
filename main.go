@@ -69,6 +69,7 @@ func main() {
 		return
 	}
 	pipe := pipeline.NewFromConfig(config)
+	pipe.Start()
 	pipe.AutoDrain()
 
 	sigs := make(chan os.Signal, 1)

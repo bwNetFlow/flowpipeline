@@ -23,7 +23,7 @@ type Pipeline struct {
 // the Out channel and discards it. This is a convenience function to enable
 // having a segment at the end of the pipeline handle all results, i.e. having
 // no post-pipeline processing.
-func (pipeline Pipeline) AutoDrain() {
+func (pipeline *Pipeline) AutoDrain() {
 	go func() {
 		for _ = range pipeline.Out {
 		}
@@ -35,7 +35,7 @@ func (pipeline Pipeline) AutoDrain() {
 // segments to propagate this close event through the full pipeline,
 // terminating all segment goroutines and thus releasing the waitgroup.
 // Blocking.
-func (pipeline Pipeline) Close() {
+func (pipeline *Pipeline) Close() {
 	defer func() {
 		recover() // in case In is already closed
 		pipeline.wg.Wait()
@@ -47,7 +47,6 @@ func (pipeline Pipeline) Close() {
 // therein. Initialization includes creating any intermediate channels and
 // wiring up the segments in the segmentList with them.
 func New(segmentList ...segments.Segment) *Pipeline {
-	wg := sync.WaitGroup{}
 	// the following loops need to be split so that Rewire can work with
 	// non-nil channels from further ahead in the pipeline... important for
 	// skip segments
@@ -58,8 +57,14 @@ func New(segmentList ...segments.Segment) *Pipeline {
 	}
 	for i, segment := range segmentList {
 		segment.Rewire(channels, uint(i), uint(i+1))
-		wg.Add(1)
-		go segment.Run(&wg)
 	}
-	return &Pipeline{In: channels[0], Out: channels[len(channels)-1], wg: &wg, SegmentList: segmentList}
+	return &Pipeline{In: channels[0], Out: channels[len(channels)-1], wg: &sync.WaitGroup{}, SegmentList: segmentList}
+}
+
+// Starts the Pipeline by starting all segment goroutines therein.
+func (pipeline *Pipeline) Start() {
+	for _, segment := range pipeline.SegmentList {
+		pipeline.wg.Add(1)
+		go segment.Run(pipeline.wg)
+	}
 }

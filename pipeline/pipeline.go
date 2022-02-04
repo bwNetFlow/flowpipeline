@@ -19,6 +19,14 @@ type Pipeline struct {
 	SegmentList []segments.Segment `yaml: segments`
 }
 
+func (pipeline *Pipeline) GetInput() chan *flow.FlowMessage {
+	return pipeline.In
+}
+
+func (pipeline *Pipeline) GetOutput() <-chan *flow.FlowMessage {
+	return pipeline.Out
+}
+
 // Starts up a goroutine specific to this Pipeline which reads any message from
 // the Out channel and discards it. This is a convenience function to enable
 // having a segment at the end of the pipeline handle all results, i.e. having

@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
+	"github.com/bwNetFlow/flowpipeline/segments/filter/elephant"
+	"github.com/bwNetFlow/flowpipeline/segments/filter/flowfilter"
 	flow "github.com/bwNetFlow/protobuf/go"
 )
 
@@ -15,8 +17,9 @@ import (
 type Pipeline struct {
 	In          chan *flow.FlowMessage
 	Out         <-chan *flow.FlowMessage
+	Drop        chan *flow.FlowMessage
 	wg          *sync.WaitGroup
-	SegmentList []segments.Segment `yaml: segments`
+	SegmentList []segments.Segment
 }
 
 func (pipeline *Pipeline) GetInput() chan *flow.FlowMessage {
@@ -25,6 +28,22 @@ func (pipeline *Pipeline) GetInput() chan *flow.FlowMessage {
 
 func (pipeline *Pipeline) GetOutput() <-chan *flow.FlowMessage {
 	return pipeline.Out
+}
+
+func (pipeline *Pipeline) GetDrop() <-chan *flow.FlowMessage {
+	if pipeline.Drop != nil {
+		return pipeline.Drop
+	}
+	pipeline.Drop = make(chan *flow.FlowMessage)
+	for _, segment := range pipeline.SegmentList {
+		switch typedSegment := segment.(type) { // handle special segments
+		case *flowfilter.FlowFilter:
+			typedSegment.SubscribeDrops(pipeline.Drop)
+		case *elephant.Elephant:
+			typedSegment.SubscribeDrops(pipeline.Drop)
+		}
+	}
+	return pipeline.Drop
 }
 
 // Starts up a goroutine specific to this Pipeline which reads any message from

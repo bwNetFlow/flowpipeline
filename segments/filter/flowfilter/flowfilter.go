@@ -17,6 +17,7 @@ type FlowFilter struct {
 	segments.BaseSegment
 	Filter string // optional, default is empty
 
+	drops      chan<- *flow.FlowMessage
 	expression *parser.Expression
 }
 
@@ -52,8 +53,17 @@ func (segment *FlowFilter) Run(wg *sync.WaitGroup) {
 	for msg := range segment.In {
 		if match, _ := filter.CheckFlow(segment.expression, msg); match {
 			segment.Out <- msg
+		} else if segment.drops != nil {
+			segment.drops <- msg
+			if r := recover(); r != nil {
+				segment.drops = nil
+			}
 		}
 	}
+}
+
+func (segment *FlowFilter) SubscribeDrops(drops chan<- *flow.FlowMessage) {
+	segment.drops = drops
 }
 
 func init() {

@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
+	"github.com/bwNetFlow/flowpipeline/segments/filter/drop"
 	"github.com/bwNetFlow/flowpipeline/segments/filter/elephant"
 	"github.com/bwNetFlow/flowpipeline/segments/filter/flowfilter"
 	flow "github.com/bwNetFlow/protobuf/go"
@@ -37,9 +38,11 @@ func (pipeline *Pipeline) GetDrop() <-chan *flow.FlowMessage {
 	pipeline.Drop = make(chan *flow.FlowMessage)
 	for _, segment := range pipeline.SegmentList {
 		switch typedSegment := segment.(type) { // handle special segments
-		case *flowfilter.FlowFilter:
+		case *drop.Drop:
 			typedSegment.SubscribeDrops(pipeline.Drop)
 		case *elephant.Elephant:
+			typedSegment.SubscribeDrops(pipeline.Drop)
+		case *flowfilter.FlowFilter:
 			typedSegment.SubscribeDrops(pipeline.Drop)
 		}
 	}

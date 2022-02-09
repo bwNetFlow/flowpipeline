@@ -1,0 +1,22 @@
+---
+###############################################################################
+# Consume flow messages, it's best to use an enriched topic as flowdump
+# printing involves interface descriptions.
+- segment: kafkaconsumer
+  config:
+    server: kafka01.example.com:9093
+    topic: flow-messages-enriched
+    group: myuser-flowdump
+    user: myuser
+    pass: $KAFKA_SASL_PASS
+
+###############################################################################
+# CSV output with given fields. If no filename is configured output
+# is redirected to stdout.
+# 
+# Example list for fields may look like
+# "TimeFlowStart,TimeFlowEnd,Bytes,Packets,SrcAddr,SrcPort,FlowDirection,DstAddr,DstPort,Proto"
+- segment: csv
+  config:
+    filename: ""
+    fields: ""

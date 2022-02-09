@@ -1,0 +1,20 @@
+---
+###############################################################################
+# Consume flow messages, it's best to use an enriched topic as flowdump
+# printing involves interface descriptions.
+- segment: kafkaconsumer
+  config:
+    server: kafka01.example.com:9093
+    topic: flow-messages-enriched
+    group: myuser-flowdump
+    user: myuser
+    pass: $KAFKA_SASL_PASS
+
+###############################################################################
+# tcpdump-style output of flows to stdout
+- segment: printflowdump
+  # the lines below are optional and set to default
+  config:
+    useprotoname: true
+    verbose: false
+    highlight: false

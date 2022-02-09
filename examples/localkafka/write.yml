@@ -1,4 +1,9 @@
 ---
+# Note that this write.yml could just as well be a real goflow2 instance as no
+# additional processing takes place. Thus, using goflow2 directly might be
+# preferrable.
+
+
 ###############################################################################
 # Receive Netflow v9 using Goflow on a local port.
 - segment: goflow

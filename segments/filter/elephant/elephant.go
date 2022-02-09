@@ -10,19 +10,16 @@ import (
 
 	"github.com/asecurityteam/rolling"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 type Elephant struct {
-	segments.BaseSegment
+	segments.BaseFilterSegment
 	Aspect     string  // optional, one of "bytes", "bps", "packets", or "pps", default is "bytes", determines which aspect qualifies a flow as an elephant
 	Percentile float64 // optional, default is 99.00, determines the cutoff percentile for flows being dropped by this segment, i.e. 95.00 corresponds to outputting the top 5% only
 	// TODO: add option to get bottom percent?
 	Exact      bool // optional, default is false, determines whether to use percentiles that are exact or generated using the P-square estimation algorithm
 	Window     int  // optional, default is 300, sets the number of seconds used as a sliding window size
 	RampupTime int  // optional, default is 0, sets the time to wait for analyzing flows. All flows within this Timerange are dropped.
-
-	drops chan<- *flow.FlowMessage
 }
 
 func (segment Elephant) New(config map[string]string) segments.Segment {
@@ -163,17 +160,13 @@ func (segment *Elephant) Run(wg *sync.WaitGroup) {
 			}
 		}
 		// implicit "if inRampup || aspect < threshold"
-		if segment.drops != nil {
-			segment.drops <- msg
+		if segment.Drops != nil {
+			segment.Drops <- msg
 			if r := recover(); r != nil {
-				segment.drops = nil
+				segment.Drops = nil
 			}
 		}
 	}
-}
-
-func (segment *Elephant) SubscribeDrops(drops chan<- *flow.FlowMessage) {
-	segment.drops = drops
 }
 
 func init() {

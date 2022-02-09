@@ -4,12 +4,10 @@ import (
 	"sync"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 type Drop struct {
-	segments.BaseSegment
-	drops chan<- *flow.FlowMessage
+	segments.BaseFilterSegment
 }
 
 func (segment Drop) New(config map[string]string) segments.Segment {
@@ -23,17 +21,13 @@ func (segment *Drop) Run(wg *sync.WaitGroup) {
 	}()
 
 	for msg := range segment.In {
-		if segment.drops != nil {
-			segment.drops <- msg
+		if segment.Drops != nil {
+			segment.Drops <- msg
 			if r := recover(); r != nil {
-				segment.drops = nil
+				segment.Drops = nil
 			}
 		}
 	}
-}
-
-func (segment *Drop) SubscribeDrops(drops chan<- *flow.FlowMessage) {
-	segment.drops = drops
 }
 
 func init() {

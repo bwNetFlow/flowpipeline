@@ -80,6 +80,21 @@ type BaseSegment struct {
 	Out chan<- *flow.FlowMessage
 }
 
+// An extended basis for Segment implementations in the filter group. It
+// contains the necessities to process filtered (dropped) flows.
+type BaseFilterSegment struct {
+	BaseSegment
+	Drops chan<- *flow.FlowMessage
+}
+
+// Set a return channel for dropped flow messages. Segments need to be wary of
+// this channel closing when producing messages to this channel. This method is
+// only called by the flowpipeline tool from the controlflow/branch segment to
+// implement the then/else branches, otherwise this functionality is unused.
+func (segment *BaseFilterSegment) SubscribeDrops(drops chan<- *flow.FlowMessage) {
+	segment.Drops = drops
+}
+
 // This function rewires this Segment with the provided channels. This is
 // typically called only by pipeline.New() and present in any Segment
 // implementation embedding the BaseSegment.

@@ -41,7 +41,7 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/remoteaddress"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/snmp"
 
-	_ "github.com/bwNetFlow/flowpipeline/segments/noop"
+	_ "github.com/bwNetFlow/flowpipeline/segments/pass"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/csv"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/json"

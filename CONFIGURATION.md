@@ -699,8 +699,8 @@ for an application.
 
 This is for internally used segments only.
 
-#### noop
-The `noop` segment serves as a heavily annotated template for new segments. So
+#### pass
+The `pass` segment serves as a heavily annotated template for new segments. So
 does this piece of documentation. Aside from summarizing what a segment does,
 it should include a description of all the parameters it accepts as well as any
 caveats users should be aware of.
@@ -710,12 +710,12 @@ Roadmap:
 * and here
 
 ```
-- segment: noop
+- segment: pass
   # the lines below are optional and set to default
   config:
     jk: this segment actually has no config at all, its just for this template
 ```
 
 [any additional links](https://bwnet.belwue.de)
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/noop)
-[examples using this segment](https://github.com/search?q=%22segment%3A+noop%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/pass)
+[examples using this segment](https://github.com/search?q=%22segment%3A+pass%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)

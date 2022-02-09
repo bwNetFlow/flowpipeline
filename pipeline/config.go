@@ -8,12 +8,12 @@ import (
 
 	"github.com/bwNetFlow/flowpipeline/segments"
 	"github.com/bwNetFlow/flowpipeline/segments/controlflow/subpipeline"
-	"github.com/bwNetFlow/flowpipeline/segments/noop"
+	"github.com/bwNetFlow/flowpipeline/segments/pass"
 	"gopkg.in/yaml.v2"
 )
 
 // A config representation of a segment. It is intended to look like this:
-//   - segment: noop
+//   - segment: pass
 //     config:
 //       key: value
 //       foo: bar
@@ -76,13 +76,13 @@ func SegmentsFromRepr(segmentReprs *[]SegmentRepr) []segments.Segment {
 		case *subpipeline.SubPipeline:
 			var conditionalSegments []segments.Segment
 			if len(segmentrepr.Condition) == 0 {
-				conditionalSegments = []segments.Segment{&noop.NoOp{}}
+				conditionalSegments = []segments.Segment{&pass.Pass{}}
 			} else {
 				conditionalSegments = SegmentsFromRepr(&segmentrepr.Condition)
 			}
 			var subpipelineSegments []segments.Segment
 			if len(segmentrepr.Segments) == 0 {
-				subpipelineSegments = []segments.Segment{&noop.NoOp{}}
+				subpipelineSegments = []segments.Segment{&pass.Pass{}}
 			} else {
 				subpipelineSegments = SegmentsFromRepr(&segmentrepr.Segments)
 			}

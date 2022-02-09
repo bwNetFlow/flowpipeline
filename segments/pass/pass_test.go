@@ -1,4 +1,4 @@
-package noop
+package pass
 
 import (
 	"io/ioutil"
@@ -22,21 +22,21 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-// NoOp Segment test, passthrough test
-func TestSegment_NoOp_passthrough(t *testing.T) {
-	result := segments.TestSegment("noop", map[string]string{},
+// Pass Segment test, passthrough test
+func TestSegment_Pass(t *testing.T) {
+	result := segments.TestSegment("pass", map[string]string{},
 		&flow.FlowMessage{Type: 3})
 	if result.Type != 3 {
-		t.Error("Segment NoOp is not working.")
+		t.Error("Segment Pass is not working.")
 	}
 }
 
-// NoOp Segment benchmark passthrough
-func BenchmarkNoOp(b *testing.B) {
+// Pass Segment benchmark passthrough
+func BenchmarkPass(b *testing.B) {
 	log.SetOutput(ioutil.Discard)
 	os.Stdout, _ = os.Open(os.DevNull)
 
-	segment := NoOp{}
+	segment := Pass{}
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
 	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)

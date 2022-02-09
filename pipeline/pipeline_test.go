@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
-	"github.com/bwNetFlow/flowpipeline/segments/noop"
+	"github.com/bwNetFlow/flowpipeline/segments/pass"
 	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 func TestPipelineBuild(t *testing.T) {
-	segmentList := []segments.Segment{&noop.NoOp{}, &noop.NoOp{}}
+	segmentList := []segments.Segment{&pass.Pass{}, &pass.Pass{}}
 	pipeline := New(segmentList...)
 	pipeline.In <- &flow.FlowMessage{Type: 3}
 	fmsg := <-pipeline.Out
@@ -19,7 +19,7 @@ func TestPipelineBuild(t *testing.T) {
 }
 
 func TestPipelineTeardown(t *testing.T) {
-	segmentList := []segments.Segment{&noop.NoOp{}, &noop.NoOp{}}
+	segmentList := []segments.Segment{&pass.Pass{}, &pass.Pass{}}
 	pipeline := New(segmentList...)
 	pipeline.AutoDrain()
 	pipeline.In <- &flow.FlowMessage{Type: 3}
@@ -28,7 +28,7 @@ func TestPipelineTeardown(t *testing.T) {
 
 func TestPipelineConfigSuccess(t *testing.T) {
 	pipeline := NewFromConfig([]byte(`---
-- segment: noop
+- segment: pass
   config:
     foo: $baz
     bar: $0`))

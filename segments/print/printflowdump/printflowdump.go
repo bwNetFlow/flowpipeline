@@ -80,6 +80,16 @@ func (segment PrintFlowdump) format_flow(flowmsg *flow.FlowMessage) string {
 	src := net.IP(flowmsg.SrcAddr)
 	dst := net.IP(flowmsg.DstAddr)
 	router := net.IP(flowmsg.SamplerAddress)
+
+	var srcas, dstas string
+	if segment.Verbose {
+		if flowmsg.SrcAS != 0 {
+			srcas = fmt.Sprintf("AS%d/", flowmsg.SrcAS)
+		}
+		if flowmsg.DstAS != 0 {
+			dstas = fmt.Sprintf("AS%d/", flowmsg.DstAS)
+		}
+	}
 	var proto string
 	if segment.UseProtoname {
 		if flowmsg.ProtoName != "" {
@@ -195,9 +205,10 @@ func (segment PrintFlowdump) format_flow(flowmsg *flow.FlowMessage) string {
 		color = "\033[0m"
 	}
 
-	return fmt.Sprintf("%s%s: %s:%d -> %s:%d [%s → %s@%s → %s], %s, %ds, %s, %s",
-		color, timestamp, src, flowmsg.SrcPort, dst, flowmsg.DstPort,
-		srcIfDesc, statusString, router, dstIfDesc, proto, duration,
+	return fmt.Sprintf("%s%s: %s%s:%d → %s%s:%d [%s → %s@%s → %s], %s, %ds, %s, %s",
+		color, timestamp, srcas, src, flowmsg.SrcPort, dstas, dst,
+		flowmsg.DstPort, srcIfDesc, statusString, router, dstIfDesc,
+		proto, duration,
 		humanize.SI(float64(flowmsg.Bytes*8/duration), "bps"),
 		humanize.SI(float64(flowmsg.Packets/duration), "pps"))
 }

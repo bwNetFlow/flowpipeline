@@ -125,6 +125,13 @@ ones in a sqlite export:
 
 
 #### skip
+
+*DEPRECATION NOTICE*: This segment will be deprecated in a future version of
+flowpipeline. In any but the most convoluted examples, the `branch` segment
+documented directly above is the clearer and more legible choice. This will
+also greatly simplify the setup internals of segments.
+
+
 The `skip` segment is used to conditionally skip over segments behind it. For
 instance, in front of a export segment a condition such as `proto tcp` with a
 skip value of `1` would result in any TCP flows not being exported by the

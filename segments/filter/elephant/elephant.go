@@ -159,13 +159,11 @@ func (segment *Elephant) Run(wg *sync.WaitGroup) {
 			if aspect >= threshold {
 				log.Printf("[debug] Elephant: Found elephant with size %d (>=%f)", msg.Bytes, threshold)
 				segment.Out <- msg
-			} else if segment.drops != nil {
-				segment.drops <- msg
-				if r := recover(); r != nil {
-					segment.drops = nil
-				}
+				continue
 			}
-		} else if segment.drops != nil {
+		}
+		// implicit "if inRampup || aspect < threshold"
+		if segment.drops != nil {
 			segment.drops <- msg
 			if r := recover(); r != nil {
 				segment.drops = nil

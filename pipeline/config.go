@@ -7,8 +7,7 @@ import (
 	"strconv"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
-	"github.com/bwNetFlow/flowpipeline/segments/controlflow/subpipeline"
-	"github.com/bwNetFlow/flowpipeline/segments/pass"
+	"github.com/bwNetFlow/flowpipeline/segments/controlflow/branch"
 	"gopkg.in/yaml.v2"
 )
 
@@ -19,10 +18,11 @@ import (
 //       foo: bar
 // This struct has the appropriate yaml tags inline.
 type SegmentRepr struct {
-	Name      string            `yaml:"segment"`                 // to be looked up with a registry
-	Config    map[string]string `yaml:"config"`                  // to be expanded by our instance
-	Segments  []SegmentRepr     `yaml:"segments,omitempty,flow"` // only used by group segment
-	Condition []SegmentRepr     `yaml:"if,omitempty,flow"`       // only used by group segment
+	Name   string            `yaml:"segment"`             // to be looked up with a registry
+	Config map[string]string `yaml:"config"`              // to be expanded by our instance
+	If     []SegmentRepr     `yaml:"if,omitempty,flow"`   // only used by group segment
+	Then   []SegmentRepr     `yaml:"then,omitempty,flow"` // only used by group segment
+	Else   []SegmentRepr     `yaml:"else,omitempty,flow"` // only used by group segment
 }
 
 // Returns the SegmentRepr's Config with all its variables expanded. It tries
@@ -73,21 +73,12 @@ func SegmentsFromRepr(segmentReprs *[]SegmentRepr) []segments.Segment {
 		// the Segment's New method knows how to handle our config
 		segment := segmentTemplate.New(segmentrepr.ExpandedConfig())
 		switch segment := segment.(type) { // handle special segments
-		case *subpipeline.SubPipeline:
-			var conditionalSegments []segments.Segment
-			if len(segmentrepr.Condition) == 0 {
-				conditionalSegments = []segments.Segment{&pass.Pass{}}
-			} else {
-				conditionalSegments = SegmentsFromRepr(&segmentrepr.Condition)
-			}
-			var subpipelineSegments []segments.Segment
-			if len(segmentrepr.Segments) == 0 {
-				subpipelineSegments = []segments.Segment{&pass.Pass{}}
-			} else {
-				subpipelineSegments = SegmentsFromRepr(&segmentrepr.Segments)
-			}
-			segment.ImportConditionalPipeline(New(conditionalSegments...))
-			segment.ImportSubpipeline(New(subpipelineSegments...))
+		case *branch.Branch:
+			segment.ImportBranches(
+				New(SegmentsFromRepr(&segmentrepr.If)...),
+				New(SegmentsFromRepr(&segmentrepr.Then)...),
+				New(SegmentsFromRepr(&segmentrepr.Else)...),
+			)
 		}
 		if segment != nil {
 			segmentList[i] = segment

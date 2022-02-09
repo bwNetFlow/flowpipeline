@@ -36,8 +36,10 @@ func (pipeline *Pipeline) GetDrop() <-chan *flow.FlowMessage {
 		return pipeline.Drop
 	}
 	pipeline.Drop = make(chan *flow.FlowMessage)
+	// Subscribe to drops from special segments, namely all based on
+	// BaseFilterSegment grouped in the filter directory.
 	for _, segment := range pipeline.SegmentList {
-		switch typedSegment := segment.(type) { // handle special segments
+		switch typedSegment := segment.(type) {
 		case *drop.Drop:
 			typedSegment.SubscribeDrops(pipeline.Drop)
 		case *elephant.Elephant:
@@ -46,7 +48,13 @@ func (pipeline *Pipeline) GetDrop() <-chan *flow.FlowMessage {
 			typedSegment.SubscribeDrops(pipeline.Drop)
 		}
 	}
+	// If there are no filter/* segments, this channel will never have
+	// messages available.
 	return pipeline.Drop
+}
+
+func (pipeline *Pipeline) IsEmpty() bool {
+	return len(pipeline.SegmentList) == 0
 }
 
 // Starts up a goroutine specific to this Pipeline which reads any message from

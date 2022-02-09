@@ -17,8 +17,8 @@ import (
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/alert/http"
 
+	_ "github.com/bwNetFlow/flowpipeline/segments/controlflow/branch"
 	_ "github.com/bwNetFlow/flowpipeline/segments/controlflow/skip"
-	_ "github.com/bwNetFlow/flowpipeline/segments/controlflow/subpipeline"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/influx"
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/prometheus"

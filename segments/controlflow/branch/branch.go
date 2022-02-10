@@ -72,10 +72,18 @@ func (segment *Branch) Run(wg *sync.WaitGroup) {
 				select {
 				case msg := <-segment.condition.GetOutput():
 					segment.then_branch.GetInput() <- msg
-					segment.Out <- <-segment.then_branch.GetOutput()
+					select {
+					case msg := <-segment.then_branch.GetOutput():
+						segment.Out <- msg
+					case <-segment.then_branch.GetDrop():
+					}
 				case msg := <-segment.condition.GetDrop():
 					segment.else_branch.GetInput() <- msg
-					segment.Out <- <-segment.else_branch.GetOutput()
+					select {
+					case msg := <-segment.else_branch.GetOutput():
+						segment.Out <- msg
+					case <-segment.else_branch.GetDrop():
+					}
 				}
 			}
 		} else if !segment.then_branch.IsEmpty() {
@@ -87,7 +95,11 @@ func (segment *Branch) Run(wg *sync.WaitGroup) {
 				select {
 				case msg := <-segment.condition.GetOutput():
 					segment.then_branch.GetInput() <- msg
-					segment.Out <- <-segment.then_branch.GetOutput()
+					select {
+					case msg := <-segment.then_branch.GetOutput():
+						segment.Out <- msg
+					case <-segment.then_branch.GetDrop():
+					}
 				case msg := <-segment.condition.GetDrop():
 					segment.Out <- msg
 				}
@@ -103,7 +115,11 @@ func (segment *Branch) Run(wg *sync.WaitGroup) {
 					segment.Out <- msg
 				case msg := <-segment.condition.GetDrop():
 					segment.else_branch.GetInput() <- msg
-					segment.Out <- <-segment.else_branch.GetOutput()
+					select {
+					case msg := <-segment.else_branch.GetOutput():
+						segment.Out <- msg
+					case <-segment.else_branch.GetDrop():
+					}
 				}
 			}
 		}

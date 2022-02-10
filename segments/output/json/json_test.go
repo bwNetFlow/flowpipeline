@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 
 // Json Segment test, passthrough test only
 func TestSegment_Json_passthrough(t *testing.T) {
-	result := segments.TestSegment("stdout", map[string]string{},
+	result := segments.TestSegment("json", map[string]string{},
 		&flow.FlowMessage{})
 	if result == nil {
 		t.Error("Segment Json is not passing through flows.")

@@ -49,5 +49,5 @@ func (segment *Pass) Run(wg *sync.WaitGroup) {
 // the API.
 func init() {
 	segment := &Pass{}
-	segments.RegisterSegment("paspass", segment)
+	segments.RegisterSegment("pass", segment)
 }

@@ -11,6 +11,7 @@ import (
 func TestPipelineBuild(t *testing.T) {
 	segmentList := []segments.Segment{&pass.Pass{}, &pass.Pass{}}
 	pipeline := New(segmentList...)
+	pipeline.Start()
 	pipeline.In <- &flow.FlowMessage{Type: 3}
 	fmsg := <-pipeline.Out
 	if fmsg.Type != 3 {
@@ -21,6 +22,7 @@ func TestPipelineBuild(t *testing.T) {
 func TestPipelineTeardown(t *testing.T) {
 	segmentList := []segments.Segment{&pass.Pass{}, &pass.Pass{}}
 	pipeline := New(segmentList...)
+	pipeline.Start()
 	pipeline.AutoDrain()
 	pipeline.In <- &flow.FlowMessage{Type: 3}
 	pipeline.Close() // fail test on halting ;)
@@ -32,6 +34,7 @@ func TestPipelineConfigSuccess(t *testing.T) {
   config:
     foo: $baz
     bar: $0`))
+	pipeline.Start()
 	pipeline.In <- &flow.FlowMessage{Type: 3}
 	fmsg := <-pipeline.Out
 	if fmsg.Type != 3 {

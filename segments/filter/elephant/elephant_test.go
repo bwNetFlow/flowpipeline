@@ -37,6 +37,8 @@ func TestSegment_Elephant_passthrough(t *testing.T) {
 	go segment.Run(wg)
 
 	in <- &flow.FlowMessage{Bytes: 10}
+	<-out
+	in <- &flow.FlowMessage{Bytes: 9}
 	in <- &flow.FlowMessage{Bytes: 100}
 	result := <-out
 	if result.Bytes != 100 {

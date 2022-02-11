@@ -43,7 +43,6 @@ func (segment FlowFilter) New(config map[string]string) segments.Segment {
 func (segment *FlowFilter) Run(wg *sync.WaitGroup) {
 	defer func() {
 		close(segment.Out)
-		segment.Drops = nil
 		wg.Done()
 	}()
 
@@ -55,9 +54,6 @@ func (segment *FlowFilter) Run(wg *sync.WaitGroup) {
 			segment.Out <- msg
 		} else if segment.Drops != nil {
 			segment.Drops <- msg
-			if r := recover(); r != nil {
-				segment.Drops = nil
-			}
 		}
 	}
 }

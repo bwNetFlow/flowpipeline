@@ -17,16 +17,12 @@ func (segment Drop) New(config map[string]string) segments.Segment {
 func (segment *Drop) Run(wg *sync.WaitGroup) {
 	defer func() {
 		close(segment.Out)
-		segment.Drops = nil
 		wg.Done()
 	}()
 
 	for msg := range segment.In {
 		if segment.Drops != nil {
 			segment.Drops <- msg
-			if r := recover(); r != nil {
-				segment.Drops = nil
-			}
 		}
 	}
 }

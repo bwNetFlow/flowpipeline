@@ -60,7 +60,7 @@ func (pipeline *Pipeline) GetDrop() <-chan *flow.FlowMessage {
 // no post-pipeline processing.
 func (pipeline *Pipeline) AutoDrain() {
 	go func() {
-		for _ = range pipeline.Out {
+		for range pipeline.Out {
 		}
 		log.Println("[info] Pipeline closed, auto draining finished.")
 	}()

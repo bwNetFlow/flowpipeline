@@ -102,7 +102,6 @@ func (segment Elephant) New(config map[string]string) segments.Segment {
 func (segment *Elephant) Run(wg *sync.WaitGroup) {
 	defer func() {
 		close(segment.Out)
-		segment.Drops = nil
 		wg.Done()
 	}()
 
@@ -163,9 +162,6 @@ func (segment *Elephant) Run(wg *sync.WaitGroup) {
 		// implicit "(if inRampup || aspect < threshold) && ..." due to the continue 3 lines above
 		if segment.Drops != nil {
 			segment.Drops <- msg
-			if r := recover(); r != nil {
-				segment.Drops = nil
-			}
 		}
 	}
 }

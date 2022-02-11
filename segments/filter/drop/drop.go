@@ -17,9 +17,7 @@ func (segment Drop) New(config map[string]string) segments.Segment {
 func (segment *Drop) Run(wg *sync.WaitGroup) {
 	defer func() {
 		close(segment.Out)
-		if segment.Drops != nil {
-			close(segment.Drops)
-		}
+		segment.Drops = nil
 		wg.Done()
 	}()
 

@@ -1,22 +1,8 @@
 package branch
 
 import (
-	"log"
-	"os"
 	"testing"
-
-	"github.com/hashicorp/logutils"
 )
-
-func TestMain(m *testing.M) {
-	log.SetOutput(&logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"info", "warning", "error"},
-		MinLevel: logutils.LogLevel("info"),
-		Writer:   os.Stderr,
-	})
-	code := m.Run()
-	os.Exit(code)
-}
 
 // Branch Segment test, passthrough test
 func TestSegment_Branch_passthrough(t *testing.T) {

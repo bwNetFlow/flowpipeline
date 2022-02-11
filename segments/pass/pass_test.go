@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 func TestSegment_Pass(t *testing.T) {
 	result := segments.TestSegment("pass", map[string]string{},
 		&flow.FlowMessage{Type: 3})
-	if result.Type != 42 {
+	if result.Type != 3 {
 		t.Error("Segment Pass is not working.")
 	}
 }

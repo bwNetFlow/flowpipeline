@@ -1,17 +1,30 @@
 package branch
 
 import (
+	"log"
+	"sync"
 	"testing"
+
+	"github.com/bwNetFlow/flowpipeline/segments"
+	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // Branch Segment test, passthrough test
+// This does not work currently, as segment tests are scoped for segment
+// package only, and this specific segment requires some pipeline
+// initialization, which would lead to an import cycle. Thus, this test
+// confirms that it fails silently, and this segment is instead tested from the
+// pipeline package test files.
 func TestSegment_Branch_passthrough(t *testing.T) {
-	// TODO FIXME: this is currently not testable using TestSegment, as
-	// that does not embed branch into segments
+	segment := segments.LookupSegment("branch").New(map[string]string{}).(*Branch)
+	if segment == nil {
+		log.Fatal("[error] Configured segment 'branch' could not be initialized properly, see previous messages.")
+	}
+	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	segment.Rewire(in, out)
 
-	// result := segments.TestSegment("branch", map[string]string{},
-	// 	&flow.FlowMessage{Type: 3})
-	// if result.Type != 3 {
-	// 	t.Error("Segment Branch is not working.")
-	// }
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	// this would timeout if it worked properly, instead it logs an error and returns
+	segment.Run(wg)
 }

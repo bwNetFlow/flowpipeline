@@ -1,7 +1,6 @@
 package branch
 
 import (
-	"log"
 	"sync"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -16,7 +15,6 @@ type Pipeline interface {
 	GetInput() chan *flow.FlowMessage
 	GetOutput() <-chan *flow.FlowMessage
 	GetDrop() <-chan *flow.FlowMessage
-	IsEmpty() bool
 }
 
 type Branch struct {
@@ -38,109 +36,65 @@ func (segment *Branch) ImportBranches(condition interface{}, then_branch interfa
 
 func (segment *Branch) Run(wg *sync.WaitGroup) {
 	defer func() {
-		if !segment.condition.IsEmpty() {
-			segment.condition.Close()
-		}
-		if !segment.then_branch.IsEmpty() {
-			segment.then_branch.Close()
-		}
-		if !segment.else_branch.IsEmpty() {
-			segment.else_branch.Close()
-		}
+		segment.condition.Close()
+		segment.then_branch.Close()
+		segment.else_branch.Close()
 		close(segment.Out)
 		wg.Done()
 	}()
 
-	// This large branching structures covers any case of defined and
-	// undefined branches and or conditions and links the appropriate
-	// channels accordingly while providing user facing log messages on
-	// what it is doing.
-	// The alternativ is to replace empty configurations of any conditional
-	// or branch with a hardcoded `pass` segment, which would allow us to
-	// do only the very first for loop in this structure and be done with
-	// it.
-	if !segment.condition.IsEmpty() {
-		go segment.condition.Start()
-		log.Println("[info] Branch: Started subpipeline for `if` segments.")
-		if !segment.then_branch.IsEmpty() && !segment.else_branch.IsEmpty() {
-			go segment.then_branch.Start()
-			log.Println("[info] Branch: Started subpipeline for `then` segments.")
-			go segment.else_branch.Start()
-			log.Println("[info] Branch: Started subpipeline for `else` segments.")
-			for pre := range segment.In {
-				segment.condition.GetInput() <- pre
-				select {
-				case msg := <-segment.condition.GetOutput():
-					segment.then_branch.GetInput() <- msg
-					select {
-					case msg := <-segment.then_branch.GetOutput():
-						segment.Out <- msg
-					case <-segment.then_branch.GetDrop():
-					}
-				case msg := <-segment.condition.GetDrop():
-					segment.else_branch.GetInput() <- msg
-					select {
-					case msg := <-segment.else_branch.GetOutput():
-						segment.Out <- msg
-					case <-segment.else_branch.GetDrop():
-					}
+	go segment.condition.Start()
+	go segment.then_branch.Start()
+	go segment.else_branch.Start()
+
+	go func() { // drain our output
+		from_then := segment.then_branch.GetOutput()
+		from_else := segment.else_branch.GetOutput()
+		for {
+			select {
+			case msg, ok := <-from_then:
+				if !ok {
+					from_then = nil
+				} else {
+					segment.Out <- msg
 				}
-			}
-		} else if !segment.then_branch.IsEmpty() {
-			log.Println("[info] Branch: Empty else branch, fast-forwarding drops in conditional to the next segment.")
-			go segment.then_branch.Start()
-			log.Println("[info] Branch: Started subpipeline for `then` segments.")
-			for pre := range segment.In {
-				segment.condition.GetInput() <- pre
-				select {
-				case msg := <-segment.condition.GetOutput():
-					segment.then_branch.GetInput() <- msg
-					select {
-					case msg := <-segment.then_branch.GetOutput():
-						segment.Out <- msg
-					case <-segment.then_branch.GetDrop():
-					}
-				case msg := <-segment.condition.GetDrop():
+			case msg, ok := <-from_else:
+				if !ok {
+					from_else = nil
+				} else {
 					segment.Out <- msg
 				}
 			}
-		} else if !segment.else_branch.IsEmpty() {
-			log.Println("[info] Branch: Empty then branch, fast-forwarding matches in conditional to the next segment.")
-			go segment.else_branch.Start()
-			log.Println("[info] Branch: Started subpipeline for `else` segments.")
-			for pre := range segment.In {
-				segment.condition.GetInput() <- pre
-				select {
-				case msg := <-segment.condition.GetOutput():
-					segment.Out <- msg
-				case msg := <-segment.condition.GetDrop():
+			if from_then == nil && from_else == nil {
+				return
+			}
+		}
+	}()
+	go func() { // move anything from conditional to our two branches
+		from_condition_out := segment.condition.GetOutput()
+		from_condition_drop := segment.condition.GetDrop()
+		for {
+			select {
+			case msg, ok := <-from_condition_out:
+				if !ok {
+					from_condition_out = nil
+				} else {
+					segment.then_branch.GetInput() <- msg
+				}
+			case msg, ok := <-from_condition_drop:
+				if !ok {
+					from_condition_drop = nil
+				} else {
 					segment.else_branch.GetInput() <- msg
-					select {
-					case msg := <-segment.else_branch.GetOutput():
-						segment.Out <- msg
-					case <-segment.else_branch.GetDrop():
-					}
 				}
 			}
-		}
-	} else {
-		if !segment.else_branch.IsEmpty() {
-			log.Println("[warning] Branch: Empty conditional, else branch is unreachable.")
-		}
-		if !segment.then_branch.IsEmpty() {
-			log.Println("[info] Branch: Empty conditional, acting as an unconditional branch.")
-			go segment.then_branch.Start()
-			log.Println("[info] Branch: Started subpipeline for `then` segments.")
-			for pre := range segment.In {
-				segment.then_branch.GetInput() <- pre
-				segment.Out <- <-segment.then_branch.GetOutput()
-			}
-		} else {
-			log.Println("[warning] Branch: Empty conditional and empty `then` branch, acting as `pass` segment.")
-			for pre := range segment.In {
-				segment.Out <- pre
+			if from_condition_out == nil && from_condition_drop == nil {
+				return
 			}
 		}
+	}()
+	for msg := range segment.In { // connect our own input to conditional
+		segment.condition.GetInput() <- msg
 	}
 }
 

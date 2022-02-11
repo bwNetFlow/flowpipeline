@@ -9,6 +9,7 @@ import (
 	"github.com/bwNetFlow/flowpipeline/segments/filter/drop"
 	"github.com/bwNetFlow/flowpipeline/segments/filter/elephant"
 	"github.com/bwNetFlow/flowpipeline/segments/filter/flowfilter"
+	"github.com/bwNetFlow/flowpipeline/segments/pass"
 	flow "github.com/bwNetFlow/protobuf/go"
 )
 
@@ -53,10 +54,6 @@ func (pipeline *Pipeline) GetDrop() <-chan *flow.FlowMessage {
 	return pipeline.Drop
 }
 
-func (pipeline *Pipeline) IsEmpty() bool {
-	return len(pipeline.SegmentList) == 0
-}
-
 // Starts up a goroutine specific to this Pipeline which reads any message from
 // the Out channel and discards it. This is a convenience function to enable
 // having a segment at the end of the pipeline handle all results, i.e. having
@@ -85,9 +82,9 @@ func (pipeline *Pipeline) Close() {
 // therein. Initialization includes creating any intermediate channels and
 // wiring up the segments in the segmentList with them.
 func New(segmentList ...segments.Segment) *Pipeline {
-	// the following loops need to be split so that Rewire can work with
-	// non-nil channels from further ahead in the pipeline... important for
-	// skip segments
+	if len(segmentList) == 0 {
+		segmentList = []segments.Segment{&pass.Pass{}}
+	}
 	channels := make([]chan *flow.FlowMessage, len(segmentList)+1)
 	channels[0] = make(chan *flow.FlowMessage)
 	for i, segment := range segmentList {

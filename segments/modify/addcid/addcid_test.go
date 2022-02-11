@@ -71,7 +71,7 @@ func BenchmarkAddCid(b *testing.B) {
 	segment := AddCid{}.New(map[string]string{"filename": "../../../examples/enricher/customer_subnets.csv"})
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
-	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
+	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

@@ -90,11 +90,9 @@ func New(segmentList ...segments.Segment) *Pipeline {
 	// skip segments
 	channels := make([]chan *flow.FlowMessage, len(segmentList)+1)
 	channels[0] = make(chan *flow.FlowMessage)
-	for i, _ := range segmentList {
-		channels[i+1] = make(chan *flow.FlowMessage)
-	}
 	for i, segment := range segmentList {
-		segment.Rewire(channels, uint(i), uint(i+1))
+		channels[i+1] = make(chan *flow.FlowMessage)
+		segment.Rewire(channels[i], channels[i+1])
 	}
 	return &Pipeline{In: channels[0], Out: channels[len(channels)-1], wg: &sync.WaitGroup{}, SegmentList: segmentList}
 }

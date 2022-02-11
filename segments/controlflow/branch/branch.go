@@ -144,12 +144,6 @@ func (segment *Branch) Run(wg *sync.WaitGroup) {
 	}
 }
 
-// Override default Rewire method for this segment.
-func (segment *Branch) Rewire(chans []chan *flow.FlowMessage, in uint, out uint) {
-	segment.In = chans[in]
-	segment.Out = chans[out]
-}
-
 func init() {
 	segment := &Branch{}
 	segments.RegisterSegment("branch", segment)

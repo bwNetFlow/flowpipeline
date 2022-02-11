@@ -32,7 +32,7 @@ func TestSegment_Sqlite_passthrough(t *testing.T) {
 	segment := Sqlite{}.New(map[string]string{"filename": "test.sqlite"})
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
-	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
+	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
@@ -53,7 +53,7 @@ func BenchmarkSqlite_1000(b *testing.B) {
 	segment := Sqlite{}.New(map[string]string{"filename": "bench.sqlite"})
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
-	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
+	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
@@ -74,7 +74,7 @@ func BenchmarkSqlite_10000(b *testing.B) {
 	segment := Sqlite{}.New(map[string]string{"filename": "bench.sqlite", "batchsize": "10000"})
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
-	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
+	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
@@ -95,7 +95,7 @@ func BenchmarkSqlite_100000(b *testing.B) {
 	segment := Sqlite{}.New(map[string]string{"filename": "bench.sqlite", "batchsize": "100000"})
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
-	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
+	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

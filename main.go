@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"plugin"
 
 	"github.com/bwNetFlow/flowpipeline/pipeline"
 	"github.com/hashicorp/logutils"
@@ -57,6 +58,7 @@ var Version string
 
 func main() {
 	configfile := flag.String("c", "config.yml", "location of the config file in yml format")
+	pluginpath := flag.String("p", "", "path to a segment plugin")
 	loglevel := flag.String("l", "warning", "loglevel: one of 'debug', 'info', 'warning' or 'error'")
 	version := flag.Bool("v", false, "print version")
 	flag.Parse()
@@ -71,6 +73,14 @@ func main() {
 		MinLevel: logutils.LogLevel(*loglevel),
 		Writer:   os.Stderr,
 	})
+
+	if *pluginpath != "" {
+		_, err := plugin.Open(*pluginpath)
+		if err != nil {
+			log.Printf("[error] Problem loading the specified plugin: %s", err)
+			return
+		}
+	}
 
 	config, err := ioutil.ReadFile(*configfile)
 	if err != nil {

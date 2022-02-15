@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/signal"
 	"plugin"
+	"strings"
 
 	"github.com/bwNetFlow/flowpipeline/pipeline"
 	"github.com/hashicorp/logutils"
@@ -56,11 +57,23 @@ import (
 
 var Version string
 
+type flagArray []string
+
+func (i *flagArray) String() string {
+	return strings.Join(*i, ",")
+}
+
+func (i *flagArray) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
 func main() {
-	configfile := flag.String("c", "config.yml", "location of the config file in yml format")
-	pluginpath := flag.String("p", "", "path to a segment plugin")
+	var pluginPaths flagArray
+	flag.Var(&pluginPaths, "p", "path to load segment plugins from, can be specified multiple times")
 	loglevel := flag.String("l", "warning", "loglevel: one of 'debug', 'info', 'warning' or 'error'")
 	version := flag.Bool("v", false, "print version")
+	configfile := flag.String("c", "config.yml", "location of the config file in yml format")
 	flag.Parse()
 
 	if *version {
@@ -74,11 +87,13 @@ func main() {
 		Writer:   os.Stderr,
 	})
 
-	if *pluginpath != "" {
-		_, err := plugin.Open(*pluginpath)
+	for _, path := range pluginPaths {
+		_, err := plugin.Open(path)
 		if err != nil {
 			log.Printf("[error] Problem loading the specified plugin: %s", err)
 			return
+		} else {
+			log.Printf("[info] Loaded plugin: %s", path)
 		}
 	}
 

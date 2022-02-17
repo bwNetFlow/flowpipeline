@@ -10,18 +10,7 @@ import (
 	cryptopan "github.com/Yawning/cryptopan"
 	"github.com/bwNetFlow/flowpipeline/segments"
 	flow "github.com/bwNetFlow/protobuf/go"
-	"github.com/hashicorp/logutils"
 )
-
-func TestMain(m *testing.M) {
-	log.SetOutput(&logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"info", "warning", "error"},
-		MinLevel: logutils.LogLevel("info"),
-		Writer:   os.Stderr,
-	})
-	code := m.Run()
-	os.Exit(code)
-}
 
 // Influx Segment test, passthrough test only
 func TestSegment_Influx_passthrough(t *testing.T) {
@@ -49,7 +38,7 @@ func BenchmarkAnonymize(b *testing.B) {
 	}
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
-	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
+	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

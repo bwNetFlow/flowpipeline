@@ -13,7 +13,7 @@ import (
 )
 
 type Elephant struct {
-	segments.BaseSegment
+	segments.BaseFilterSegment
 	Aspect     string  // optional, one of "bytes", "bps", "packets", or "pps", default is "bytes", determines which aspect qualifies a flow as an elephant
 	Percentile float64 // optional, default is 99.00, determines the cutoff percentile for flows being dropped by this segment, i.e. 95.00 corresponds to outputting the top 5% only
 	// TODO: add option to get bottom percent?
@@ -156,7 +156,12 @@ func (segment *Elephant) Run(wg *sync.WaitGroup) {
 			if aspect >= threshold {
 				log.Printf("[debug] Elephant: Found elephant with size %d (>=%f)", msg.Bytes, threshold)
 				segment.Out <- msg
+				continue
 			}
+		}
+		// implicit "(if inRampup || aspect < threshold) && ..." due to the continue 3 lines above
+		if segment.Drops != nil {
+			segment.Drops <- msg
 		}
 	}
 }

@@ -74,18 +74,64 @@ conditional, limiting payload data, and multiple receivers.
 Segments in this group have the ability to change the sequence of segments any
 given flow traverses.
 
-#### blackhole
-The `blackhole` segment is used to drain a pipeline, effectively starting a new
-pipeline after it. In conjunction with `skip`, this can act as a `flowfilter`.
+#### branch
+The `branch` segment is used to select the further progression of the pipeline
+between to branches. To this end, it uses additional syntax that other segments
+do not have access to, namely the `if`, `then` and `else` keys which can
+contain lists of segments that constitute embedded pipelines.
+
+The any of these three keys may be empty and they are by default. The `if`
+segments receive the flows entering the `branch` segment unconditionally. If
+the segments in `if` proceed any flow from the input all the way to the end of
+the `if` segments, this flow will be moved on to the `then` segments. If flows
+are dropped at any point within the `if` segments, they will be moved on to the
+`else` branch immediately, shortcutting the traversal of the `if` segments. Any
+edits made to flows during the `if` segments will be persisted in either
+branch, `then` and `else`, as well as after the flows passed from the `branch`
+segment into consecutive segments. Dropping flows behaves regularly in both
+branches, but note that flows can not be dropped within the `if` branch
+segments, as this is taken as a cue to move them into the `else` branch.
+
+If any of these three lists of segments (or subpipelines) is empty, the
+`branch` segment will behave as if this subpipeline consisted of a single
+`pass` segment.
+
+Instead of a minimal example, the following more elaborate one highlights all
+TCP flows while printing to standard output and keeps only these highlighted
+ones in a sqlite export:
 
 ```
-- segment: blackhole
+- segment: branch
+  if:
+  - segment: flowfilter
+    config:
+      filter: proto tcp
+  - segment: elephant
+  then:
+  - segment: printflowdump
+    config:
+      highlight: 1
+  else:
+  - segment: printflowdump
+  - segment: drop
+
+- segment: sqlite
+  config:
+    filename: tcponly.sqlite
 ```
 
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/controlflow/blackhole)
-[examples using this segment](https://github.com/search?q=%22segment%3A+blackhole%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/controlflow/branch)
+[examples using this segment](https://github.com/search?q=%22segment%3A+branch%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
 
 #### skip
+
+*DEPRECATION NOTICE*: This segment will be deprecated in a future version of
+flowpipeline. In any but the most convoluted examples, the `branch` segment
+documented directly above is the clearer and more legible choice. This will
+also greatly simplify the setup internals of segments.
+
+
 The `skip` segment is used to conditionally skip over segments behind it. For
 instance, in front of a export segment a condition such as `proto tcp` with a
 skip value of `1` would result in any TCP flows not being exported by the
@@ -141,6 +187,17 @@ in front of this export segment.
 Segments in this group all drop flows, i.e. remove them from the pipeline from
 this segment on. Fields in individual flows are never modified, only used as
 criteria.
+
+#### drop
+The `drop` segment is used to drain a pipeline, effectively starting a new
+pipeline after it. In conjunction with `skip`, this can act as a `flowfilter`.
+
+```
+- segment: drop
+```
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/filter/drop)
+[examples using this segment](https://github.com/search?q=%22segment%3A+drop%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### elephant
 The `elephant` segment uses a configurable sliding window to determine flow
@@ -701,8 +758,8 @@ for an application.
 
 This is for internally used segments only.
 
-#### noop
-The `noop` segment serves as a heavily annotated template for new segments. So
+#### pass
+The `pass` segment serves as a heavily annotated template for new segments. So
 does this piece of documentation. Aside from summarizing what a segment does,
 it should include a description of all the parameters it accepts as well as any
 caveats users should be aware of.
@@ -712,12 +769,12 @@ Roadmap:
 * and here
 
 ```
-- segment: noop
+- segment: pass
   # the lines below are optional and set to default
   config:
     jk: this segment actually has no config at all, its just for this template
 ```
 
 [any additional links](https://bwnet.belwue.de)
-[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/noop)
-[examples using this segment](https://github.com/search?q=%22segment%3A+noop%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/pass)
+[examples using this segment](https://github.com/search?q=%22segment%3A+pass%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)

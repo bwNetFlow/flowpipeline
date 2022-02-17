@@ -17,12 +17,12 @@ import (
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/alert/http"
 
-	_ "github.com/bwNetFlow/flowpipeline/segments/controlflow/blackhole"
-	_ "github.com/bwNetFlow/flowpipeline/segments/controlflow/skip"
+	_ "github.com/bwNetFlow/flowpipeline/segments/controlflow/branch"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/influx"
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/prometheus"
 
+	_ "github.com/bwNetFlow/flowpipeline/segments/filter/drop"
 	_ "github.com/bwNetFlow/flowpipeline/segments/filter/elephant"
 	_ "github.com/bwNetFlow/flowpipeline/segments/filter/flowfilter"
 
@@ -40,7 +40,7 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/remoteaddress"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/snmp"
 
-	_ "github.com/bwNetFlow/flowpipeline/segments/noop"
+	_ "github.com/bwNetFlow/flowpipeline/segments/pass"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/csv"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/json"
@@ -69,6 +69,7 @@ func main() {
 		return
 	}
 	pipe := pipeline.NewFromConfig(config)
+	pipe.Start()
 	pipe.AutoDrain()
 
 	sigs := make(chan os.Signal, 1)

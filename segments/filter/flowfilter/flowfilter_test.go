@@ -10,18 +10,7 @@ import (
 
 	"github.com/bwNetFlow/flowpipeline/segments"
 	flow "github.com/bwNetFlow/protobuf/go"
-	"github.com/hashicorp/logutils"
 )
-
-func TestMain(m *testing.M) {
-	log.SetOutput(&logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"info", "warning", "error"},
-		MinLevel: logutils.LogLevel("info"),
-		Writer:   os.Stderr,
-	})
-	code := m.Run()
-	os.Exit(code)
-}
 
 // FlowFilter Segment testing is basic, the filtering itself is tested in the flowfilter repo
 func TestSegment_FlowFilter_accept(t *testing.T) {
@@ -56,7 +45,7 @@ func BenchmarkFlowFilter(b *testing.B) {
 	segment := FlowFilter{}.New(map[string]string{"filter": "port <50"})
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
-	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
+	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

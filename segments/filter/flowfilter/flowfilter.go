@@ -14,7 +14,7 @@ import (
 )
 
 type FlowFilter struct {
-	segments.BaseSegment
+	segments.BaseFilterSegment
 	Filter string // optional, default is empty
 
 	expression *parser.Expression
@@ -52,6 +52,8 @@ func (segment *FlowFilter) Run(wg *sync.WaitGroup) {
 	for msg := range segment.In {
 		if match, _ := filter.CheckFlow(segment.expression, msg); match {
 			segment.Out <- msg
+		} else if segment.Drops != nil {
+			segment.Drops <- msg
 		}
 	}
 }

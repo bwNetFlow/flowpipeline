@@ -9,18 +9,7 @@ import (
 
 	"github.com/bwNetFlow/flowpipeline/segments"
 	flow "github.com/bwNetFlow/protobuf/go"
-	"github.com/hashicorp/logutils"
 )
-
-func TestMain(m *testing.M) {
-	log.SetOutput(&logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"info", "warning", "error"},
-		MinLevel: logutils.LogLevel("info"),
-		Writer:   os.Stderr,
-	})
-	code := m.Run()
-	os.Exit(code)
-}
 
 // DropFields Segment tests are thorough and try every combination
 func TestSegment_DropFields_policyKeep(t *testing.T) {
@@ -49,7 +38,7 @@ func BenchmarkDropFields(b *testing.B) {
 	segment := DropFields{}.New(map[string]string{"policy": "drop", "fields": "SrcAddr"})
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
-	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
+	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

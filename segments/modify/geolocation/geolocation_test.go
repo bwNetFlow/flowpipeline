@@ -9,18 +9,7 @@ import (
 
 	"github.com/bwNetFlow/flowpipeline/segments"
 	flow "github.com/bwNetFlow/protobuf/go"
-	"github.com/hashicorp/logutils"
 )
-
-func TestMain(m *testing.M) {
-	log.SetOutput(&logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"info", "warning", "error"},
-		MinLevel: logutils.LogLevel("info"),
-		Writer:   os.Stderr,
-	})
-	code := m.Run()
-	os.Exit(code)
-}
 
 // GeoLocation Segment tests are thorough and try every combination
 func TestSegment_GeoLocation_noRemoteAddrKeep(t *testing.T) {
@@ -71,7 +60,7 @@ func BenchmarkGeoLocation(b *testing.B) {
 	segment := GeoLocation{}.New(map[string]string{"filename": "../../../examples/enricher/GeoLite2-Country-Test.mmdb"})
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
-	segment.Rewire([]chan *flow.FlowMessage{in, out}, 0, 1)
+	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

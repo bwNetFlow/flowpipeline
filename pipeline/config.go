@@ -7,18 +7,22 @@ import (
 	"strconv"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
+	"github.com/bwNetFlow/flowpipeline/segments/controlflow/branch"
 	"gopkg.in/yaml.v2"
 )
 
 // A config representation of a segment. It is intended to look like this:
-//   - segment: noop
+//   - segment: pass
 //     config:
 //       key: value
 //       foo: bar
 // This struct has the appropriate yaml tags inline.
 type SegmentRepr struct {
-	Name   string            `yaml:"segment"` // to be looked up with a registry
-	Config map[string]string `yaml:"config"`  // to be expanded by our instance
+	Name   string            `yaml:"segment"`             // to be looked up with a registry
+	Config map[string]string `yaml:"config"`              // to be expanded by our instance
+	If     []SegmentRepr     `yaml:"if,omitempty,flow"`   // only used by group segment
+	Then   []SegmentRepr     `yaml:"then,omitempty,flow"` // only used by group segment
+	Else   []SegmentRepr     `yaml:"else,omitempty,flow"` // only used by group segment
 }
 
 // Returns the SegmentRepr's Config with all its variables expanded. It tries
@@ -47,24 +51,40 @@ func (s *SegmentRepr) ExpandedConfig() map[string]string {
 // initializes a Pipeline with them.
 func NewFromConfig(config []byte) *Pipeline {
 	// parse a list of SegmentReprs from yaml
-	pipelineRepr := new([]SegmentRepr)
+	segmentReprs := new([]SegmentRepr)
 
-	err := yaml.Unmarshal(config, &pipelineRepr)
+	err := yaml.Unmarshal(config, &segmentReprs)
 	if err != nil {
 		log.Fatalf("[error] Error parsing configuration YAML: %v", err)
 	}
 
+	segments := SegmentsFromRepr(segmentReprs)
+
 	// we have SegmentReprs parsed, instanciate them as actual Segments
-	segmentList := make([]segments.Segment, len(*pipelineRepr))
-	for i, segmentrepr := range *pipelineRepr {
-		segmenttype := segments.LookupSegment(segmentrepr.Name) // a typed nil instance
+	return New(segments...)
+}
+
+// Creates a list of Segments from their config representations. Handles
+// recursive definitions found in Segments.
+func SegmentsFromRepr(segmentReprs *[]SegmentRepr) []segments.Segment {
+	segmentList := make([]segments.Segment, len(*segmentReprs))
+	for i, segmentrepr := range *segmentReprs {
+		segmentTemplate := segments.LookupSegment(segmentrepr.Name) // a typed nil instance
 		// the Segment's New method knows how to handle our config
-		segment := segmenttype.New(segmentrepr.ExpandedConfig())
+		segment := segmentTemplate.New(segmentrepr.ExpandedConfig())
+		switch segment := segment.(type) { // handle special segments
+		case *branch.Branch:
+			segment.ImportBranches(
+				New(SegmentsFromRepr(&segmentrepr.If)...),
+				New(SegmentsFromRepr(&segmentrepr.Then)...),
+				New(SegmentsFromRepr(&segmentrepr.Else)...),
+			)
+		}
 		if segment != nil {
 			segmentList[i] = segment
 		} else {
 			log.Fatalf("[error] Configured segment '%s' could not be initialized properly, see previous messages.", segmentrepr.Name)
 		}
 	}
-	return New(segmentList...)
+	return segmentList
 }

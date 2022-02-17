@@ -1,9 +1,8 @@
-package csv
+package pass
 
 import (
 	"io/ioutil"
 	"log"
-	"net"
 	"os"
 	"sync"
 	"testing"
@@ -12,22 +11,21 @@ import (
 	flow "github.com/bwNetFlow/protobuf/go"
 )
 
-// Csv Segment test, passthrough test
-func TestSegment_Csv_passthrough(t *testing.T) {
-	result := segments.TestSegment("csv", map[string]string{},
-		&flow.FlowMessage{Type: 3, SamplerAddress: net.ParseIP("192.0.2.1")})
-
+// Pass Segment test, passthrough test
+func TestSegment_Pass(t *testing.T) {
+	result := segments.TestSegment("pass", map[string]string{},
+		&flow.FlowMessage{Type: 3})
 	if result.Type != 3 {
-		t.Error("Segment Csv is not working.")
+		t.Error("Segment Pass is not working.")
 	}
 }
 
-// Csv Segment benchmark passthrough
-func BenchmarkCsv(b *testing.B) {
+// Pass Segment benchmark passthrough
+func BenchmarkPass(b *testing.B) {
 	log.SetOutput(ioutil.Discard)
 	os.Stdout, _ = os.Open(os.DevNull)
 
-	segment := Csv{}.New(map[string]string{})
+	segment := Pass{}
 
 	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
 	segment.Rewire(in, out)
@@ -37,7 +35,7 @@ func BenchmarkCsv(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &flow.FlowMessage{Proto: 45}
+		in <- &flow.FlowMessage{}
 		_ = <-out
 	}
 	close(in)

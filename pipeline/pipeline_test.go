@@ -4,9 +4,12 @@ import (
 	"testing"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
-	_ "github.com/bwNetFlow/flowpipeline/segments/modify/dropfields"
 	"github.com/bwNetFlow/flowpipeline/segments/pass"
 	flow "github.com/bwNetFlow/protobuf/go"
+
+	_ "github.com/bwNetFlow/flowpipeline/segments/filter/drop"
+	_ "github.com/bwNetFlow/flowpipeline/segments/modify/dropfields"
+	_ "github.com/bwNetFlow/flowpipeline/segments/testing/generator"
 )
 
 func TestPipelineBuild(t *testing.T) {
@@ -71,5 +74,59 @@ func Test_Branch_passthrough(t *testing.T) {
 	fmsg = <-pipeline.Out
 	if fmsg.Proto != 42 || fmsg.InIf != 1 || fmsg.OutIf == 1 {
 		t.Errorf("Branch segment did not work correctly, state is Proto %d, InIf %d, OutIf %d, should be (42, 1, 0).", fmsg.Proto, fmsg.InIf, fmsg.OutIf)
+	}
+}
+
+func Test_Branch_DeadlockFreeGeneration_If(t *testing.T) {
+	pipeline := NewFromConfig([]byte(`---
+- segment: branch
+  if:
+  - segment: generator
+  - segment: flowfilter
+    config:
+      filter: proto tcp
+  then:
+  - segment: dropfields
+    config:
+      policy: drop
+      fields: Bytes
+`))
+	pipeline.Start()
+	pipeline.In <- &flow.FlowMessage{Proto: 42, Bytes: 42}
+	for i := 0; i < 5; i++ {
+		fmsg := <-pipeline.Out
+		if fmsg.Proto == 6 && fmsg.Bytes != 0 {
+			t.Errorf("Branch segment did not work correctly, state is Proto %d, Bytes %d, should be (6, 0).", fmsg.Proto, fmsg.Bytes)
+		} else if fmsg.Proto == 42 && fmsg.Bytes != 42 {
+			t.Errorf("Branch segment did not work correctly, state is Proto %d, Bytes %d, should be (42, 42).", fmsg.Proto, fmsg.Bytes)
+		}
+	}
+}
+
+func Test_Branch_DeadlockFreeGeneration_Then(t *testing.T) {
+	pipeline := NewFromConfig([]byte(`---
+- segment: branch
+  then:
+  - segment: generator
+`))
+	pipeline.Start()
+	pipeline.In <- &flow.FlowMessage{Proto: 42, Bytes: 42}
+	for i := 0; i < 5; i++ {
+		// no checks, not timeouting is enough
+		<-pipeline.Out
+	}
+}
+
+func Test_Branch_DeadlockFreeGeneration_Else(t *testing.T) {
+	pipeline := NewFromConfig([]byte(`---
+- segment: branch
+  else:
+  - segment: generator
+`))
+	pipeline.Start()
+	pipeline.In <- &flow.FlowMessage{Proto: 42, Bytes: 42}
+	for i := 0; i < 5; i++ {
+		// no checks, not timeouting is enough
+		<-pipeline.Out
 	}
 }

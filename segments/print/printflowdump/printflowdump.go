@@ -205,12 +205,19 @@ func (segment PrintFlowdump) format_flow(flowmsg *flow.FlowMessage) string {
 		color = "\033[0m"
 	}
 
-	return fmt.Sprintf("%s%s: %s%s:%d → %s%s:%d [%s → %s@%s → %s], %s, %ds, %s, %s",
+	var note string
+	if flowmsg.Note != "" {
+		note = " - " + flowmsg.Note
+	}
+
+	return fmt.Sprintf("%s%s: %s%s:%d → %s%s:%d [%s → %s@%s → %s], %s, %ds, %s, %s%s",
 		color, timestamp, srcas, src, flowmsg.SrcPort, dstas, dst,
 		flowmsg.DstPort, srcIfDesc, statusString, router, dstIfDesc,
 		proto, duration,
 		humanize.SI(float64(flowmsg.Bytes*8/duration), "bps"),
-		humanize.SI(float64(flowmsg.Packets/duration), "pps"))
+		humanize.SI(float64(flowmsg.Packets/duration), "pps"),
+		note,
+	)
 }
 
 func init() {

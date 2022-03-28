@@ -3,7 +3,7 @@ name: release version tag
 on:
   push:
     tags:
-    - "v*.*.*-?[a-z]+"
+    - "v*.*.*"
 
 jobs:
   build:
@@ -54,8 +54,8 @@ jobs:
       uses: actions/download-artifact@v3
     - name: release with binaries
       uses: softprops/action-gh-release@v1
-      generate_release_notes: true
       with:
+        generate_release_notes: true
         files: |
           flowpipeline-linux
           flowpipeline-linux-static

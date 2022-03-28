@@ -28,27 +28,19 @@ jobs:
       run: go test ./...
 
     - name: build binary
-      run: go build -o flowpipeline .
-
-    - name: save binary
-      uses: actions/upload-artifact@v3
-      with:
-        name: flowpipeline-${{ matrix.goos }}
-        path: ./flowpipeline
+      run: go build -o flowpipeline-${{ matrix.goos }} .
 
     - name: build statically linked
-      run: go build -o flowpipeline-static .
+      run: go build -o flowpipeline-${{ matrix.goos }}-static .
       env:
         CGO_ENABLED: 0
 
     - name: save statically linked binary
       uses: actions/upload-artifact@v3
       with:
-        name: flowpipeline-${{ matrix.goos }}-static
-        path: ./flowpipeline-static
+        name: flowpipeline
+        path: ./flowpipeline-*
 
-    - name: display uploaded files
-      run: ls -R
 
   release:
     runs-on: ubuntu-latest
@@ -62,4 +54,4 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         generate_release_notes: true
-        files: "**/flowpipeline-*"
+        files: "flowpipeline/flowpipeline-*"

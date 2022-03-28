@@ -2,8 +2,8 @@ name: release version tag
 
 on:
   push:
-    tags:
-    - "v*.*.*"
+    branches: [ master ]
+    tags: [ "v*.*.*" ]
 
 jobs:
   build:
@@ -54,4 +54,5 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         generate_release_notes: true
+        prerelease: ${{ endsWith(github.ref, '-alpha') || endsWith(github.ref, '-beta') }}
         files: "flowpipeline/flowpipeline-*"

@@ -48,6 +48,7 @@ jobs:
         path: ./flowpipeline-static
 
   release:
+    runs-on: ubuntu-latest
     needs: build
     steps:
     - name: get binaries from previous job

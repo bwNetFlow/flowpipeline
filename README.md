@@ -38,9 +38,16 @@ maybe follow the instructions there).
 Download our [latest release](https://github.com/bwNetFlow/flowpipeline/releases)
 and run it, same as if you compiled it yourself.
 
+The default, dynamically linked version requires a reasonably recent system
+(glibc 2.32+, linux 5.11+ for `bpf`, ...) and comes with all features.
+As a fallback option, the static binaries will work in older environments
+(CentOS 7, Debian 10, ...), but come without the segments that require
+CGO/dynamically linked code (`bpf` and `sqlite`, check
+[CONFIGURATION.md](https://github.com/bwNetFlow/flowpipeline/blob/master/CONFIGURATION.md)).
+
 ### Container Releases
 A ready to use container is provided as `bwnetflow/flowpipeline`, you can check
-it out on [docker hub](https://hub.docker.com/r/bwnetflow/flowpipeline).
+it out on [GitHub container registry](https://github.com/bwNetFlow/flowpipeline/pkgs/container/flowpipeline).
 
 Configurations referencing other files (geolocation databases for instance)
 will work in a container without extra edits. This is because the volume

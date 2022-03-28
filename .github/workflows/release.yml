@@ -47,12 +47,17 @@ jobs:
         name: flowpipeline-${{ matrix.goos }}-static
         path: ./flowpipeline-static
 
+    - name: display uploaded files
+      run: ls -R
+
   release:
     runs-on: ubuntu-latest
     needs: build
     steps:
     - name: get binaries from previous job
       uses: actions/download-artifact@v3
+    - name: display downloaded files
+      run: ls -R
     - name: release with binaries
       uses: softprops/action-gh-release@v1
       with:

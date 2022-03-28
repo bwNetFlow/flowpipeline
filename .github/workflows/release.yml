@@ -3,31 +3,48 @@ name: release version tag
 on:
   push:
     tags:
-      - "v*.*.*-?[a-z]+"
+    - "v*.*.*-?[a-z]+"
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+        - os: ubuntu-latest
+          goos: linux
+        - os: macos-latest
+          goos: darwin
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
+    - name: checkout
+      uses: actions/checkout@v3
 
-      - name: setup go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.17
+    - name: setup go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.17
 
-      - name: test before release
-        run: go test ./...
+    - name: test before release
+      run: go test ./...
 
-      - name: build binary
-        run: go build -o flowpipeline .
+    - name: build binary
+      run: go build -o flowpipeline .
 
-      - name: release
-        uses: softprops/action-gh-release@v1
-        generate_release_notes: true
-        with:
-          files: flowpipeline
+    - name: save binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: flowpipeline-${{ matrix.goos }}
+        path: ./flowpipeline
+
+  release:
+    needs: build
+    steps:
+    - name: get binaries from previous job
+      uses: actions/download-artifact@v3
+    - name: release with binaries
+      uses: softprops/action-gh-release@v1
+      generate_release_notes: true
+      with:
+        files: |
+          flowpipeline-linux
+          flowpipeline-darwin

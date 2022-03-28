@@ -247,7 +247,7 @@ flows to the next segment, i.e. multiple input segments can be used in sequence
 to add to a single pipeline.
 
 #### bpf
-**This segment is unavailable in the static binary release due to its CGO dependency.**
+**This segment is available only on Linux.**
 
 The `bpf` segment sources packet header data from a local interface and uses
 this data to run a Netflow-style cache before emitting flow data to the

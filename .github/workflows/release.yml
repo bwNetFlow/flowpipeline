@@ -1,4 +1,4 @@
-name: release version tags automatically
+name: release version tag
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: test master and PRs against master
+name: test master and PRs
 
 on:
   push:
@@ -7,12 +7,15 @@ on:
     branches: [ master ]
 
 jobs:
-
   test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+        - os: ubuntu-latest
+          goos: linux
+        - os: macos-latest
+          goos: darwin
     steps:
     - name: checkout
       uses: actions/checkout@v2
@@ -31,5 +34,5 @@ jobs:
     - name: upload binary
       uses: actions/upload-artifact@v3
       with:
-        name: flowpipeline
+        name: flowpipeline-${{ matrix.goos }}
         path: ./flowpipeline

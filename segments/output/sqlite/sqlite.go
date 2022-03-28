@@ -1,3 +1,6 @@
+//go:build cgo
+// +build cgo
+
 // Dumps all incoming flow messages to a local sqlite database. The schema used
 // for this is preset.
 package sqlite

@@ -1,0 +1,35 @@
+name: test master and PRs against master
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+    - name: checkout
+      uses: actions/checkout@v2
+
+    - name: setup go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.17
+
+    - name: test
+      run: go test ./...
+
+    - name: build
+      run: go build -o flowpipeline .
+
+    - name: upload binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: flowpipeline
+        path: ./flowpipeline

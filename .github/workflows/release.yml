@@ -1,0 +1,33 @@
+name: release version tags automatically
+
+on:
+  push:
+    tags:
+      - "v*.*.*-?[a-z]+"
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+
+      - name: test before release
+        run: go test ./...
+
+      - name: build binary
+        run: go build -o flowpipeline .
+
+      - name: release
+        uses: softprops/action-gh-release@v1
+        generate_release_notes: true
+        with:
+          files: flowpipeline

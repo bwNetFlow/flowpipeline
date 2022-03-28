@@ -1,3 +1,5 @@
+// +build linux,cgo
+
 package bpf
 
 // Bpf Segment test, passthrough test TODO: how to guarantee device presence on any host

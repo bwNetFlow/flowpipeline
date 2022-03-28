@@ -247,6 +247,8 @@ flows to the next segment, i.e. multiple input segments can be used in sequence
 to add to a single pipeline.
 
 #### bpf
+**This segment is unavailable in the static binary release due to its CGO dependency.**
+
 The `bpf` segment sources packet header data from a local interface and uses
 this data to run a Netflow-style cache before emitting flow data to the
 pipeline.
@@ -636,6 +638,8 @@ number of other things.
 [examples using this segment](https://github.com/search?q=%22segment%3A+kafkaproducer%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### sqlite
+**This segment is unavailable in the static binary release due to its CGO dependency.**
+
 The `sqlite` segment provides a SQLite output option. It is intended for use as
 an ad-hoc dump method to answer questions on live traffic, i.e. average packet
 size for a specific class of traffic. The fields parameter optionally takes a

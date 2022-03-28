@@ -36,3 +36,14 @@ jobs:
       with:
         name: flowpipeline-${{ matrix.goos }}
         path: ./flowpipeline
+
+    - name: build statically linked
+      run: go build -o flowpipeline-static .
+      env:
+        CGO_ENABLED: 0
+
+    - name: save statically linked binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: flowpipeline-${{ matrix.goos }}-static
+        path: ./flowpipeline-static

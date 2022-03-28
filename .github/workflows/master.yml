@@ -1,0 +1,49 @@
+name: test master and PRs
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+        - os: ubuntu-latest
+          goos: linux
+        - os: macos-latest
+          goos: darwin
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+
+    - name: setup go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.17
+
+    - name: test
+      run: go test ./...
+
+    - name: build
+      run: go build -o flowpipeline .
+
+    - name: save binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: flowpipeline-${{ matrix.goos }}
+        path: ./flowpipeline
+
+    - name: build statically linked
+      run: go build -o flowpipeline-static .
+      env:
+        CGO_ENABLED: 0
+
+    - name: save statically linked binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: flowpipeline-${{ matrix.goos }}-static
+        path: ./flowpipeline-static

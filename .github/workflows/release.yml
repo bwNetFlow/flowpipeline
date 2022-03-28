@@ -1,0 +1,63 @@
+name: release version tag
+
+on:
+  push:
+    tags:
+    - "v*.*.*-?[a-z]+"
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+        - os: ubuntu-latest
+          goos: linux
+        - os: macos-latest
+          goos: darwin
+    steps:
+    - name: checkout
+      uses: actions/checkout@v3
+
+    - name: setup go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.17
+
+    - name: test before release
+      run: go test ./...
+
+    - name: build binary
+      run: go build -o flowpipeline .
+
+    - name: save binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: flowpipeline-${{ matrix.goos }}
+        path: ./flowpipeline
+
+    - name: build statically linked
+      run: go build -o flowpipeline-static .
+      env:
+        CGO_ENABLED: 0
+
+    - name: save statically linked binary
+      uses: actions/upload-artifact@v3
+      with:
+        name: flowpipeline-${{ matrix.goos }}-static
+        path: ./flowpipeline-static
+
+  release:
+    needs: build
+    steps:
+    - name: get binaries from previous job
+      uses: actions/download-artifact@v3
+    - name: release with binaries
+      uses: softprops/action-gh-release@v1
+      generate_release_notes: true
+      with:
+        files: |
+          flowpipeline-linux
+          flowpipeline-linux-static
+          flowpipeline-darwin
+          flowpipeline-darwin-static

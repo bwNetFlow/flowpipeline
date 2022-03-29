@@ -80,6 +80,17 @@ first argument, and then prints it out in a `tcpdump`-style format.
 You'd call it with `./flowpipeline "proto tcp and (port 80 or port 443)"`., for
 instance.
 
+### Custom Segments
+If you find that the existing segments lack some functionality or you require
+some very specific behaviour, it is possible to include segments as a plugin.
+This is done using the `-p yourplugin.so` commandline option and your own
+custom module. See
+[examples/plugin](https://github.com/bwNetFlow/flowpipeline/tree/master/examples/plugin)
+for a basic example and instructions on how to compile your plugin.
+
+Note that this requires CGO and thus will not work using the static binary
+releases or in a container.
+
 ## Contributing
 
 Contributions in any form (code, issues, feature requests) are very much welcome.

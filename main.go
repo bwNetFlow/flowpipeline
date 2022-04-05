@@ -12,6 +12,8 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"plugin"
+	"strings"
 
 	"github.com/bwNetFlow/flowpipeline/pipeline"
 	"github.com/hashicorp/logutils"
@@ -55,10 +57,23 @@ import (
 
 var Version string
 
+type flagArray []string
+
+func (i *flagArray) String() string {
+	return strings.Join(*i, ",")
+}
+
+func (i *flagArray) Set(value string) error {
+	*i = append(*i, value)
+	return nil
+}
+
 func main() {
-	configfile := flag.String("c", "config.yml", "location of the config file in yml format")
+	var pluginPaths flagArray
+	flag.Var(&pluginPaths, "p", "path to load segment plugins from, can be specified multiple times")
 	loglevel := flag.String("l", "warning", "loglevel: one of 'debug', 'info', 'warning' or 'error'")
 	version := flag.Bool("v", false, "print version")
+	configfile := flag.String("c", "config.yml", "location of the config file in yml format")
 	flag.Parse()
 
 	if *version {
@@ -71,6 +86,20 @@ func main() {
 		MinLevel: logutils.LogLevel(*loglevel),
 		Writer:   os.Stderr,
 	})
+
+	for _, path := range pluginPaths {
+		_, err := plugin.Open(path)
+		if err != nil {
+			if err.Error() == "plugin: not implemented" {
+				log.Println("[error] Loading plugins is unsupported when running a static, not CGO-enabled binary.")
+			} else {
+				log.Printf("[error] Problem loading the specified plugin: %s", err)
+			}
+			return
+		} else {
+			log.Printf("[info] Loaded plugin: %s", path)
+		}
+	}
 
 	config, err := ioutil.ReadFile(*configfile)
 	if err != nil {

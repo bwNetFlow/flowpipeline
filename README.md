@@ -42,7 +42,7 @@ The default, dynamically linked version requires a reasonably recent system
 (glibc 2.32+, linux 5.11+ for `bpf`, ...) and comes with all features.
 As a fallback option, the static binaries will work in older environments
 (CentOS 7, Debian 10, ...), but come without the segments that require
-CGO/dynamically linked code (`bpf` and `sqlite`, check
+CGO/dynamically linked code (`bpf`, `sqlite`, and plugin support, check
 [CONFIGURATION.md](https://github.com/bwNetFlow/flowpipeline/blob/master/CONFIGURATION.md)).
 
 ### Container Releases

@@ -90,7 +90,11 @@ func main() {
 	for _, path := range pluginPaths {
 		_, err := plugin.Open(path)
 		if err != nil {
-			log.Printf("[error] Problem loading the specified plugin: %s", err)
+			if err.Error() == "plugin: not implemented" {
+				log.Println("[error] Loading plugins is unsupported when running a static, not CGO-enabled binary.")
+			} else {
+				log.Printf("[error] Problem loading the specified plugin: %s", err)
+			}
 			return
 		} else {
 			log.Printf("[info] Loaded plugin: %s", path)

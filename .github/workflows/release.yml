@@ -28,10 +28,10 @@ jobs:
       run: go test ./...
 
     - name: build binary
-      run: go build -o flowpipeline-${{ matrix.goos }} .
+      run: go build -o flowpipeline-${{ matrix.goos }} -ldflags "-X main.Version=${{ github.ref_name }}" .
 
     - name: build statically linked
-      run: go build -o flowpipeline-${{ matrix.goos }}-static .
+      run: go build -o flowpipeline-${{ matrix.goos }}-static -ldflags "-X main.Version=${{ github.ref_name }}" .
       env:
         CGO_ENABLED: 0
 

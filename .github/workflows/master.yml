@@ -29,7 +29,7 @@ jobs:
       run: go test ./...
 
     - name: build
-      run: go build -o flowpipeline .
+      run: go build -o flowpipeline -ldflags "-X main.Version=${{ github.sha }}" .
 
     - name: save binary
       uses: actions/upload-artifact@v3

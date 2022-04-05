@@ -7,6 +7,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -52,10 +53,18 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/print/printflowdump"
 )
 
+var Version string
+
 func main() {
 	configfile := flag.String("c", "config.yml", "location of the config file in yml format")
 	loglevel := flag.String("l", "warning", "loglevel: one of 'debug', 'info', 'warning' or 'error'")
+	version := flag.Bool("v", false, "print version")
 	flag.Parse()
+
+	if *version {
+		fmt.Println(Version)
+		return
+	}
 
 	log.SetOutput(&logutils.LevelFilter{
 		Levels:   []logutils.LogLevel{"debug", "info", "warning", "error"},

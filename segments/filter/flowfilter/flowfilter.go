@@ -8,11 +8,11 @@ import (
 
 	"github.com/bwNetFlow/flowfilter/parser"
 	"github.com/bwNetFlow/flowfilter/visitors"
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
+// FIXME: the flowfilter project needs to be updated to new protobuf too
 type FlowFilter struct {
 	segments.BaseFilterSegment
 	Filter string // optional, default is empty
@@ -33,7 +33,7 @@ func (segment FlowFilter) New(config map[string]string) segments.Segment {
 		return nil
 	}
 	filter := &visitors.Filter{}
-	if _, err := filter.CheckFlow(newSegment.expression, &flow.FlowMessage{}); err != nil {
+	if _, err := filter.CheckFlow(newSegment.expression, &pb.EnrichedFlow{}); err != nil {
 		log.Printf("[error] FlowFilter: Semantic error in filter expression: %v", err)
 		return nil
 	}

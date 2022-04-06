@@ -3,8 +3,8 @@ package generator
 import (
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 type Generator struct {
@@ -29,7 +29,7 @@ func (segment *Generator) Run(wg *sync.WaitGroup) {
 			}
 			segment.Out <- msg
 		default:
-			segment.Out <- &flow.FlowMessage{Proto: 6, Bytes: 42, Note: "generated test flow"}
+			segment.Out <- &pb.EnrichedFlow{Proto: 6, Bytes: 42, Note: "generated test flow"}
 		}
 	}
 }

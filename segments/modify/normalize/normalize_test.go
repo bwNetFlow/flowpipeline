@@ -7,14 +7,14 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // Normalize Segment test, in-flow SampleingRate test
 func TestSegment_Normalize_inFlowSamplingRate(t *testing.T) {
 	result := segments.TestSegment("normalize", map[string]string{},
-		&flow.FlowMessage{SamplingRate: 32, Bytes: 1})
+		&pb.EnrichedFlow{SamplingRate: 32, Bytes: 1})
 	if result.Bytes != 32 {
 		t.Error("Segment Normalize is not working with in-flow SamplingRate.")
 	}
@@ -23,7 +23,7 @@ func TestSegment_Normalize_inFlowSamplingRate(t *testing.T) {
 // Normalize Segment test, fallback SampleingRate test
 func TestSegment_Normalize_fallbackSamplingRate(t *testing.T) {
 	result := segments.TestSegment("normalize", map[string]string{"fallback": "42"},
-		&flow.FlowMessage{SamplingRate: 0, Bytes: 1})
+		&pb.EnrichedFlow{SamplingRate: 0, Bytes: 1})
 	if result.Bytes != 42 {
 		t.Error("Segment Normalize is not working with fallback SamplingRate.")
 	}
@@ -32,7 +32,7 @@ func TestSegment_Normalize_fallbackSamplingRate(t *testing.T) {
 // Normalize Segment test, no fallback SampleingRate test
 func TestSegment_Normalize_noFallbackSamplingRate(t *testing.T) {
 	result := segments.TestSegment("normalize", map[string]string{},
-		&flow.FlowMessage{SamplingRate: 0, Bytes: 1})
+		&pb.EnrichedFlow{SamplingRate: 0, Bytes: 1})
 	if result.Bytes != 1 {
 		t.Error("Segment Normalize is not working with fallback SamplingRate.")
 	}
@@ -45,7 +45,7 @@ func BenchmarkNormalize(b *testing.B) {
 
 	segment := Normalize{}.New(map[string]string{})
 
-	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -53,7 +53,7 @@ func BenchmarkNormalize(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &flow.FlowMessage{SamplingRate: 0, Bytes: 1}
+		in <- &pb.EnrichedFlow{SamplingRate: 0, Bytes: 1}
 		_ = <-out
 	}
 	close(in)

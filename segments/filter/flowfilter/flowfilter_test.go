@@ -8,14 +8,14 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // FlowFilter Segment testing is basic, the filtering itself is tested in the flowfilter repo
 func TestSegment_FlowFilter_accept(t *testing.T) {
 	result := segments.TestSegment("flowfilter", map[string]string{"filter": "proto 4"},
-		&flow.FlowMessage{Proto: 4})
+		&pb.EnrichedFlow{Proto: 4})
 	if result == nil {
 		t.Error("Segment FlowFilter dropped a flow incorrectly.")
 	}
@@ -23,7 +23,7 @@ func TestSegment_FlowFilter_accept(t *testing.T) {
 
 func TestSegment_FlowFilter_deny(t *testing.T) {
 	result := segments.TestSegment("flowfilter", map[string]string{"filter": "proto 5"},
-		&flow.FlowMessage{Proto: 4})
+		&pb.EnrichedFlow{Proto: 4})
 	if result != nil {
 		t.Error("Segment FlowFilter accepted a flow incorrectly.")
 	}
@@ -44,7 +44,7 @@ func BenchmarkFlowFilter(b *testing.B) {
 
 	segment := FlowFilter{}.New(map[string]string{"filter": "port <50"})
 
-	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -52,7 +52,7 @@ func BenchmarkFlowFilter(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &flow.FlowMessage{SrcPort: uint32(rand.Intn(100))}
+		in <- &pb.EnrichedFlow{SrcPort: uint32(rand.Intn(100))}
 		_ = <-out
 	}
 	close(in)

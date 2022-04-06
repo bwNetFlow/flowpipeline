@@ -14,11 +14,11 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-
-	oldflow "github.com/bwNetFlow/protobuf/go"
 )
 
+// FIXME: clean up those todos
 type KafkaConsumer struct {
 	segments.BaseSegment
 	Server         string // required
@@ -115,6 +115,7 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 		}
 		config.Net.TLS.Enable = true
 		config.Net.TLS.Config = &tls.Config{RootCAs: rootCAs}
+	} else {
 		log.Println("[info] KafkaConsumer: Disabled TLS, operating unencrypted.")
 	}
 
@@ -145,7 +146,7 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 	handlerCtx, handlerCancel := context.WithCancel(context.Background())
 	var handler = &Handler{
 		ready: make(chan bool),
-		flows: make(chan *oldflow.FlowMessage),
+		flows: make(chan *pb.EnrichedFlow),
 	}
 	handlerWg := sync.WaitGroup{}
 	handlerWg.Add(1)

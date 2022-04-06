@@ -8,14 +8,14 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // Csv Segment test, passthrough test
 func TestSegment_Csv_passthrough(t *testing.T) {
 	result := segments.TestSegment("csv", map[string]string{},
-		&flow.FlowMessage{Type: 3, SamplerAddress: net.ParseIP("192.0.2.1")})
+		&pb.EnrichedFlow{Type: 3, SamplerAddress: net.ParseIP("192.0.2.1")})
 
 	if result.Type != 3 {
 		t.Error("Segment Csv is not working.")
@@ -29,7 +29,7 @@ func BenchmarkCsv(b *testing.B) {
 
 	segment := Csv{}.New(map[string]string{})
 
-	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -37,7 +37,7 @@ func BenchmarkCsv(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &flow.FlowMessage{Proto: 45}
+		in <- &pb.EnrichedFlow{Proto: 45}
 		_ = <-out
 	}
 	close(in)

@@ -3,9 +3,9 @@ package pipeline
 import (
 	"testing"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
 	"github.com/bwNetFlow/flowpipeline/segments/pass"
-	flow "github.com/bwNetFlow/protobuf/go"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/filter/drop"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/dropfields"
@@ -16,7 +16,7 @@ func TestPipelineBuild(t *testing.T) {
 	segmentList := []segments.Segment{&pass.Pass{}, &pass.Pass{}}
 	pipeline := New(segmentList...)
 	pipeline.Start()
-	pipeline.In <- &flow.FlowMessage{Type: 3}
+	pipeline.In <- &pb.EnrichedFlow{Type: 3}
 	fmsg := <-pipeline.Out
 	if fmsg.Type != 3 {
 		t.Error("Pipeline Setup is not working.")
@@ -28,7 +28,7 @@ func TestPipelineTeardown(t *testing.T) {
 	pipeline := New(segmentList...)
 	pipeline.Start()
 	pipeline.AutoDrain()
-	pipeline.In <- &flow.FlowMessage{Type: 3}
+	pipeline.In <- &pb.EnrichedFlow{Type: 3}
 	pipeline.Close() // fail test on halting ;)
 }
 
@@ -39,7 +39,7 @@ func TestPipelineConfigSuccess(t *testing.T) {
     foo: $baz
     bar: $0`))
 	pipeline.Start()
-	pipeline.In <- &flow.FlowMessage{Type: 3}
+	pipeline.In <- &pb.EnrichedFlow{Type: 3}
 	fmsg := <-pipeline.Out
 	if fmsg.Type != 3 {
 		t.Error("Pipeline built from config is not working.")
@@ -65,12 +65,12 @@ func Test_Branch_passthrough(t *testing.T) {
       fields: OutIf
 `))
 	pipeline.Start()
-	pipeline.In <- &flow.FlowMessage{Proto: 6, InIf: 1, OutIf: 1}
+	pipeline.In <- &pb.EnrichedFlow{Proto: 6, InIf: 1, OutIf: 1}
 	fmsg := <-pipeline.Out
 	if fmsg.Proto != 6 || fmsg.InIf == 1 || fmsg.OutIf != 1 {
 		t.Errorf("Branch segment did not work correctly, state is Proto %d, InIf %d, OutIf %d, should be (6, 0, 1).", fmsg.Proto, fmsg.InIf, fmsg.OutIf)
 	}
-	pipeline.In <- &flow.FlowMessage{Proto: 42, InIf: 1, OutIf: 1}
+	pipeline.In <- &pb.EnrichedFlow{Proto: 42, InIf: 1, OutIf: 1}
 	fmsg = <-pipeline.Out
 	if fmsg.Proto != 42 || fmsg.InIf != 1 || fmsg.OutIf == 1 {
 		t.Errorf("Branch segment did not work correctly, state is Proto %d, InIf %d, OutIf %d, should be (42, 1, 0).", fmsg.Proto, fmsg.InIf, fmsg.OutIf)
@@ -92,7 +92,7 @@ func Test_Branch_DeadlockFreeGeneration_If(t *testing.T) {
       fields: Bytes
 `))
 	pipeline.Start()
-	pipeline.In <- &flow.FlowMessage{Proto: 42, Bytes: 42}
+	pipeline.In <- &pb.EnrichedFlow{Proto: 42, Bytes: 42}
 	for i := 0; i < 5; i++ {
 		fmsg := <-pipeline.Out
 		if fmsg.Proto == 6 && fmsg.Bytes != 0 {
@@ -110,7 +110,7 @@ func Test_Branch_DeadlockFreeGeneration_Then(t *testing.T) {
   - segment: generator
 `))
 	pipeline.Start()
-	pipeline.In <- &flow.FlowMessage{Proto: 42, Bytes: 42}
+	pipeline.In <- &pb.EnrichedFlow{Proto: 42, Bytes: 42}
 	for i := 0; i < 5; i++ {
 		// no checks, not timeouting is enough
 		<-pipeline.Out
@@ -124,7 +124,7 @@ func Test_Branch_DeadlockFreeGeneration_Else(t *testing.T) {
   - segment: generator
 `))
 	pipeline.Start()
-	pipeline.In <- &flow.FlowMessage{Proto: 42, Bytes: 42}
+	pipeline.In <- &pb.EnrichedFlow{Proto: 42, Bytes: 42}
 	for i := 0; i < 5; i++ {
 		// no checks, not timeouting is enough
 		<-pipeline.Out

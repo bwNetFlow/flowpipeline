@@ -4,8 +4,8 @@ import (
 	"log"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // This mirrors the proper implementation in the pipeline package. This
@@ -13,9 +13,9 @@ import (
 type Pipeline interface {
 	Start()
 	Close()
-	GetInput() chan *flow.FlowMessage
-	GetOutput() <-chan *flow.FlowMessage
-	GetDrop() <-chan *flow.FlowMessage
+	GetInput() chan *pb.EnrichedFlow
+	GetOutput() <-chan *pb.EnrichedFlow
+	GetDrop() <-chan *pb.EnrichedFlow
 }
 
 type Branch struct {

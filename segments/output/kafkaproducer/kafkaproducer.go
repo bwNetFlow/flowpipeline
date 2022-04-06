@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
 	kafka "github.com/bwNetFlow/kafkaconnector"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // All configuration parameters are the same as in the kafkaconsumer segment,
@@ -24,6 +24,8 @@ import (
 // flows. Usually, a sensible application is usage with customer ids (`Cid`).
 //
 // For more info, see examples/splitter in the repo.
+
+// FIXME: use sarama directly here
 type KafkaProducer struct {
 	segments.BaseSegment
 	Server      string // required
@@ -42,7 +44,7 @@ func (segment KafkaProducer) New(config map[string]string) segments.Segment {
 	}
 
 	if config["topicsuffix"] != "" {
-		fmsg := reflect.ValueOf(flow.FlowMessage{})
+		fmsg := reflect.ValueOf(pb.EnrichedFlow{})
 		field := fmsg.FieldByName(config["topicsuffix"])
 		if !field.IsValid() {
 			log.Println("[error] KafkaProducer: The 'topicsuffix' is not a valid FlowMessage field.")

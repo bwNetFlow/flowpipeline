@@ -27,9 +27,10 @@ import (
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/filter/drop"
 	_ "github.com/bwNetFlow/flowpipeline/segments/filter/elephant"
-	_ "github.com/bwNetFlow/flowpipeline/segments/filter/flowfilter"
 
-	_ "github.com/bwNetFlow/flowpipeline/segments/input/bpf"
+	// _ "github.com/bwNetFlow/flowpipeline/segments/filter/flowfilter"
+
+	// _ "github.com/bwNetFlow/flowpipeline/segments/input/bpf"
 	_ "github.com/bwNetFlow/flowpipeline/segments/input/goflow"
 	_ "github.com/bwNetFlow/flowpipeline/segments/input/kafkaconsumer"
 	_ "github.com/bwNetFlow/flowpipeline/segments/input/stdin"
@@ -47,7 +48,8 @@ import (
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/csv"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/json"
-	_ "github.com/bwNetFlow/flowpipeline/segments/output/kafkaproducer"
+
+	// _ "github.com/bwNetFlow/flowpipeline/segments/output/kafkaproducer"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/sqlite"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/print/count"

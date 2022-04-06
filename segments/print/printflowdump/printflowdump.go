@@ -12,9 +12,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
 	"github.com/bwNetFlow/flowpipeline/segments/modify/protomap"
-	flow "github.com/bwNetFlow/protobuf/go"
 	"github.com/dustin/go-humanize"
 )
 
@@ -75,7 +75,7 @@ func (segment PrintFlowdump) New(config map[string]string) segments.Segment {
 
 }
 
-func (segment PrintFlowdump) format_flow(flowmsg *flow.FlowMessage) string {
+func (segment PrintFlowdump) format_flow(flowmsg *pb.EnrichedFlow) string {
 	timestamp := time.Unix(int64(flowmsg.TimeFlowEnd), 0).Format("15:04:05")
 	src := net.IP(flowmsg.SrcAddr)
 	dst := net.IP(flowmsg.DstAddr)

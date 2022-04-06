@@ -7,14 +7,14 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // Pass Segment test, passthrough test
 func TestSegment_Pass(t *testing.T) {
 	result := segments.TestSegment("pass", map[string]string{},
-		&flow.FlowMessage{Type: 3})
+		&pb.EnrichedFlow{Type: 3})
 	if result.Type != 3 {
 		t.Error("Segment Pass is not working.")
 	}
@@ -27,7 +27,7 @@ func BenchmarkPass(b *testing.B) {
 
 	segment := Pass{}
 
-	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -35,7 +35,7 @@ func BenchmarkPass(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &flow.FlowMessage{}
+		in <- &pb.EnrichedFlow{}
 		_ = <-out
 	}
 	close(in)

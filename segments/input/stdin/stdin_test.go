@@ -8,14 +8,14 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // StdIn Segment test, passthrough test only
 func TestSegment_StdIn_passthrough(t *testing.T) {
 	result := segments.TestSegment("stdin", map[string]string{},
-		&flow.FlowMessage{})
+		&pb.EnrichedFlow{})
 	if result == nil {
 		t.Error("Segment StdIn is not passing through flows.")
 	}
@@ -30,7 +30,7 @@ func BenchmarkStdin(b *testing.B) {
 		scanner: bufio.NewScanner(os.Stdin),
 	}
 
-	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -38,7 +38,7 @@ func BenchmarkStdin(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &flow.FlowMessage{}
+		in <- &pb.EnrichedFlow{}
 		_ = <-out
 	}
 	close(in)

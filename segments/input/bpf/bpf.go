@@ -15,6 +15,7 @@ import (
 	"github.com/bwNetFlow/flowpipeline/segments"
 )
 
+// FIXME: the bpf_flowexport projects needs to adopt the new flowmsg too
 type Bpf struct {
 	segments.BaseSegment
 

@@ -7,8 +7,8 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/bwNetFlow/flowpipeline/pb"
 	oldpb "github.com/bwNetFlow/protobuf/go"
-	"github.com/golang/protobuf/proto"
 	goflowpb "github.com/netsampler/goflow2/pb"
+	"google.golang.org/protobuf/proto"
 )
 
 // Handler represents a Sarama consumer group consumer

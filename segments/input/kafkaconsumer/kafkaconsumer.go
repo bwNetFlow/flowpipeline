@@ -4,13 +4,19 @@
 package kafkaconsumer
 
 import (
+	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"log"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
+	"github.com/Shopify/sarama"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	kafka "github.com/bwNetFlow/kafkaconnector"
+
+	oldflow "github.com/bwNetFlow/protobuf/go"
 )
 
 type KafkaConsumer struct {
@@ -92,35 +98,99 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 
-	var kafkaConn = kafka.Connector{}
-	if !segment.Tls {
-		kafkaConn.DisableTLS()
+	var err error
+	// TODO: move config into object
+	config := sarama.NewConfig()
+
+	// TODO: make configurable
+	config.Version, err = sarama.ParseKafkaVersion("2.4.0")
+	if err != nil {
+		log.Panicf("Error parsing Kafka version: %v", err)
+	}
+
+	if segment.Tls {
+		rootCAs, err := x509.SystemCertPool()
+		if err != nil {
+			log.Panicf("TLS Error: %v", err)
+		}
+		config.Net.TLS.Enable = true
+		config.Net.TLS.Config = &tls.Config{RootCAs: rootCAs}
 		log.Println("[info] KafkaConsumer: Disabled TLS, operating unencrypted.")
 	}
 
-	if !segment.Auth {
-		kafkaConn.DisableAuth()
-		log.Println("[info] KafkaConsumer: Disabled auth.")
-	} else {
-		kafkaConn.SetAuth(segment.User, segment.Pass)
+	if segment.Auth {
+		config.Net.SASL.Enable = true
+		config.Net.SASL.User = segment.User
+		config.Net.SASL.Password = segment.Pass
 		log.Printf("[info] KafkaConsumer: Authenticating as user '%s'.", segment.User)
+	} else {
+		config.Net.SASL.Enable = false
+		log.Println("[info] KafkaConsumer: Disabled auth.")
 	}
 
-	err := kafkaConn.StartConsumer(segment.Server, strings.Split(segment.Topic, ","), segment.Group, segment.startingOffset)
+	// TODO: make configurable
+	config.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
+	config.Consumer.Offsets.Initial = segment.startingOffset
+
+	client, err := sarama.NewConsumerGroup(strings.Split(segment.Server, ","), segment.Group, config)
 	if err != nil {
-		log.Fatalln("[error] KafkaConsumer: Error starting consumer, this usually indicates a misconfiguration (auth).")
+		if client == nil {
+			log.Fatalf("[error] KafkaConsumer: Creating Kafka client failed, this indicates an unreachable server or a SSL problem. Original error:\n  %v", err)
+		} else {
+			log.Fatalf("[error] KafkaConsumer: Creating Kafka consumer group failed while the connection was okay. Original error:\n  %v", err)
+		}
 	}
+
+	// log.Fatalln("[error] KafkaConsumer: Error starting consumer, this usually indicates a misconfiguration (auth).")
+	handlerCtx, handlerCancel := context.WithCancel(context.Background())
+	var handler = &Handler{
+		ready: make(chan bool),
+		flows: make(chan *oldflow.FlowMessage),
+	}
+	handlerWg := sync.WaitGroup{}
+	handlerWg.Add(1)
+	go func() {
+		defer handlerWg.Done()
+		for {
+			// This loop ensures recreation of our consumer session when server-side rebalances happen.
+			if err := client.Consume(handlerCtx, strings.Split(segment.Topic, ","), handler); err != nil {
+				log.Printf("[error] KafkaConsumer: Could not create new consumer session. Original error:\n  %v", err)
+				time.Sleep(5 * time.Second) // TODO: although this never occured for me, make configurable
+				continue
+			}
+			// check if context was cancelled, signaling that the consumer should stop
+			if handlerCtx.Err() != nil {
+				return
+			}
+			handler.ready = make(chan bool) // TODO: this is from the official example, not sure it is necessary in out case
+		}
+	}()
+	<-handler.ready
+	log.Println("[info] KafkaConsumer: Connected and operational")
+
+	defer func() {
+		handlerWg.Wait()
+		if err = client.Close(); err != nil {
+			log.Panicf("[error] KafkaConsumer: Error closing Kafka client: %v", err)
+		}
+	}()
 
 	// receive flows in a loop
 	for {
 		select {
-		case msg := <-kafkaConn.ConsumerChannel():
-			segment.Out <- msg
-		case msg, ok := <-segment.In:
+		case msg, ok := <-handler.flows:
 			if !ok {
+				// This will occur when the handler calls its Cleanup method
+				handlerCancel() // This is in case the channel was closed somehow else, which shouldn't happen
 				return
 			}
 			segment.Out <- msg
+		case msg, ok := <-segment.In:
+			if !ok {
+				handlerCancel() // Trigger handler shutdown and cleanup
+			} else {
+				segment.Out <- msg
+			}
 		}
 	}
 }

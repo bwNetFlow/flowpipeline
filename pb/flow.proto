@@ -1,0 +1,112 @@
+syntax = "proto3";
+package flowpb;
+option go_package = "github.com/bwNetFlow/flowpipeline/pb;";
+
+import "goflow.proto";
+
+message EnrichedFlow {
+
+  flowpb.FlowMessage Core = 1;
+
+  // bwNET custom fields:
+
+  // input/bpf:
+  // Many of the above fields can not be filled when creating flows from eBPF.
+  // However, there are some additional packet level metrics available,
+  // inspired by this list:
+  // https://github.com/ahlashkari/CICFlowMeter/blob/master/ReadMe.txt
+
+  uint32 PacketBytesMin = 1100;    // new, single packet means uint32 < MTU
+  uint32 PacketBytesMax = 1101;    // new
+  uint32 PacketBytesMean = 1102;   // new
+  uint32 PacketBytesStdDev = 1103; // new
+
+  uint64 PacketIATMin = 1110;    // new
+  uint64 PacketIATMax = 1111;    // new
+  uint64 PacketIATMean = 1112;   // new
+  uint64 PacketIATStdDev = 1113; // new
+
+  uint32 HeaderBytes = 1120; // new
+
+  uint64 FINFlagCount = 1130; // new
+  uint64 SYNFlagCount = 1131; // new
+  uint64 RSTFlagCount = 1132; // new
+  uint64 PSHFlagCount = 1133; // new
+  uint64 ACKFlagCount = 1134; // new
+  uint64 URGFlagCount = 1135; // new
+  uint64 CWRFlagCount = 1136; // new
+  uint64 ECEFlagCount = 1137; // new
+
+  uint64 PayloadPackets = 1140; // new
+
+  uint64 TimeActiveMin = 1150;    // new
+  uint64 TimeActiveMax = 1151;    // new
+  uint64 TimeActiveMean = 1152;   // new
+  uint64 TimeActiveStdDev = 1153; // new
+  uint64 TimeIdleMin = 1154;      // new
+  uint64 TimeIdleMax = 1155;      // new
+  uint64 TimeIdleMean = 1156;     // new
+  uint64 TimeIdleStdDev = 1157;   // new
+
+  // modify/addcid
+  uint32 Cid = 1000; // TODO: deprecate and provide as helper?
+  string CidString = 1001; // deprecated, delete for v1.0.0
+  uint32 SrcCid = 1012;
+  uint32 DstCid = 1013;
+
+  // modify/anonymize
+  enum AnonymizedType {
+    NotAnonymized = 0;
+    CryptoPAN = 1;
+  }
+  AnonymizedType SrcAddrAnon = 1160; // new
+  AnonymizedType DstAddrAnon = 1161; // new
+  uint32 PreservedPrefixLen = 1162;  // new
+
+  AnonymizedType SamplerAddrAnon = 1163; // TODO: needed?
+  uint32 SamplerAddrAnonPreservedPrefixLen = 1164; // TODO: afi for src/dst is always the same, but sampler can differ... we need this too then?
+
+  // modify/bgp
+  repeated uint32 SrcASPath = 1170; // new
+  repeated uint32 DstASPath = 1171; // new
+  // TODO: are MED, localpref, ... useful? for Src/Dst each?
+
+  // modify/geolocation
+  string RemoteCountry = 1010; // TODO: deprecate and provide as helper
+  string SrcCountry = 1014;
+  string DstCountry = 1015;
+
+  // modify/normalize
+  enum NormalizedType {
+    No = 0;
+    Yes = 1;
+  }
+  NormalizedType Normalized = 1002; // TODO: deprecate and replace with helper?
+  // TODO: if not, replace with OriginalSamplingRate instead and set SamplingRate to 1?
+
+  // modify/protomap
+  string ProtoName = 1009; // TODO: deprecate and replace with helper, why lug a string along...
+
+  // modify/remoteaddress
+  enum RemoteAddrType {
+    Neither = 0;
+    Src = 1;
+    Dst = 2;
+  }
+  RemoteAddrType RemoteAddr = 1011; // TODO: figure out a better system? applicable only to service providers right now...
+
+  // modify/reversedns
+  string SrcAddrName = 1180; // new
+  string DstAddrName = 1181; // new
+
+  // modify/snmp
+  string SrcIfName = 1003;  // TODO: rename to match InIf and OutIf
+  string SrcIfDesc = 1004;  // TODO: rename to match InIf and OutIf
+  uint32 SrcIfSpeed = 1005; // TODO: rename to match InIf and OutIf
+  string DstIfName = 1006;  // TODO: rename to match InIf and OutIf
+  string DstIfDesc = 1007;  // TODO: rename to match InIf and OutIf
+  uint32 DstIfSpeed = 1008; // TODO: rename to match InIf and OutIf
+
+  // general
+  string Note = 1016; // free-form field to implement anything
+}

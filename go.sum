@@ -395,6 +395,8 @@ github.com/nats-io/nkeys v0.1.3/go.mod h1:xpnFELMwJABBLVhffcfd1MZx6VsNRFpEugbxzi
 github.com/nats-io/nuid v1.0.1/go.mod h1:19wcPz3Ph3q0Jbyiqsd0kePYG7A95tJPxeL+1OSON2c=
 github.com/netsampler/goflow2 v1.0.4 h1:xUW5ry7h9oYAsh35mgiIvL59HKKluyzchenvCEGnZ7o=
 github.com/netsampler/goflow2 v1.0.4/go.mod h1:8ORfpaFZtAtvf6aRIACc7/M2hI9IT88wmw/JxT6s6nk=
+github.com/netsampler/goflow2 v1.1.0 h1:izXi00eRpyaGgjbIr6IDdVe1xjzIK+7e65vxK9u3jBQ=
+github.com/netsampler/goflow2 v1.1.0/go.mod h1:yqw2cLe+lbnDN1+JKBqxoj2FKOA83iB8wV0aCKnlesg=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/oklog/oklog v0.3.2/go.mod h1:FCV+B7mhrz4o+ueLpx+KqkyXRGMWOYEvfiXtdGtbWGs=
 github.com/oklog/run v1.0.0/go.mod h1:dlhp/R75TPv97u0XWUtDeV/lRKWPKSdTuV0TZvrmrQA=

@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/logutils v1.0.0
 	github.com/influxdata/influxdb-client-go/v2 v2.7.0
 	github.com/mattn/go-sqlite3 v1.14.10
-	github.com/netsampler/goflow2 v1.0.4
+	github.com/netsampler/goflow2 v1.1.0
 	github.com/oschwald/maxminddb-golang v1.8.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.12.0

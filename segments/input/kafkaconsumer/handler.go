@@ -52,36 +52,13 @@ func (h *Handler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 				log.Println("[warning] KafkaConsumer: This Kafka cluster still uses the old flow format, consider updating its generator.")
 				loggedFormatDetails = true
 			}
-			if err := proto.Unmarshal(message.Value, goflowMsg); err != nil {
-				log.Println("[error] KafkaConsumer: Found old format that is not parsable using goflow format.")
-				continue
-			}
-			h.flows <- &pb.EnrichedFlow{
-				Core:          goflowMsg,
-				Cid:           oldFlowMsg.Cid,
-				CidString:     oldFlowMsg.CidString,
-				SrcCid:        oldFlowMsg.SrcCid,
-				DstCid:        oldFlowMsg.DstCid,
-				Normalized:    pb.EnrichedFlow_NormalizedType(oldFlowMsg.Normalized),
-				SrcIfName:     oldFlowMsg.SrcIfName,
-				SrcIfDesc:     oldFlowMsg.SrcIfDesc,
-				SrcIfSpeed:    oldFlowMsg.SrcIfSpeed,
-				DstIfName:     oldFlowMsg.DstIfName,
-				DstIfDesc:     oldFlowMsg.DstIfDesc,
-				DstIfSpeed:    oldFlowMsg.DstIfSpeed,
-				ProtoName:     oldFlowMsg.ProtoName,
-				RemoteCountry: oldFlowMsg.RemoteCountry,
-				SrcCountry:    oldFlowMsg.SrcCountry,
-				DstCountry:    oldFlowMsg.DstCountry,
-				RemoteAddr:    pb.EnrichedFlow_RemoteAddrType(oldFlowMsg.RemoteAddr),
-				Note:          oldFlowMsg.Note,
-			}
+			h.flows <- pb.NewFromOld(oldFlowMsg)
 		} else if err := proto.Unmarshal(message.Value, goflowMsg); err == nil {
 			if !loggedFormatDetails {
 				log.Println("[info] KafkaConsumer: This Kafka cluster uses Goflow's flow format, converting.")
 				loggedFormatDetails = true
 			}
-			h.flows <- &pb.EnrichedFlow{Core: goflowMsg}
+			h.flows <- pb.NewFromGoflow(goflowMsg)
 		} else if err := proto.Unmarshal(message.Value, flowMsg); err == nil {
 			h.flows <- flowMsg
 		}

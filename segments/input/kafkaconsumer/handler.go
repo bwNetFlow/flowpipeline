@@ -6,8 +6,6 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/bwNetFlow/flowpipeline/pb"
-	oldpb "github.com/bwNetFlow/protobuf/go"
-	goflowpb "github.com/netsampler/goflow2/pb"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -41,26 +39,13 @@ func (h *Handler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 	// Do not move the code below to a goroutine.
 	// The `ConsumeClaim` itself is called within a goroutine, see:
 	// https://github.com/Shopify/sarama/blob/master/consumer_group.go#L27-L29
-	var loggedFormatDetails bool
 	for message := range claim.Messages() {
 		session.MarkMessage(message, "")
 		flowMsg := new(pb.EnrichedFlow)
-		goflowMsg := new(goflowpb.FlowMessage)
-		oldFlowMsg := new(oldpb.FlowMessage)
-		if err := proto.Unmarshal(message.Value, oldFlowMsg); err == nil {
-			if !loggedFormatDetails {
-				log.Println("[warning] KafkaConsumer: This Kafka cluster still uses the old flow format, consider updating its generator.")
-				loggedFormatDetails = true
-			}
-			h.flows <- pb.NewFromOld(oldFlowMsg)
-		} else if err := proto.Unmarshal(message.Value, goflowMsg); err == nil {
-			if !loggedFormatDetails {
-				log.Println("[info] KafkaConsumer: This Kafka cluster uses Goflow's flow format, converting.")
-				loggedFormatDetails = true
-			}
-			h.flows <- pb.NewFromGoflow(goflowMsg)
-		} else if err := proto.Unmarshal(message.Value, flowMsg); err == nil {
+		if err := proto.Unmarshal(message.Value, flowMsg); err == nil {
 			h.flows <- flowMsg
+		} else {
+			log.Printf("[warning] KafkaConsumer: Error decoding flow, this might be due to the use of Goflow custom fields. Original error:\n  %s", err)
 		}
 	}
 	return nil

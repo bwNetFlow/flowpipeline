@@ -8,6 +8,7 @@ import (
 	"github.com/bwNetFlow/flowpipeline/segments/pass"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/filter/drop"
+	_ "github.com/bwNetFlow/flowpipeline/segments/filter/flowfilter"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/dropfields"
 	_ "github.com/bwNetFlow/flowpipeline/segments/testing/generator"
 )

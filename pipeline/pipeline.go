@@ -9,8 +9,7 @@ import (
 	"github.com/bwNetFlow/flowpipeline/segments"
 	"github.com/bwNetFlow/flowpipeline/segments/filter/drop"
 	"github.com/bwNetFlow/flowpipeline/segments/filter/elephant"
-
-	// "github.com/bwNetFlow/flowpipeline/segments/filter/flowfilter"
+	"github.com/bwNetFlow/flowpipeline/segments/filter/flowfilter"
 	"github.com/bwNetFlow/flowpipeline/segments/pass"
 )
 
@@ -46,8 +45,8 @@ func (pipeline *Pipeline) GetDrop() <-chan *pb.EnrichedFlow {
 			typedSegment.SubscribeDrops(pipeline.Drop)
 		case *elephant.Elephant:
 			typedSegment.SubscribeDrops(pipeline.Drop)
-		// case *flowfilter.FlowFilter:
-		// 	typedSegment.SubscribeDrops(pipeline.Drop)
+		case *flowfilter.FlowFilter:
+			typedSegment.SubscribeDrops(pipeline.Drop)
 		}
 	}
 	// If there are no filter/* segments, this channel will never have

@@ -2,18 +2,13 @@ module github.com/bwNetFlow/flowpipeline
 
 go 1.18
 
-replace (
-	github.com/bwNetFlow/bpf_flowexport => ../bpf_flowexport
-	github.com/bwNetFlow/flowfilter => ../flowfilter
-)
-
 require (
 	github.com/Shopify/sarama v1.32.0
 	github.com/Yawning/cryptopan v0.0.0-20170504040949-65bca51288fe
 	github.com/alouca/gosnmp v0.0.0-20170620005048-04d83944c9ab
 	github.com/asecurityteam/rolling v2.0.4+incompatible
-	github.com/bwNetFlow/bpf_flowexport v0.0.0-20220127110939-edc01dda56f9
-	github.com/bwNetFlow/flowfilter v0.0.0-20220127112217-16b8415be8e3
+	github.com/bwNetFlow/bpf_flowexport v0.0.0-20220511092017-f0d983f0357d
+	github.com/bwNetFlow/flowfilter v0.0.0-20220511091132-1b7634137ba9
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04
 	github.com/bwNetFlow/kafkaconnector v0.0.0-20210817091537-cdd6f54695a0
 	github.com/bwNetFlow/protobuf/go v0.0.0-20211004083441-61e193b4b342

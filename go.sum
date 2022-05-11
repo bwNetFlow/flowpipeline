@@ -82,8 +82,12 @@ github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6r
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
 github.com/bwNetFlow/bpf_flowexport v0.0.0-20220127110939-edc01dda56f9 h1:id8YK7pJSJ38i5UGztaJNr9Y9T/h43TN9R/fKU79dko=
 github.com/bwNetFlow/bpf_flowexport v0.0.0-20220127110939-edc01dda56f9/go.mod h1:jWLl3PeaAsdjYy8BHaX93VgJoRhp3R2s4bo9leNTYX8=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20220511092017-f0d983f0357d h1:q5wlBZxxLWo6gVyUoXNJaoXGrKMXw7+RUcB+XLtR8+Q=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20220511092017-f0d983f0357d/go.mod h1:OLnBDc0oCLChCyTwWWtpTZdG+Fc2KlRVFeRUmUXsNqc=
 github.com/bwNetFlow/flowfilter v0.0.0-20220127112217-16b8415be8e3 h1:/yY+mRQ28jl+0YwtCR/AA+Vp12HEEIpzcvMY0VBIFkc=
 github.com/bwNetFlow/flowfilter v0.0.0-20220127112217-16b8415be8e3/go.mod h1:w9a+i4UtraKmVHuPt3Cuf6NG+muqie4bOTFxov6KUlQ=
+github.com/bwNetFlow/flowfilter v0.0.0-20220511091132-1b7634137ba9 h1:ybly8a1XVvq+ulrU8KKpFi3L0SMye/idDU8R2S4dECE=
+github.com/bwNetFlow/flowfilter v0.0.0-20220511091132-1b7634137ba9/go.mod h1:DpkR7zck+U/+YeFOAiq83xg6sUnwa4R6RWClYE9oHeU=
 github.com/bwNetFlow/flowpipeline v0.8.0-beta.0.20220411121859-672a5e3fd706/go.mod h1:svUq6iCLPgwWMFW4Amaio89LonYGiZDnPwNUmKv+nQE=
 github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04 h1:mm0/N8cMAdc5TRsmAkrhnPIdOm0ZqbT7uUC9Wt/21mk=
 github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04/go.mod h1:rtoxrzCig192Z9SYgF7J58r3qgnJ09yI3pnPVPf9+3U=
@@ -101,6 +105,7 @@ github.com/cespare/xxhash/v2 v2.1.2/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XL
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
+github.com/cilium/ebpf v0.8.0/go.mod h1:f5zLIM0FSNuAkSyLAN7X+Hy6yznlF1mNiWUMfxMtrgk=
 github.com/cilium/ebpf v0.8.1 h1:bLSSEbBLqGPXxls55pGr5qWZaTqcmfDJHhou7t254ao=
 github.com/cilium/ebpf v0.8.1/go.mod h1:f5zLIM0FSNuAkSyLAN7X+Hy6yznlF1mNiWUMfxMtrgk=
 github.com/clbanning/x2j v0.0.0-20191024224557-825249438eec/go.mod h1:jMjuTZXRI4dUb/I5gc9Hdhagfvm9+RyrPryS/auMzxE=

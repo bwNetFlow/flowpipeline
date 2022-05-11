@@ -76,8 +76,11 @@ func (segment *Bgp) Run(wg *sync.WaitGroup) {
 		} else {
 			if router, ok := segment.routeInfoServer.Routers[msg.SamplerAddressObj().String()]; ok {
 				routeInfos = router.Lookup(msg.DstAddrObj().String())
-			} else {
+			} else if segment.FallbackRouter != "" {
 				routeInfos = segment.routeInfoServer.Routers[segment.FallbackRouter].Lookup(msg.DstAddrObj().String())
+			} else {
+				segment.Out <- msg
+				continue
 			}
 		}
 		for _, path := range routeInfos {

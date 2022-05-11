@@ -1,6 +1,8 @@
 package pb
 
 import (
+	"net"
+
 	oldpb "github.com/bwNetFlow/protobuf/go"
 	goflowpb "github.com/netsampler/goflow2/pb"
 )
@@ -256,4 +258,16 @@ func (flow *EnrichedFlow) IsForwarded() bool {
 
 func (flow *EnrichedFlow) IsUnknownForwardingStatus() bool {
 	return flow.GetForwardingStatus() < 64
+}
+
+func (flow *EnrichedFlow) SrcAddrObj() net.IP {
+	return net.IP(flow.SrcAddr)
+}
+
+func (flow *EnrichedFlow) DstAddrObj() net.IP {
+	return net.IP(flow.DstAddr)
+}
+
+func (flow *EnrichedFlow) SamplerAddressObj() net.IP {
+	return net.IP(flow.SamplerAddress)
 }

@@ -150,17 +150,19 @@ message EnrichedFlow {
     NotAnonymized = 0;
     CryptoPAN = 1;
   }
-  AnonymizedType SrcAddrAnon = 1160; // new
-  AnonymizedType DstAddrAnon = 1161; // new
-  uint32 PreservedPrefixLen = 1162;  // new
+  AnonymizedType SrcAddrAnon = 1160;
+  AnonymizedType DstAddrAnon = 1161;
+  uint32 SrcAddrPreservedLen = 1162;
+  uint32 DstAddrPreservedLen = 1163;
 
-  AnonymizedType SamplerAddrAnon = 1163; // TODO: needed?
-  uint32 SamplerAddrAnonPreservedPrefixLen = 1164; // TODO: afi for src/dst is always the same, but sampler can differ... we need this too then?
+  AnonymizedType SamplerAddrAnon = 1164;
+  uint32 SamplerAddrAnonPreservedPrefixLen = 1165;
 
   // modify/bgp
-  repeated uint32 SrcASPath = 1170; // new
-  repeated uint32 DstASPath = 1171; // new
-  // TODO: are MED, localpref, ... useful? for Src/Dst each?
+  // as done by a number of Netflow implementations, these refer to the destination
+  repeated uint32 ASPath = 1171;
+  uint32 Med = 1172;
+  uint32 LocalPref = 1173;
 
   // modify/geolocation
   string RemoteCountry = 1010; // TODO: deprecate and provide as helper

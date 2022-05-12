@@ -110,7 +110,10 @@ github.com/bwNetFlow/flowfilter v0.0.0-20220127112217-16b8415be8e3 h1:/yY+mRQ28j
 github.com/bwNetFlow/flowfilter v0.0.0-20220127112217-16b8415be8e3/go.mod h1:w9a+i4UtraKmVHuPt3Cuf6NG+muqie4bOTFxov6KUlQ=
 github.com/bwNetFlow/flowfilter v0.0.0-20220511091132-1b7634137ba9 h1:ybly8a1XVvq+ulrU8KKpFi3L0SMye/idDU8R2S4dECE=
 github.com/bwNetFlow/flowfilter v0.0.0-20220511091132-1b7634137ba9/go.mod h1:DpkR7zck+U/+YeFOAiq83xg6sUnwa4R6RWClYE9oHeU=
+github.com/bwNetFlow/flowfilter v0.0.0-20220511135012-4ce5777ea672 h1:xtNEyqHdpYjXd0+k3fD1K/7Z7ix3Qx9JehD6Nv7Xd9g=
+github.com/bwNetFlow/flowfilter v0.0.0-20220511135012-4ce5777ea672/go.mod h1:04xQ/wGk3zzAKTWhF7BP8FSOmkY9TMjphFqZCnzn/zo=
 github.com/bwNetFlow/flowpipeline v0.8.0-beta.0.20220411121859-672a5e3fd706/go.mod h1:svUq6iCLPgwWMFW4Amaio89LonYGiZDnPwNUmKv+nQE=
+github.com/bwNetFlow/flowpipeline v0.8.0-beta.0.20220511112313-9b9f62fc06d8/go.mod h1:XOSA5I2PHoyRYx1dNAercag0SidrOz+MjY9RQMrZJdY=
 github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04 h1:mm0/N8cMAdc5TRsmAkrhnPIdOm0ZqbT7uUC9Wt/21mk=
 github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04/go.mod h1:rtoxrzCig192Z9SYgF7J58r3qgnJ09yI3pnPVPf9+3U=
 github.com/bwNetFlow/kafkaconnector v0.0.0-20210817091537-cdd6f54695a0 h1:OUzMhaRnXiehD2VAQatkbGB80R1uxE4Jpaj6pDUIrL8=

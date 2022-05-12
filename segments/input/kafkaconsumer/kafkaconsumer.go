@@ -50,7 +50,6 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 
 	// set some unconfigurable defaults
 	newsegment.saramaConfig.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
-	newsegment.saramaConfig.Consumer.Offsets.Initial = segment.startingOffset
 
 	// TODO: parse and set kafka version
 	newsegment.saramaConfig.Version, err = sarama.ParseKafkaVersion("2.4.0")
@@ -92,21 +91,6 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 	} else {
 		log.Println("[info] KafkaConsumer: 'auth' set to default true.")
 	}
-	newsegment.Auth = useAuth
-	if newsegment.Auth {
-		newsegment.saramaConfig.Net.SASL.Enable = true
-		newsegment.saramaConfig.Net.SASL.User = segment.User
-		newsegment.saramaConfig.Net.SASL.Password = segment.Pass
-		log.Printf("[info] KafkaConsumer: Authenticating as user '%s'.", segment.User)
-	} else {
-		newsegment.saramaConfig.Net.SASL.Enable = false
-		log.Println("[info] KafkaConsumer: Disabled auth.")
-	}
-
-	// warn if we're leaking credentials
-	if newsegment.Auth && !newsegment.Tls {
-		log.Println("[warning] KafkaConsumer: Authentication will be done in plain text!")
-	}
 
 	// parse and configure credentials, if applicable
 	if useAuth && (config["user"] == "" || config["pass"] == "") {
@@ -117,13 +101,30 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 		newsegment.Pass = config["pass"]
 	}
 
+	// use these credentials
+	newsegment.Auth = useAuth
+	if newsegment.Auth {
+		newsegment.saramaConfig.Net.SASL.Enable = true
+		newsegment.saramaConfig.Net.SASL.User = newsegment.User
+		newsegment.saramaConfig.Net.SASL.Password = newsegment.Pass
+		log.Printf("[info] KafkaConsumer: Authenticating as user '%s'.", newsegment.User)
+	} else {
+		newsegment.saramaConfig.Net.SASL.Enable = false
+		log.Println("[info] KafkaConsumer: Disabled auth.")
+	}
+
+	// warn if we're leaking credentials
+	if newsegment.Auth && !newsegment.Tls {
+		log.Println("[warning] KafkaConsumer: Authentication will be done in plain text!")
+	}
+
 	// parse and set starting point of fresh consumer groups
 	startAt := "newest"
-	var startingOffset int64 = -1 // see sarama const OffsetNewest
+	var startingOffset int64 = sarama.OffsetNewest // see sarama const OffsetNewest
 	if config["startat"] != "" {
 		if strings.ToLower(config["startat"]) == "oldest" {
 			startAt = "oldest"
-			startingOffset = -2 // see sarama const OffsetOldest
+			startingOffset = sarama.OffsetOldest // see sarama const OffsetOldest
 		} else if strings.ToLower(config["startat"]) != "newest" {
 			log.Println("[error] KafkaConsumer: Could not parse 'startat' parameter, using default 'newest'.")
 		}

@@ -77,10 +77,10 @@ func (segment KafkaProducer) New(config map[string]string) segments.Segment {
 		if parsedTls, err := strconv.ParseBool(config["tls"]); err == nil {
 			useTls = parsedTls
 		} else {
-			log.Println("[error] KafkaConsumer: Could not parse 'tls' parameter, using default true.")
+			log.Println("[error] KafkaProducer: Could not parse 'tls' parameter, using default true.")
 		}
 	} else {
-		log.Println("[info] KafkaConsumer: 'tls' set to default true.")
+		log.Println("[info] KafkaProducer: 'tls' set to default true.")
 	}
 	newsegment.Tls = useTls
 	if newsegment.Tls {
@@ -91,7 +91,7 @@ func (segment KafkaProducer) New(config map[string]string) segments.Segment {
 		newsegment.saramaConfig.Net.TLS.Enable = true
 		newsegment.saramaConfig.Net.TLS.Config = &tls.Config{RootCAs: rootCAs}
 	} else {
-		log.Println("[info] KafkaConsumer: Disabled TLS, operating unencrypted.")
+		log.Println("[info] KafkaProducer: Disabled TLS, operating unencrypted.")
 	}
 
 	// parse config and setup auth
@@ -100,34 +100,36 @@ func (segment KafkaProducer) New(config map[string]string) segments.Segment {
 		if parsedAuth, err := strconv.ParseBool(config["auth"]); err == nil {
 			useAuth = parsedAuth
 		} else {
-			log.Println("[error] KafkaConsumer: Could not parse 'auth' parameter, using default true.")
+			log.Println("[error] KafkaProducer: Could not parse 'auth' parameter, using default true.")
 		}
 	} else {
-		log.Println("[info] KafkaConsumer: 'auth' set to default true.")
-	}
-	newsegment.Auth = useAuth
-	if newsegment.Auth {
-		newsegment.saramaConfig.Net.SASL.Enable = true
-		newsegment.saramaConfig.Net.SASL.User = segment.User
-		newsegment.saramaConfig.Net.SASL.Password = segment.Pass
-		log.Printf("[info] KafkaConsumer: Authenticating as user '%s'.", segment.User)
-	} else {
-		newsegment.saramaConfig.Net.SASL.Enable = false
-		log.Println("[info] KafkaConsumer: Disabled auth.")
-	}
-
-	// warn if we're leaking credentials
-	if newsegment.Auth && !newsegment.Tls {
-		log.Println("[warning] KafkaConsumer: Authentication will be done in plain text!")
+		log.Println("[info] KafkaProducer: 'auth' set to default true.")
 	}
 
 	// parse and configure credentials, if applicable
 	if useAuth && (config["user"] == "" || config["pass"] == "") {
-		log.Println("[error] KafkaConsumer: Missing required configuration parameters for auth.")
+		log.Println("[error] KafkaProducer: Missing required configuration parameters for auth.")
 		return nil
 	} else {
 		newsegment.User = config["user"]
 		newsegment.Pass = config["pass"]
+	}
+
+	// use these credentials
+	newsegment.Auth = useAuth
+	if newsegment.Auth {
+		newsegment.saramaConfig.Net.SASL.Enable = true
+		newsegment.saramaConfig.Net.SASL.User = newsegment.User
+		newsegment.saramaConfig.Net.SASL.Password = newsegment.Pass
+		log.Printf("[info] KafkaProducer: Authenticating as user '%s'.", newsegment.User)
+	} else {
+		newsegment.saramaConfig.Net.SASL.Enable = false
+		log.Println("[info] KafkaProducer: Disabled auth.")
+	}
+
+	// warn if we're leaking credentials
+	if newsegment.Auth && !newsegment.Tls {
+		log.Println("[warning] KafkaProducer: Authentication will be done in plain text!")
 	}
 
 	// parse special target topic handling information

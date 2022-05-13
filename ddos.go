@@ -39,15 +39,18 @@ func (segment *Ddos) Run(wg *sync.WaitGroup) {
 		select {
 		case <-ticker.C:
 			databaseEntries := []*Record{}
-			for key, entry := range database {
-				if entry.LastUpdated.Before(time.Now().Add(-5 * time.Minute)) {
-					delete(database, key)
-				}
+			for _, entry := range database {
 				databaseEntries = append(databaseEntries, entry)
 			}
 			sort.Slice(databaseEntries, func(i, j int) bool {
 				iBytes := databaseEntries[i].Bytes.Reduce(rolling.Sum)
+				if iBytes == 0 {
+					delete(database, databaseEntries[i].DstIp)
+				}
 				jBytes := databaseEntries[j].Bytes.Reduce(rolling.Sum)
+				if jBytes == 0 {
+					delete(database, databaseEntries[j].DstIp)
+				}
 				return iBytes > jBytes
 			})
 			printedRecords := 0
@@ -74,7 +77,6 @@ func (segment *Ddos) Run(wg *sync.WaitGroup) {
 			}
 			record.Bytes.Append(float64(msg.Bytes))
 			record.Packets.Append(float64(msg.Packets))
-			record.LastUpdated = time.Now()
 			database[msg.DstAddrObj().String()] = record
 
 			segment.Out <- msg

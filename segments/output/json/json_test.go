@@ -7,14 +7,14 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // Json Segment test, passthrough test only
 func TestSegment_Json_passthrough(t *testing.T) {
 	result := segments.TestSegment("json", map[string]string{},
-		&flow.FlowMessage{})
+		&pb.EnrichedFlow{})
 	if result == nil {
 		t.Error("Segment Json is not passing through flows.")
 	}
@@ -27,7 +27,7 @@ func BenchmarkJson(b *testing.B) {
 
 	segment := Json{}.New(map[string]string{})
 
-	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -35,7 +35,7 @@ func BenchmarkJson(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &flow.FlowMessage{}
+		in <- &pb.EnrichedFlow{}
 		_ = <-out
 	}
 	close(in)

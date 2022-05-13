@@ -7,14 +7,14 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // Protomap Segment test, passthrough test only
 func TestSegment_protomap_passthrough(t *testing.T) {
 	result := segments.TestSegment("protomap", map[string]string{},
-		&flow.FlowMessage{})
+		&pb.EnrichedFlow{})
 	if result == nil {
 		t.Error("Segment protomap is not passing through flows.")
 	}
@@ -23,7 +23,7 @@ func TestSegment_protomap_passthrough(t *testing.T) {
 // Protomap Segment test, passthrough test only
 func TestSegment_protomap_tcp(t *testing.T) {
 	result := segments.TestSegment("protomap", map[string]string{},
-		&flow.FlowMessage{Proto: 6})
+		&pb.EnrichedFlow{Proto: 6})
 	if result.ProtoName != "TCP" {
 		t.Error("Segment protomap is not tagging ProtoName correctly.")
 	}
@@ -36,7 +36,7 @@ func BenchmarkProtomap(b *testing.B) {
 
 	segment := Protomap{}.New(map[string]string{})
 
-	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -44,7 +44,7 @@ func BenchmarkProtomap(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &flow.FlowMessage{Proto: 6}
+		in <- &pb.EnrichedFlow{Proto: 6}
 		_ = <-out
 	}
 	close(in)

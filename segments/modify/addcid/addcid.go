@@ -111,11 +111,11 @@ func (segment *AddCid) Run(wg *sync.WaitGroup) {
 
 func (segment *AddCid) readPrefixList() {
 	f, err := os.Open(segments.ContainerVolumePrefix + segment.FileName)
-	defer f.Close()
 	if err != nil {
 		log.Printf("[error] AddCid: Could not open prefix list: %v", err)
 		return
 	}
+	defer f.Close()
 
 	csvr := csv.NewReader(f)
 	var count int

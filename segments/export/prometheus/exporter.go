@@ -6,8 +6,7 @@ import (
 	"net"
 	"net/http"
 
-	flow "github.com/bwNetFlow/protobuf/go"
-	flow_helper "github.com/bwNetFlow/protobuf_helpers/go"
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -73,7 +72,7 @@ func (e *Exporter) ServeEndpoints(segment *Prometheus) {
 	log.Printf("Enabled Prometheus %s and %s endpoints.", segment.MetricsPath, segment.FlowdataPath)
 }
 
-func (e *Exporter) Increment(flow *flow.FlowMessage) {
+func (e *Exporter) Increment(flow *pb.EnrichedFlow) {
 	var application string
 	_, appGuess1 := filterPopularPorts(flow.GetSrcPort())
 	_, appGuess2 := filterPopularPorts(flow.GetDstPort())
@@ -83,9 +82,7 @@ func (e *Exporter) Increment(flow *flow.FlowMessage) {
 		application = appGuess2
 	}
 
-	hflow := flow_helper.NewFlowHelper(flow)
-
-	peer := hflow.Peer()
+	peer := flow.Peer()
 	var remoteAS string
 	if flow.GetFlowDirection() == 0 {
 		remoteAS = nameThatAS(flow.GetSrcAS())
@@ -99,13 +96,13 @@ func (e *Exporter) Increment(flow *flow.FlowMessage) {
 		case "router":
 			labels[l] = net.IP(flow.GetSamplerAddress()).String()
 		case "ipversion":
-			labels[l] = hflow.IPVersionString()
+			labels[l] = flow.IPVersionString()
 		case "application":
 			labels[l] = application
 		case "protoname":
 			labels[l] = fmt.Sprint(flow.GetProtoName())
 		case "direction":
-			labels[l] = hflow.FlowDirectionString()
+			labels[l] = flow.FlowDirectionString()
 		case "peer":
 			labels[l] = peer
 		case "remoteas":

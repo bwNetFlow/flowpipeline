@@ -7,8 +7,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 type DropFields struct {
@@ -43,7 +43,7 @@ func (segment *DropFields) Run(wg *sync.WaitGroup) {
 		for _, fieldname := range fields {
 			switch segment.Policy {
 			case "keep":
-				reduced := &flow.FlowMessage{}
+				reduced := &pb.EnrichedFlow{}
 				reflected_reduced := reflect.ValueOf(reduced)
 				original_field := reflect.Indirect(reflected_original).FieldByName(fieldname)
 				reduced_field := reflected_reduced.Elem().FieldByName(fieldname)

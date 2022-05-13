@@ -17,8 +17,8 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 type Sqlite struct {
@@ -67,7 +67,7 @@ func (segment Sqlite) New(config map[string]string) segments.Segment {
 
 	// determine field set
 	if config["fields"] != "" {
-		protofields := reflect.TypeOf(flow.FlowMessage{})
+		protofields := reflect.TypeOf(pb.EnrichedFlow{})
 		conffields := strings.Split(config["fields"], ",")
 		for _, field := range conffields {
 			protofield, found := protofields.FieldByName(field)
@@ -79,7 +79,7 @@ func (segment Sqlite) New(config map[string]string) segments.Segment {
 			newsegment.fieldTypes = append(newsegment.fieldTypes, protofield.Type.String())
 		}
 	} else {
-		protofields := reflect.TypeOf(flow.FlowMessage{})
+		protofields := reflect.TypeOf(pb.EnrichedFlow{})
 		// +-3 skips over protobuf state, sizeCache and unknownFields
 		newsegment.fieldNames = make([]string, protofields.NumField()-3)
 		newsegment.fieldTypes = make([]string, protofields.NumField()-3)
@@ -139,7 +139,7 @@ func (segment *Sqlite) Run(wg *sync.WaitGroup) {
 	}
 	tx.Commit()
 
-	var unsaved []*flow.FlowMessage
+	var unsaved []*pb.EnrichedFlow
 
 	for msg := range segment.In {
 		unsaved = append(unsaved, msg)
@@ -148,14 +148,14 @@ func (segment *Sqlite) Run(wg *sync.WaitGroup) {
 			if err != nil {
 				log.Printf("[error] %s", err)
 			}
-			unsaved = []*flow.FlowMessage{}
+			unsaved = []*pb.EnrichedFlow{}
 		}
 		segment.Out <- msg
 	}
 	segment.bulkInsert(unsaved)
 }
 
-func (segment Sqlite) bulkInsert(unsavedFlows []*flow.FlowMessage) error {
+func (segment Sqlite) bulkInsert(unsavedFlows []*pb.EnrichedFlow) error {
 	if len(unsavedFlows) == 0 {
 		return nil
 	}

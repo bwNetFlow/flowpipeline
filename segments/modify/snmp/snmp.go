@@ -92,7 +92,7 @@ func (segment *SNMPInterface) Run(wg *sync.WaitGroup) {
 			msg.SrcIfName, msg.SrcIfDesc, msg.SrcIfSpeed = segment.fetchInterfaceData(router, msg.InIf)
 			if msg.SrcIfDesc != "" {
 				cleanDesc := segment.compiledRegex.FindStringSubmatch(msg.SrcIfDesc)
-				if cleanDesc != nil && len(cleanDesc) > 1 {
+				if len(cleanDesc) > 1 {
 					msg.SrcIfDesc = cleanDesc[1]
 				}
 			}
@@ -101,7 +101,7 @@ func (segment *SNMPInterface) Run(wg *sync.WaitGroup) {
 			msg.DstIfName, msg.DstIfDesc, msg.DstIfSpeed = segment.fetchInterfaceData(router, msg.OutIf)
 			if msg.DstIfDesc != "" {
 				cleanDesc := segment.compiledRegex.FindStringSubmatch(msg.DstIfDesc)
-				if cleanDesc != nil && len(cleanDesc) > 1 {
+				if len(cleanDesc) > 1 {
 					msg.DstIfDesc = cleanDesc[1]
 				}
 			}

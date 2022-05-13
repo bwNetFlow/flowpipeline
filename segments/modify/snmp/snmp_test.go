@@ -14,9 +14,9 @@ import (
 // 			Regex:     "^_[a-z]{3}_[0-9]{5}_[0-9]{5}_ [A-Z0-9]+ (.*?) *( \\(.*)?$",
 // 			ConnLimit: 1,
 // 		},
-// 		[]*flow.FlowMessage{
-// 			&flow.FlowMessage{Type: 42, SamplerAddress: []byte{127, 0, 0, 1}, InIf: 70},
-// 			&flow.FlowMessage{SamplerAddress: []byte{127, 0, 0, 1}, InIf: 70},
+// 		[]*pb.EnrichedFlow{
+// 			&pb.EnrichedFlow{Type: 42, SamplerAddress: []byte{127, 0, 0, 1}, InIf: 70},
+// 			&pb.EnrichedFlow{SamplerAddress: []byte{127, 0, 0, 1}, InIf: 70},
 // 		})
 // 	if result.SrcIfDesc == "" {
 // 		t.Error("Segment SNMPInterface is not adding a SrcIfDesc.")

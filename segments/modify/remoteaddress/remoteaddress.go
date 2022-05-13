@@ -36,9 +36,9 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
 	"github.com/bwNetFlow/ip_prefix_trie"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 type RemoteAddress struct {
@@ -89,7 +89,7 @@ func (segment *RemoteAddress) Run(wg *sync.WaitGroup) {
 					ret, _ = segment.trieV4.Lookup(addr).(int64)
 				}
 				if ret != 0 {
-					msg.RemoteAddr = flow.FlowMessage_RemoteAddrType(i + 1)
+					msg.RemoteAddr = pb.EnrichedFlow_RemoteAddrType(i + 1)
 					break
 				} else if segment.DropUnmatched {
 					continue
@@ -127,11 +127,11 @@ func (segment *RemoteAddress) Run(wg *sync.WaitGroup) {
 
 func (segment *RemoteAddress) readPrefixList() {
 	f, err := os.Open(segments.ContainerVolumePrefix + segment.FileName)
-	defer f.Close()
 	if err != nil {
 		log.Printf("[error] RemoteAddress: Could not open prefix list: %v", err)
 		return
 	}
+	defer f.Close()
 
 	csvr := csv.NewReader(f)
 	var count int

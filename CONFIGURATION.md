@@ -746,6 +746,39 @@ The result is printed upon termination of the flowpipeline.
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/print/count)
 [examples using this segment](https://github.com/search?q=%22segment%3A+count%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
+#### passthroughasns
+The `passthroughasns` segment prints a report on which ASNs in a flows ASPath
+carry the most traffic overall. Any flow has its byte and packet count added to
+a sliding window for each ASN it its ASPath, which does not equal to the
+NextHopAS (which is obviously a peer). A report looks like
+
+```
+===================================================================
+9283: 734.515139 Mbps, 559.153067 kpps
+234: 654.705813 Mbps, 438.586667 kpps
+123: 507.164314 Mbps, 379.857067 kpps
+987: 463.91171 Mbps, 318.9248 kpps
+...
+```
+
+Other than this, it shares all of its parameters with the `toptalkers` segment below.
+
+```
+- segment: passthroughasns
+  # the lines below are optional and set to default
+  config:
+    window: 60
+    reportinterval: 10
+    filename: ""
+    logprefix: ""
+    thresholdbps: 0
+    thresholdpps: 0
+    topn: 10
+```
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/print/passthroughasns)
+[examples using this segment](https://github.com/search?q=%22segment%3A+passthroughasns%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
+
 #### printdots
 The `printdots` segment keeps counting flows internally and emits a dot (`.`)
 every `flowsperdot` flows. Its parameter needs to be chosen with the expected

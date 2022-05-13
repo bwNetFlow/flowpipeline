@@ -7,8 +7,8 @@ require (
 	github.com/Yawning/cryptopan v0.0.0-20170504040949-65bca51288fe
 	github.com/alouca/gosnmp v0.0.0-20170620005048-04d83944c9ab
 	github.com/asecurityteam/rolling v2.0.4+incompatible
-	github.com/bwNetFlow/bpf_flowexport v0.0.0-20220511092017-f0d983f0357d
-	github.com/bwNetFlow/flowfilter v0.0.0-20220511135012-4ce5777ea672
+	github.com/bwNetFlow/bpf_flowexport v0.0.0-20220513130819-464bb4424357
+	github.com/bwNetFlow/flowfilter v0.0.0-20220513130822-01db3c8eb287
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04
 	github.com/bwNetFlow/kafkaconnector v0.0.0-20210817091537-cdd6f54695a0
 	github.com/bwNetFlow/protobuf/go v0.0.0-20211004083441-61e193b4b342

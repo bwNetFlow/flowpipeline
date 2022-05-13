@@ -111,10 +111,10 @@ func (segment TopTalkers) New(config map[string]string) segments.Segment {
 				return nil
 			}
 		} else {
-			log.Println("[error] TopTalkers: Could not parse 'topn' parameter, using default 20.")
+			log.Println("[error] TopTalkers: Could not parse 'topn' parameter, using default 10.")
 		}
 	} else {
-		log.Println("[info] TopTalkers: 'topn' set to default 20.")
+		log.Println("[info] TopTalkers: 'topn' set to default 10.")
 	}
 
 	return newsegment
@@ -151,11 +151,16 @@ func (segment *TopTalkers) Run(wg *sync.WaitGroup) {
 			var printedRecords uint64 = 0
 			fmt.Fprintln(segment.writer, segment.LogPrefix+"===================================================================")
 			for _, record := range databaseEntries {
+				bps := record.Bytes.Reduce(rolling.Sum) * 8 / float64(segment.Window)
+				pps := record.Packets.Reduce(rolling.Sum) * 8 / float64(segment.Window)
+				if bps < float64(segment.ThresholdBps) || pps < float64(segment.ThresholdPps) {
+					break
+				}
 				fmt.Fprintf(segment.writer, "%s%s: %s, %s\n",
 					segment.LogPrefix,
 					record.DstIp,
-					humanize.SI(record.Bytes.Reduce(rolling.Sum)*8/float64(segment.Window), "bps"),
-					humanize.SI(record.Packets.Reduce(rolling.Sum)*8/float64(segment.Window), "pps"),
+					humanize.SI(bps, "bps"),
+					humanize.SI(pps, "pps"),
 				)
 				printedRecords += 1
 				if printedRecords >= segment.TopN {

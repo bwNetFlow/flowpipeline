@@ -46,6 +46,10 @@ func (segment Bgp) New(config map[string]string) segments.Segment {
 	if err != nil {
 		log.Println("[info] Bgp: 'usefallbackonly' set to default 'false'.")
 	}
+	if fallbackonly && config["fallbackrouter"] == "" {
+		log.Printf("[error] Bgp: Forcing fallback requires a fallbackrouter parameter.")
+		return nil
+	}
 
 	newSegment := &Bgp{
 		FileName:        config["filename"],

@@ -400,6 +400,49 @@ Roadmap:
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/addcid)
 [examples using this segment](https://github.com/search?q=%22segment%3A+addcid%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
+#### bgp
+The `bgp` segment can add a information from BGP to flows. By default, this
+information is retrieved from a session with the router specified by a flow's
+SamplerAddress.
+
+To this end, this segment requires an additional configuration file for
+configuring BGP sessions with routers. In below case, no SamplerAddress string
+representation has been configured, but rather some other name ("default") to
+be used in this segments fallback configuration parameter.
+
+```yaml
+routerid: "192.0.2.42"
+asn: 553
+routers:
+  default:
+    neighbors:
+      - 192.0.2.1
+      - 2001:db8::1
+```
+
+For the above bgp config to work, the parameter `fallbackrouter: default` is
+required. This segment will first try to lookup a router by SamplerAddress, but
+if no such router session is configured, it will fallback to the
+`fallbackrouter` only if it is set. The parameter `usefallbackonly` is to
+disable matching for SamplerAddress completely, which is a common use case and
+makes things slightly more efficient.
+
+If no `fallbackrouter` is set, no data will be annotated. The annotated fields are
+`ASPath`, `Med`, `LocalPref`, `DstAS`, `NextHopAS`, `NextHop`, wheras the last
+three are possibly overwritten from the original router export.
+
+```
+- segment: bgp
+  config:
+    filename: "bgp.conf"
+    # the lines below are optional and set to default
+    fallbackrouter: ""
+    usefallbackonly: 0
+```
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/bgp)
+[examples using this segment](https://github.com/search?q=%22segment%3A+bgp%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
 #### anonymize
 The `anonymize` segment anonymizes IP addresses occuring in flows using the
 Crypto-PAn algorithm. By default all possible IP address fields are targeted,

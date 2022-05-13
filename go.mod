@@ -3,14 +3,14 @@ module github.com/bwNetFlow/flowpipeline
 go 1.18
 
 require (
+	github.com/BelWue/bgp_routeinfo v0.0.0-20220510102019-664808e55ca7
 	github.com/Shopify/sarama v1.32.0
 	github.com/Yawning/cryptopan v0.0.0-20170504040949-65bca51288fe
 	github.com/alouca/gosnmp v0.0.0-20170620005048-04d83944c9ab
 	github.com/asecurityteam/rolling v2.0.4+incompatible
-	github.com/bwNetFlow/bpf_flowexport v0.0.0-20220511092017-f0d983f0357d
-	github.com/bwNetFlow/flowfilter v0.0.0-20220511135012-4ce5777ea672
+	github.com/bwNetFlow/bpf_flowexport v0.0.0-20220513130819-464bb4424357
+	github.com/bwNetFlow/flowfilter v0.0.0-20220513130822-01db3c8eb287
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04
-	github.com/bwNetFlow/kafkaconnector v0.0.0-20210817091537-cdd6f54695a0
 	github.com/bwNetFlow/protobuf/go v0.0.0-20211004083441-61e193b4b342
 	github.com/dustin/go-humanize v1.0.0
 	github.com/hashicorp/logutils v1.0.0
@@ -25,14 +25,12 @@ require (
 )
 
 require (
-	github.com/BelWue/bgp_routeinfo v0.0.0-20220510102019-664808e55ca7 // indirect
 	github.com/alecthomas/participle/v2 v2.0.0-alpha8 // indirect
 	github.com/alouca/gologger v0.0.0-20120904114645-7d4b7291de9c // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cilium/ebpf v0.8.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/deathowl/go-metrics-prometheus v0.0.0-20200518174047-74482eab5bfb // indirect
 	github.com/deepmap/oapi-codegen v1.9.1 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
 	github.com/eapache/channels v1.1.0 // indirect

@@ -1,4 +1,4 @@
-FROM golang:1.17 AS builder
+FROM golang:1.18 AS builder
 RUN apt-get update
 
 # add local repo into the builder
@@ -14,4 +14,4 @@ WORKDIR /
 
 # copy binary from builder to your desired location
 COPY --from=builder /opt/build/fpl .
-ENTRYPOINT /fpl -c config/config.yml $0
+ENTRYPOINT /fpl -c config/config.yml $@

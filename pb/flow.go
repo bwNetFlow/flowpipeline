@@ -271,3 +271,19 @@ func (flow *EnrichedFlow) DstAddrObj() net.IP {
 func (flow *EnrichedFlow) SamplerAddressObj() net.IP {
 	return net.IP(flow.SamplerAddress)
 }
+
+func (flow *EnrichedFlow) GetBps() uint64 {
+	duration := flow.TimeFlowEnd - flow.TimeFlowStart
+	if duration == 0 {
+		duration = 1
+	}
+	return flow.Bytes / duration
+}
+
+func (flow *EnrichedFlow) GetPps() uint64 {
+	duration := flow.TimeFlowEnd - flow.TimeFlowStart
+	if duration == 0 {
+		duration = 1
+	}
+	return flow.Packets / duration
+}

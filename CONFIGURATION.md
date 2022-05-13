@@ -801,6 +801,41 @@ for an application.
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/print/printflowdump)
 [examples using this segment](https://github.com/search?q=%22segment%3A+printflowdump%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
+#### toptalkers
+The `toptalkers` segment prints a report on which destination addresses
+receives the most traffic. A report looks like this:
+
+```
+===================================================================
+x.x.x.x: 734.515139 Mbps, 559.153067 kpps
+x.x.x.x: 654.705813 Mbps, 438.586667 kpps
+x.x.x.x: 507.164314 Mbps, 379.857067 kpps
+x.x.x.x: 463.91171 Mbps, 318.9248 kpps
+...
+```
+
+One can configure the sliding window size using `window`, as well as the
+`reportinterval`. Optionally, this segment can report its output to a file and
+use a custom prefix for any of its lines in order to enable multiple segments
+writing to the same file. The thresholds serve to only log when the largest top
+talkers are of note: the output is suppressed when either bytes or packets per
+second are under their thresholds.
+
+```
+- segment: toptalkers
+  # the lines below are optional and set to default
+  config:
+    window: 60
+    reportinterval: 10
+    filename: ""
+    logprefix: ""
+    thresholdbps: 0
+    thresholdpps: 0
+    topn: 10
+```
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/print/toptalkers)
+[examples using this segment](https://github.com/search?q=%22segment%3A+toptalkers%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
 ### Ungrouped
 
 This is for internally used segments only.

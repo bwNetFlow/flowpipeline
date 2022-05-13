@@ -31,7 +31,7 @@ type TopTalkers struct {
 	LogPrefix      string // optional, default is "", a prefix for each log line, useful in case multiple segments log to the same file
 	ThresholdBps   uint64 // optional, default is 0, only log talkers with an average bits per second rate higher than this value
 	ThresholdPps   uint64 // optional, default is 0, only log talkers with an average packets per second rate higher than this value
-	TopN           uint64 // optional, default is 20, sets the number of top talkers per report
+	TopN           uint64 // optional, default is 10, sets the number of top talkers per report
 }
 
 func (segment TopTalkers) New(config map[string]string) segments.Segment {

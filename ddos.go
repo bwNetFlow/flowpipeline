@@ -12,9 +12,10 @@ import (
 )
 
 type Record struct {
-	DstIp   string
-	Bytes   *rolling.TimePolicy
-	Packets *rolling.TimePolicy
+	DstIp       string
+	LastUpdated time.Time
+	Bytes       *rolling.TimePolicy
+	Packets     *rolling.TimePolicy
 }
 
 type Ddos struct {
@@ -38,7 +39,10 @@ func (segment *Ddos) Run(wg *sync.WaitGroup) {
 		select {
 		case <-ticker.C:
 			databaseEntries := []*Record{}
-			for _, entry := range database {
+			for key, entry := range database {
+				if entry.LastUpdated.Before(time.Now().Add(-5 * time.Minute)) {
+					delete(database, key)
+				}
 				databaseEntries = append(databaseEntries, entry)
 			}
 			sort.Slice(databaseEntries, func(i, j int) bool {
@@ -70,6 +74,7 @@ func (segment *Ddos) Run(wg *sync.WaitGroup) {
 			}
 			record.Bytes.Append(float64(msg.Bytes))
 			record.Packets.Append(float64(msg.Packets))
+			record.LastUpdated = time.Now()
 			database[msg.DstAddrObj().String()] = record
 
 			segment.Out <- msg

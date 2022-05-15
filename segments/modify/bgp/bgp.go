@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/BelWue/bgp_routeinfo/routeinfo"
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
 	"gopkg.in/yaml.v2"
 )
@@ -94,6 +95,16 @@ func (segment *Bgp) Run(wg *sync.WaitGroup) {
 			msg.ASPath = path.AsPath
 			msg.Med = path.Med
 			msg.LocalPref = path.LocalPref
+			switch path.Validation {
+			case routeinfo.Valid:
+				msg.ValidationStatus = pb.EnrichedFlow_Valid
+			case routeinfo.NotFound:
+				msg.ValidationStatus = pb.EnrichedFlow_NotFound
+			case routeinfo.Invalid:
+				msg.ValidationStatus = pb.EnrichedFlow_Invalid
+			default:
+				msg.ValidationStatus = pb.EnrichedFlow_Unknown
+			}
 			// for router exported netflow, the following are likely overwriting their own annotations
 			msg.DstAS = path.AsPath[len(path.AsPath)-1]
 			msg.NextHopAS = path.AsPath[0]

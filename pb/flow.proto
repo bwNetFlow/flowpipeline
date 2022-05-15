@@ -163,6 +163,13 @@ message EnrichedFlow {
   repeated uint32 ASPath = 1171;
   uint32 Med = 1172;
   uint32 LocalPref = 1173;
+  enum ValidationStatusType {
+    Unknown = 0;
+    Valid = 1;
+    NotFound = 2;
+    Invalid = 3;
+  }
+  ValidationStatusType ValidationStatus = 1174;
 
   // modify/geolocation
   string RemoteCountry = 1010; // TODO: deprecate and provide as helper

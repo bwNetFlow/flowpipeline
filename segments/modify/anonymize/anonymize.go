@@ -48,7 +48,11 @@ func (segments Anonymize) New(config map[string]string) segments.Segment {
 	ekb := []byte(encryptionKey)
 	anon, err := cryptopan.New(ekb)
 	if err != nil {
-		log.Printf("[error] Anonymize: error creating anonymizer: %e", err)
+		if _, ok := err.(cryptopan.KeySizeError); ok {
+			log.Printf("[error] Anonymize: Key has insufficient length %d, please specifiy one with more than 32 chars.", len(encryptionKey))
+		} else {
+			log.Printf("[error] Anonymize: error creating anonymizer: %e", err)
+		}
 		return nil
 	}
 

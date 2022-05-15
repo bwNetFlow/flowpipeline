@@ -73,10 +73,19 @@ func (segment *Anonymize) Run(wg *sync.WaitGroup) {
 		for _, field := range segment.Fields {
 			switch field {
 			case "SrcAddr":
+				if msg.SrcAddrObj() == nil {
+					continue
+				}
 				msg.SrcAddr = segment.anonymizer.Anonymize(msg.SrcAddr)
 			case "DstAddr":
+				if msg.DstAddrObj() == nil {
+					continue
+				}
 				msg.DstAddr = segment.anonymizer.Anonymize(msg.DstAddr)
 			case "SamplerAddress":
+				if msg.SamplerAddressObj() == nil {
+					continue
+				}
 				msg.SamplerAddress = segment.anonymizer.Anonymize(msg.SamplerAddress)
 			}
 		}

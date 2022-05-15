@@ -446,7 +446,8 @@ three are possibly overwritten from the original router export.
 #### anonymize
 The `anonymize` segment anonymizes IP addresses occuring in flows using the
 Crypto-PAn algorithm. By default all possible IP address fields are targeted,
-this can be configured using the fields parameter.
+this can be configured using the fields parameter. The key needs to be at least
+32 characters long.
 
 ```
 - segment: anonymize

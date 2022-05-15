@@ -9,7 +9,7 @@ require (
 	github.com/alouca/gosnmp v0.0.0-20170620005048-04d83944c9ab
 	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/bwNetFlow/bpf_flowexport v0.0.0-20220513130819-464bb4424357
-	github.com/bwNetFlow/flowfilter v0.0.0-20220513130822-01db3c8eb287
+	github.com/bwNetFlow/flowfilter v0.0.0-20220515094130-2a4c8ff90a24
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04
 	github.com/bwNetFlow/protobuf/go v0.0.0-20211004083441-61e193b4b342
 	github.com/dustin/go-humanize v1.0.0

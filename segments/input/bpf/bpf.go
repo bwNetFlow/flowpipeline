@@ -103,7 +103,7 @@ func (segment *Bpf) Run(wg *sync.WaitGroup) {
 		log.Printf("[error] Bpf: error starting up BPF dumping: %s", err)
 		os.Exit(1)
 	}
-	segment.exporter.Start()
+	segment.exporter.Start(segment.dumper.SamplerAddress)
 	go segment.exporter.ConsumeFrom(segment.dumper.Packets())
 	defer func() {
 		close(segment.Out)

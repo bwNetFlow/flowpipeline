@@ -86,6 +86,8 @@ github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6r
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
 github.com/bwNetFlow/bpf_flowexport v0.0.0-20220513130819-464bb4424357 h1:VlxOzWqWUNeyvsEgnVLN2uADgTViQPalqDqLFvF3G68=
 github.com/bwNetFlow/bpf_flowexport v0.0.0-20220513130819-464bb4424357/go.mod h1:DuJLqsHWPJZpyo1yfuHEMjSlQlPjXWntTjGAHJCt4ns=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20220515112212-cd8128615c05 h1:/H/qIQ0bo3uVWV9ILwv7dIR6r4MsHmqk+Nc7zGT4/0s=
+github.com/bwNetFlow/bpf_flowexport v0.0.0-20220515112212-cd8128615c05/go.mod h1:DuJLqsHWPJZpyo1yfuHEMjSlQlPjXWntTjGAHJCt4ns=
 github.com/bwNetFlow/flowfilter v0.0.0-20220513130822-01db3c8eb287 h1:Er2APhBrVpIm/vSJbCoB0SR+RxVBwP6VsD8VBsr57qc=
 github.com/bwNetFlow/flowfilter v0.0.0-20220513130822-01db3c8eb287/go.mod h1:H8oNwlpcGRRfUUl94etwaMjDfCOZtVHOb8gAORPPP5Y=
 github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04 h1:mm0/N8cMAdc5TRsmAkrhnPIdOm0ZqbT7uUC9Wt/21mk=

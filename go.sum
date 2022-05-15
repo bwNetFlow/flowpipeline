@@ -88,6 +88,8 @@ github.com/bwNetFlow/bpf_flowexport v0.0.0-20220513130819-464bb4424357 h1:VlxOzW
 github.com/bwNetFlow/bpf_flowexport v0.0.0-20220513130819-464bb4424357/go.mod h1:DuJLqsHWPJZpyo1yfuHEMjSlQlPjXWntTjGAHJCt4ns=
 github.com/bwNetFlow/flowfilter v0.0.0-20220513130822-01db3c8eb287 h1:Er2APhBrVpIm/vSJbCoB0SR+RxVBwP6VsD8VBsr57qc=
 github.com/bwNetFlow/flowfilter v0.0.0-20220513130822-01db3c8eb287/go.mod h1:H8oNwlpcGRRfUUl94etwaMjDfCOZtVHOb8gAORPPP5Y=
+github.com/bwNetFlow/flowfilter v0.0.0-20220515094130-2a4c8ff90a24 h1:nOxnEHVFnrIabGV/GtHL6ahyol000LouI3AK4wBvDck=
+github.com/bwNetFlow/flowfilter v0.0.0-20220515094130-2a4c8ff90a24/go.mod h1:qZWbCW/iVLbV74sE3/xHjRTehIieFQo/wnx+8UoflGs=
 github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04 h1:mm0/N8cMAdc5TRsmAkrhnPIdOm0ZqbT7uUC9Wt/21mk=
 github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04/go.mod h1:rtoxrzCig192Z9SYgF7J58r3qgnJ09yI3pnPVPf9+3U=
 github.com/bwNetFlow/protobuf/go v0.0.0-20211004083441-61e193b4b342 h1:CrEmmSVFs3Ssceezrj/KyLuTvelGH8CZkNLgVxYrQ4o=

@@ -12,6 +12,9 @@ RUN CGO_ENABLED=0 go build -tags container -o fpl -v
 FROM alpine
 WORKDIR /
 
+# add some tools
+RUN apk add -U coreutils
+
 # copy binary from builder to your desired location
 COPY --from=builder /opt/build/fpl .
 ENTRYPOINT /fpl -c config/config.yml $@

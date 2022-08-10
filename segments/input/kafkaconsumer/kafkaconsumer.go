@@ -125,6 +125,7 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 		if strings.ToLower(config["startat"]) == "oldest" {
 			startAt = "oldest"
 			startingOffset = sarama.OffsetOldest // see sarama const OffsetOldest
+			log.Println("[info] KafkaConsumer: Starting at oldest flows.")
 		} else if strings.ToLower(config["startat"]) != "newest" {
 			log.Println("[error] KafkaConsumer: Could not parse 'startat' parameter, using default 'newest'.")
 		}
@@ -132,6 +133,7 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 		log.Println("[info] KafkaConsumer: 'startat' set to default 'newest'.")
 	}
 	newsegment.startingOffset = startingOffset
+	newsegment.saramaConfig.Consumer.Offsets.Initial = startingOffset
 	newsegment.StartAt = startAt
 	return newsegment
 }

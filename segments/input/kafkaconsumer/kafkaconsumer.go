@@ -135,6 +135,9 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 	newsegment.startingOffset = startingOffset
 	newsegment.saramaConfig.Consumer.Offsets.Initial = startingOffset
 	newsegment.StartAt = startAt
+
+	timeout, err := time.ParseDuration("5s")
+	newsegment.saramaConfig.Net.DialTimeout = timeout
 	return newsegment
 }
 
@@ -147,7 +150,7 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 	client, err := sarama.NewConsumerGroup(strings.Split(segment.Server, ","), segment.Group, segment.saramaConfig)
 	if err != nil {
 		if client == nil {
-			log.Fatalf("[error] KafkaConsumer: Creating Kafka client failed, this indicates an unreachable server or a SSL problem. Original error:\n  %v", err)
+			log.Fatalf("[error] KafkaConsumer: Creating Kafka client failed, this indicates an unreachable server, invalid credentials, or a SSL problem. Original error:\n  %v", err)
 		} else {
 			log.Fatalf("[error] KafkaConsumer: Creating Kafka consumer group failed while the connection was okay. Original error:\n  %v", err)
 		}

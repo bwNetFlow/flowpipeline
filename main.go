@@ -27,6 +27,7 @@ import (
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/filter/drop"
 	_ "github.com/bwNetFlow/flowpipeline/segments/filter/elephant"
+
 	_ "github.com/bwNetFlow/flowpipeline/segments/filter/flowfilter"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/input/bpf"
@@ -36,6 +37,7 @@ import (
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/addcid"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/anonymize"
+	_ "github.com/bwNetFlow/flowpipeline/segments/modify/bgp"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/dropfields"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/geolocation"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/normalize"
@@ -48,12 +50,14 @@ import (
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/csv"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/json"
+
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/kafkaproducer"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/sqlite"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/print/count"
 	_ "github.com/bwNetFlow/flowpipeline/segments/print/printdots"
 	_ "github.com/bwNetFlow/flowpipeline/segments/print/printflowdump"
+	_ "github.com/bwNetFlow/flowpipeline/segments/print/toptalkers"
 )
 
 var Version string

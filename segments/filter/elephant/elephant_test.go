@@ -7,8 +7,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // Elephant Segment test, passthrough test
@@ -18,17 +18,17 @@ func TestSegment_Elephant_passthrough(t *testing.T) {
 		log.Fatal("[error] Configured segment 'elephant' could not be initialized properly, see previous messages.")
 	}
 
-	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go segment.Run(wg)
 
-	in <- &flow.FlowMessage{Bytes: 10}
+	in <- &pb.EnrichedFlow{Bytes: 10}
 	<-out
-	in <- &flow.FlowMessage{Bytes: 9}
-	in <- &flow.FlowMessage{Bytes: 100}
+	in <- &pb.EnrichedFlow{Bytes: 9}
+	in <- &pb.EnrichedFlow{Bytes: 100}
 	result := <-out
 	if result.Bytes != 100 {
 		t.Error("Segment Elephant is not working.")
@@ -44,7 +44,7 @@ func BenchmarkElephant(b *testing.B) {
 
 	segment := Elephant{}
 
-	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -52,7 +52,7 @@ func BenchmarkElephant(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &flow.FlowMessage{}
+		in <- &pb.EnrichedFlow{}
 		_ = <-out
 	}
 	close(in)

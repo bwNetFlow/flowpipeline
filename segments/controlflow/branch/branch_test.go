@@ -5,8 +5,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // Branch Segment test, passthrough test
@@ -20,7 +20,7 @@ func TestSegment_Branch_passthrough(t *testing.T) {
 	if segment == nil {
 		log.Fatal("[error] Configured segment 'branch' could not be initialized properly, see previous messages.")
 	}
-	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}

@@ -7,14 +7,14 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // RemoteAddress Segment testing is basically checking whether switch/case is working okay...
 func TestSegment_RemoteAddress(t *testing.T) {
 	result := segments.TestSegment("remoteaddress", map[string]string{"policy": "border"},
-		&flow.FlowMessage{FlowDirection: 0})
+		&pb.EnrichedFlow{FlowDirection: 0})
 	if result.RemoteAddr != 1 {
 		t.Error("Segment RemoteAddress is not determining RemoteAddr correctly.")
 	}
@@ -22,7 +22,7 @@ func TestSegment_RemoteAddress(t *testing.T) {
 
 func TestSegment_RemoteAddress_localAddrIsDst(t *testing.T) {
 	result := segments.TestSegment("remoteaddress", map[string]string{"policy": "cidr", "filename": "../../../examples/enricher/customer_subnets.csv"},
-		&flow.FlowMessage{SrcAddr: []byte{192, 168, 88, 42}})
+		&pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 42}})
 	if result.RemoteAddr != 1 {
 		t.Error("Segment RemoteAddress is not determining the local address correctly by 'cidr'.")
 	}
@@ -35,7 +35,7 @@ func BenchmarkRemoteAddress(b *testing.B) {
 
 	segment := RemoteAddress{}.New(map[string]string{"policy": "cidr", "filename": "../../../examples/enricher/customer_subnets.csv"})
 
-	in, out := make(chan *flow.FlowMessage), make(chan *flow.FlowMessage)
+	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -43,7 +43,7 @@ func BenchmarkRemoteAddress(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &flow.FlowMessage{SrcAddr: []byte{192, 168, 88, 42}}
+		in <- &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 42}}
 		_ = <-out
 	}
 	close(in)

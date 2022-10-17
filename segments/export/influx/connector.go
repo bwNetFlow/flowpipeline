@@ -8,7 +8,7 @@ import (
 	"net"
 	"time"
 
-	flow "github.com/bwNetFlow/protobuf/go"
+	"github.com/bwNetFlow/flowpipeline/pb"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
 )
@@ -47,24 +47,24 @@ func (c *Connector) checkBucket() {
 	}
 }
 
-func (c *Connector) CreatePoint(flow *flow.FlowMessage) *write.Point {
+func (c *Connector) CreatePoint(msg *pb.EnrichedFlow) *write.Point {
 	// write tags for datapoint and drop them to not insert as fields
 	// TODO: maybe we will add more fields from the Protobuf Definition to be used as Tags
 	tags := map[string]string{}
 	for index, t := range c.tags {
 		switch t {
 		case "Cid":
-			tags[t] = fmt.Sprint(flow.Cid)
+			tags[t] = fmt.Sprint(msg.Cid)
 		case "ProtoName":
-			tags[t] = fmt.Sprint(flow.GetProtoName())
+			tags[t] = fmt.Sprint(msg.GetProtoName())
 		case "RemoteCountry":
-			tags[t] = flow.GetRemoteCountry()
+			tags[t] = msg.GetRemoteCountry()
 		case "SamplerAddress":
-			tags[t] = net.IP(flow.GetSamplerAddress()).String()
+			tags[t] = net.IP(msg.GetSamplerAddress()).String()
 		case "SrcIfDesc":
-			tags[t] = fmt.Sprint(flow.SrcIfDesc)
+			tags[t] = fmt.Sprint(msg.SrcIfDesc)
 		case "DstIfDesc":
-			tags[t] = fmt.Sprint(flow.DstIfDesc)
+			tags[t] = fmt.Sprint(msg.DstIfDesc)
 		default:
 			log.Printf("[info] Influx: Chosen Tag not supported. ignoring tag %s", t)
 			// delete not supported tags
@@ -73,7 +73,7 @@ func (c *Connector) CreatePoint(flow *flow.FlowMessage) *write.Point {
 	}
 
 	// marshall protobuf to json
-	data, err := json.Marshal(flow)
+	data, err := json.Marshal(msg)
 	if err != nil {
 		log.Printf("[warning] influx: Skipping a flow, failed to recode protobuf as JSON: %v", err)
 		return nil

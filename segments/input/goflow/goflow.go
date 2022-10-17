@@ -13,8 +13,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/netsampler/goflow2/transport"
@@ -26,7 +26,7 @@ type Goflow struct {
 	Listen  []url.URL // optional, default config value for this slice is "sflow://:6343,netflow://:2055"
 	Workers uint64    // optional, amunt of workers to spawn for each endpoint, default is 1
 
-	goflow_in chan *flow.FlowMessage
+	goflow_in chan *pb.EnrichedFlow
 }
 
 func (segment Goflow) New(config map[string]string) segments.Segment {
@@ -88,7 +88,7 @@ func (segment *Goflow) Run(wg *sync.WaitGroup) {
 		close(segment.Out)
 		wg.Done()
 	}()
-	segment.goflow_in = make(chan *flow.FlowMessage)
+	segment.goflow_in = make(chan *pb.EnrichedFlow)
 	segment.startGoFlow(&channelDriver{segment.goflow_in})
 	for {
 		select {
@@ -111,11 +111,11 @@ func (segment *Goflow) Run(wg *sync.WaitGroup) {
 }
 
 type channelDriver struct {
-	out chan *flow.FlowMessage
+	out chan *pb.EnrichedFlow
 }
 
 func (d *channelDriver) Send(key, data []byte) error {
-	msg := &flow.FlowMessage{}
+	msg := &pb.EnrichedFlow{}
 	// TODO: can we shave of this Unmarshal here and the Marshal in line 138
 	if err := proto.Unmarshal(data, msg); err != nil {
 		log.Println("[error] Goflow: Conversion error for received flow.")

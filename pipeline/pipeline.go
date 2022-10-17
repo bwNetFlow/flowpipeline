@@ -5,38 +5,38 @@ import (
 	"log"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
 	"github.com/bwNetFlow/flowpipeline/segments/filter/drop"
 	"github.com/bwNetFlow/flowpipeline/segments/filter/elephant"
 	"github.com/bwNetFlow/flowpipeline/segments/filter/flowfilter"
 	"github.com/bwNetFlow/flowpipeline/segments/pass"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 // Basically a list of segments. It further exposes the In and Out channels of
 // the Pipeline as a whole, i.e. the ingress channel of the first and the
 // egress channel of the last segment in its SegmentList.
 type Pipeline struct {
-	In          chan *flow.FlowMessage
-	Out         <-chan *flow.FlowMessage
-	Drop        chan *flow.FlowMessage
+	In          chan *pb.EnrichedFlow
+	Out         <-chan *pb.EnrichedFlow
+	Drop        chan *pb.EnrichedFlow
 	wg          *sync.WaitGroup
 	SegmentList []segments.Segment
 }
 
-func (pipeline *Pipeline) GetInput() chan *flow.FlowMessage {
+func (pipeline *Pipeline) GetInput() chan *pb.EnrichedFlow {
 	return pipeline.In
 }
 
-func (pipeline *Pipeline) GetOutput() <-chan *flow.FlowMessage {
+func (pipeline *Pipeline) GetOutput() <-chan *pb.EnrichedFlow {
 	return pipeline.Out
 }
 
-func (pipeline *Pipeline) GetDrop() <-chan *flow.FlowMessage {
+func (pipeline *Pipeline) GetDrop() <-chan *pb.EnrichedFlow {
 	if pipeline.Drop != nil {
 		return pipeline.Drop
 	}
-	pipeline.Drop = make(chan *flow.FlowMessage)
+	pipeline.Drop = make(chan *pb.EnrichedFlow)
 	// Subscribe to drops from special segments, namely all based on
 	// BaseFilterSegment grouped in the filter directory.
 	for _, segment := range pipeline.SegmentList {
@@ -85,10 +85,10 @@ func New(segmentList ...segments.Segment) *Pipeline {
 	if len(segmentList) == 0 {
 		segmentList = []segments.Segment{&pass.Pass{}}
 	}
-	channels := make([]chan *flow.FlowMessage, len(segmentList)+1)
-	channels[0] = make(chan *flow.FlowMessage)
+	channels := make([]chan *pb.EnrichedFlow, len(segmentList)+1)
+	channels[0] = make(chan *pb.EnrichedFlow)
 	for i, segment := range segmentList {
-		channels[i+1] = make(chan *flow.FlowMessage)
+		channels[i+1] = make(chan *pb.EnrichedFlow)
 		segment.Rewire(channels[i], channels[i+1])
 	}
 	return &Pipeline{In: channels[0], Out: channels[len(channels)-1], wg: &sync.WaitGroup{}, SegmentList: segmentList}

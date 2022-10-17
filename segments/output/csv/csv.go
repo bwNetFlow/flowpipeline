@@ -14,8 +14,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 )
 
 type Csv struct {
@@ -48,7 +48,7 @@ func (segment Csv) New(config map[string]string) segments.Segment {
 
 	var heading []string
 	if config["fields"] != "" {
-		protofields := reflect.TypeOf(flow.FlowMessage{})
+		protofields := reflect.TypeOf(pb.EnrichedFlow{})
 		conffields := strings.Split(config["fields"], ",")
 		for _, field := range conffields {
 			protofield, found := protofields.FieldByName(field)
@@ -61,7 +61,7 @@ func (segment Csv) New(config map[string]string) segments.Segment {
 			heading = append(heading, field)
 		}
 	} else {
-		protofields := reflect.TypeOf(flow.FlowMessage{})
+		protofields := reflect.TypeOf(pb.EnrichedFlow{})
 		// +-3 skips over protobuf state, sizeCache and unknownFields
 		newsegment.fieldNames = make([]string, protofields.NumField()-3)
 		newsegment.fieldTypes = make([]string, protofields.NumField()-3)

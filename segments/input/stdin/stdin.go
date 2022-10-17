@@ -6,8 +6,8 @@ import (
 	"bufio"
 	"log"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
-	flow "github.com/bwNetFlow/protobuf/go"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"os"
@@ -74,7 +74,7 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 			}
 			segment.Out <- msg
 		case line := <-fromStdin:
-			msg := &flow.FlowMessage{}
+			msg := &pb.EnrichedFlow{}
 			err := protojson.Unmarshal(line, msg)
 			if err != nil {
 				log.Printf("[warning] StdIn: Skipping a flow, failed to recode input to protobuf: %v", err)

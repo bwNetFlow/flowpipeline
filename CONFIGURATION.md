@@ -400,10 +400,54 @@ Roadmap:
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/addcid)
 [examples using this segment](https://github.com/search?q=%22segment%3A+addcid%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
+#### bgp
+The `bgp` segment can add a information from BGP to flows. By default, this
+information is retrieved from a session with the router specified by a flow's
+SamplerAddress.
+
+To this end, this segment requires an additional configuration file for
+configuring BGP sessions with routers. In below case, no SamplerAddress string
+representation has been configured, but rather some other name ("default") to
+be used in this segments fallback configuration parameter.
+
+```yaml
+routerid: "192.0.2.42"
+asn: 553
+routers:
+  default:
+    neighbors:
+      - 192.0.2.1
+      - 2001:db8::1
+```
+
+For the above bgp config to work, the parameter `fallbackrouter: default` is
+required. This segment will first try to lookup a router by SamplerAddress, but
+if no such router session is configured, it will fallback to the
+`fallbackrouter` only if it is set. The parameter `usefallbackonly` is to
+disable matching for SamplerAddress completely, which is a common use case and
+makes things slightly more efficient.
+
+If no `fallbackrouter` is set, no data will be annotated. The annotated fields are
+`ASPath`, `Med`, `LocalPref`, `DstAS`, `NextHopAS`, `NextHop`, wheras the last
+three are possibly overwritten from the original router export.
+
+```
+- segment: bgp
+  config:
+    filename: "bgp.conf"
+    # the lines below are optional and set to default
+    fallbackrouter: ""
+    usefallbackonly: 0
+```
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/bgp)
+[examples using this segment](https://github.com/search?q=%22segment%3A+bgp%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
 #### anonymize
 The `anonymize` segment anonymizes IP addresses occuring in flows using the
 Crypto-PAn algorithm. By default all possible IP address fields are targeted,
-this can be configured using the fields parameter.
+this can be configured using the fields parameter. The key needs to be at least
+32 characters long.
 
 ```
 - segment: anonymize
@@ -757,6 +801,41 @@ for an application.
 ```
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/print/printflowdump)
 [examples using this segment](https://github.com/search?q=%22segment%3A+printflowdump%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
+#### toptalkers
+The `toptalkers` segment prints a report on which destination addresses
+receives the most traffic. A report looks like this:
+
+```
+===================================================================
+x.x.x.x: 734.515139 Mbps, 559.153067 kpps
+x.x.x.x: 654.705813 Mbps, 438.586667 kpps
+x.x.x.x: 507.164314 Mbps, 379.857067 kpps
+x.x.x.x: 463.91171 Mbps, 318.9248 kpps
+...
+```
+
+One can configure the sliding window size using `window`, as well as the
+`reportinterval`. Optionally, this segment can report its output to a file and
+use a custom prefix for any of its lines in order to enable multiple segments
+writing to the same file. The thresholds serve to only log when the largest top
+talkers are of note: the output is suppressed when either bytes or packets per
+second are under their thresholds.
+
+```
+- segment: toptalkers
+  # the lines below are optional and set to default
+  config:
+    window: 60
+    reportinterval: 10
+    filename: ""
+    logprefix: ""
+    thresholdbps: 0
+    thresholdpps: 0
+    topn: 10
+```
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/print/toptalkers)
+[examples using this segment](https://github.com/search?q=%22segment%3A+toptalkers%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 ### Ungrouped
 

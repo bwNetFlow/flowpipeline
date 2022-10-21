@@ -22,6 +22,7 @@ import (
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/controlflow/branch"
 
+	_ "github.com/bwNetFlow/flowpipeline/segments/export/clickhouse"
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/influx"
 	_ "github.com/bwNetFlow/flowpipeline/segments/export/prometheus"
 
@@ -49,7 +50,6 @@ import (
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/csv"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/json"
-
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/kafkaproducer"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/sqlite"
 

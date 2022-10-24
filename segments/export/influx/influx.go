@@ -8,86 +8,87 @@ package influx
 import (
 	"log"
 	"net/url"
+	"reflect"
 	"sort"
 	"strings"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
 )
 
 type Influx struct {
 	segments.BaseSegment
-	Address string   // URL for influxdb endpoint
-	Org     string   // influx org name
-	Bucket  string   // influx bucket
-	Token   string   // influx access token
+	Address string   // optional, URL for influxdb endpoint, default is http://127.0.0.1:8086
+	Org     string   // required, Influx org name
+	Bucket  string   // required, Influx bucket
+	Token   string   // required, Influx access token
 	Tags    []string // optional, list of Tags to be created. Recommended to keep this to a
-	// 	Batchsize  uint32 // set the batch size for the writer
-	// 	ExportFreq uint32 // set the frequency for the writer
+
+	fieldNames []string
 }
 
 func (segment Influx) New(config map[string]string) segments.Segment {
+	newsegment := &Influx{}
+
 	// TODO: add paramteres for Influx endpoint and eval vars
-	var address = "http://127.0.0.1:8086"
 	if config["address"] != "" {
-		address = config["address"]
 		// check if a valid url has been passed
-		_, err := url.Parse(address)
+		_, err := url.Parse(config["address"])
 		if err != nil {
 			log.Printf("[error] Influx: error parsing given url: %e", err)
 		}
-		address = config["address"]
+		newsegment.Address = config["address"]
 	} else {
+		newsegment.Address = "http://127.0.0.1:8086"
 		log.Println("[info] Influx: Missing configuration parameter 'address'. Using default address 'http://127.0.0.1:8086'")
 	}
 
-	var org string
 	if config["org"] == "" {
 		log.Println("[error] Influx: Missing configuration parameter 'org'. Please set the organization to use.")
 		return nil
 	} else {
-		org = config["org"]
+		newsegment.Org = config["org"]
 	}
 
-	var bucket string
 	if config["bucket"] == "" {
 		log.Println("[error] Influx: Missing configuration parameter 'bucket'. Please set the bucket to use.")
 		return nil
 	} else {
-		bucket = config["bucket"]
+		newsegment.Bucket = config["bucket"]
 	}
 
-	var token string
 	if config["token"] == "" {
 		log.Println("[error] Influx: Missing configuration parameter 'token'. Please set the token to use.")
 		return nil
 	} else {
-		token = config["token"]
+		newsegment.Token = config["token"]
 	}
 
 	// set default Tags if not configured
-	var tags = []string{
-		"ProtoName",
-	}
 	if config["tags"] == "" {
-		log.Println("[info] Influx: Configuration parameter 'tags' not set. Using default tag 'ProtoName' to export")
-	} else {
-		tags = []string{}
-		for _, tag := range strings.Split(config["tags"], ",") {
-			log.Printf("[info] Influx: custom tag found: %s", tag)
-			tags = append(tags, tag)
-		}
+		log.Println("[info] prometheus: Configuration parameter 'tags' not set. Using default tags to export.")
+		config["tags"] = "ProtoName"
 	}
+	var tags []string
+	for _, tag := range strings.Split(config["tags"], ",") {
+		log.Printf("[info] prometheus: custom tag found: %s", tag)
+		tags = append(tags, tag)
+	}
+	protofields := reflect.TypeOf(pb.EnrichedFlow{})
+	for _, field := range tags {
+		_, found := protofields.FieldByName(field)
+		if !found {
+			log.Printf("[error] Prometheus: Field '%s' specified in 'tags' does not exist.", field)
+			return nil
+		}
+		newsegment.fieldNames = append(newsegment.fieldNames, field)
+	}
+
 	// sort tags in alphabetical order
 	sort.Strings(tags)
 
-	return &Influx{
-		Address: address,
-		Org:     org,
-		Bucket:  bucket,
-		Token:   token,
-		Tags:    tags,
-	}
+	return newsegment
 }
 
 func (segment *Influx) Run(wg *sync.WaitGroup) {

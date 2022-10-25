@@ -9,7 +9,7 @@ require (
 	github.com/alouca/gosnmp v0.0.0-20170620005048-04d83944c9ab
 	github.com/asecurityteam/rolling v2.0.4+incompatible
 	github.com/bwNetFlow/bpf_flowexport v0.0.0-20220515112212-cd8128615c05
-	github.com/bwNetFlow/flowfilter v0.0.0-20221025085019-cc6e02e56dd5
+	github.com/bwNetFlow/flowfilter v0.0.0-20221025122444-6fb1583a75de
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04
 	github.com/bwNetFlow/protobuf/go v0.0.0-20211004083441-61e193b4b342
 	github.com/dustin/go-humanize v1.0.0
@@ -25,7 +25,7 @@ require (
 )
 
 require (
-	github.com/alecthomas/participle/v2 v2.0.0-beta.5 // indirect
+	github.com/alecthomas/participle/v2 v2.0.0-beta.2 // indirect
 	github.com/alouca/gologger v0.0.0-20120904114645-7d4b7291de9c // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect

@@ -162,13 +162,14 @@ among others.
 The `influx` segment provides a way to write into an Influxdb instance.
 The `tags` parameter allows any field to be used as a tag and takes a comma-separated list from any
 field available in the [protobuf definition](https://github.com/bwNetFlow/flowpipeline/blob/master/pb/flow.proto).
+The `fields` works in the exact same way, except that these protobuf fields won't be indexed by InfluxDB.
 
 Note that some of the above fields might not be present depending on the method
 of flow export, the input segment used in this pipeline, or the modify segments
 in front of this export segment.
 
 ```
-- segment: prometheus
+- segment: influx
   config:
     org: my-org
     bucket: my-bucket
@@ -176,6 +177,7 @@ in front of this export segment.
     # the lines below are optional and set to default
     address: http://127.0.0.1:8086
     tags: "ProtoName"
+    fields: ""
 ```
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/export/prometheus)

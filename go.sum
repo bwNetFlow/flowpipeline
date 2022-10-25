@@ -46,6 +46,10 @@ github.com/Shopify/toxiproxy/v2 v2.5.0 h1:i4LPT+qrSlKNtQf5QliVjdP08GyAH8+BUIc9gT
 github.com/Yawning/cryptopan v0.0.0-20170504040949-65bca51288fe h1:SKdmPMOww/faIbffys2UgnZHlQJETCw7N18AaYUYf2M=
 github.com/Yawning/cryptopan v0.0.0-20170504040949-65bca51288fe/go.mod h1:tGK+sH41V0mnyFBVWQoRyj7neHPwQwPM1KJ3PfS6dTI=
 github.com/alecthomas/assert/v2 v2.0.3 h1:WKqJODfOiQG0nEJKFKzDIG3E29CN2/4zR9XGJzKIkbg=
+github.com/alecthomas/participle/v2 v2.0.0-beta.1 h1:qA1IALv09wFD4fQ2anV6MCl1BIInd+Dm+ksI6ES4kfs=
+github.com/alecthomas/participle/v2 v2.0.0-beta.1/go.mod h1:RC764t6n4L8D8ITAJv0qdokritYSNR3wV5cVwmIEaMM=
+github.com/alecthomas/participle/v2 v2.0.0-beta.2 h1:iCENLBxIYQvtQdkenzAKgXpP72fudHI+j4RFPfaiKYk=
+github.com/alecthomas/participle/v2 v2.0.0-beta.2/go.mod h1:RC764t6n4L8D8ITAJv0qdokritYSNR3wV5cVwmIEaMM=
 github.com/alecthomas/participle/v2 v2.0.0-beta.5 h1:y6dsSYVb1G5eK6mgmy+BgI3Mw35a3WghArZ/Hbebrjo=
 github.com/alecthomas/participle/v2 v2.0.0-beta.5/go.mod h1:RC764t6n4L8D8ITAJv0qdokritYSNR3wV5cVwmIEaMM=
 github.com/alecthomas/repr v0.1.0 h1:ENn2e1+J3k09gyj2shc0dHr/yjaWSHRlrJ4DPMevDqE=
@@ -69,6 +73,10 @@ github.com/bwNetFlow/bpf_flowexport v0.0.0-20220515112212-cd8128615c05 h1:/H/qIQ
 github.com/bwNetFlow/bpf_flowexport v0.0.0-20220515112212-cd8128615c05/go.mod h1:DuJLqsHWPJZpyo1yfuHEMjSlQlPjXWntTjGAHJCt4ns=
 github.com/bwNetFlow/flowfilter v0.0.0-20221025085019-cc6e02e56dd5 h1:FSu5oL/90AZkR0LOQXcrzyGBSkcYEFPaB918QYQOots=
 github.com/bwNetFlow/flowfilter v0.0.0-20221025085019-cc6e02e56dd5/go.mod h1:0wEpa32Pzt5SuxNeOCSr2MdEuLCNrbJYR2JHpbWGchA=
+github.com/bwNetFlow/flowfilter v0.0.0-20221025114515-6dde7d4359dc h1:OohTX4yW89wbZhe7T8L0dUiVaNQiyxLs12yMT2rnrDs=
+github.com/bwNetFlow/flowfilter v0.0.0-20221025114515-6dde7d4359dc/go.mod h1:g+jR9KOBdcsGSdRLf8Q5ii7FgwumWPs83gU8pbBQ/4k=
+github.com/bwNetFlow/flowfilter v0.0.0-20221025122444-6fb1583a75de h1:I5mCsPZuXe3k5lGwCwIm5pwm+vi9IKSLRFpXIlVy+sg=
+github.com/bwNetFlow/flowfilter v0.0.0-20221025122444-6fb1583a75de/go.mod h1:Ow+LzmHD+4E3szR0b8X4LLCnj3p9WwTFY9Ho+Up/7u4=
 github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04 h1:mm0/N8cMAdc5TRsmAkrhnPIdOm0ZqbT7uUC9Wt/21mk=
 github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04/go.mod h1:rtoxrzCig192Z9SYgF7J58r3qgnJ09yI3pnPVPf9+3U=
 github.com/bwNetFlow/protobuf/go v0.0.0-20211004083441-61e193b4b342 h1:CrEmmSVFs3Ssceezrj/KyLuTvelGH8CZkNLgVxYrQ4o=

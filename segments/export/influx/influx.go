@@ -22,7 +22,8 @@ type Influx struct {
 	Org     string   // required, Influx org name
 	Bucket  string   // required, Influx bucket
 	Token   string   // required, Influx access token
-	Tags    []string // optional, list of Tags to be created. Recommended to keep this to a
+	Tags    []string // optional, list of Tags to be created.
+	Fields  []string // optional, list of Fields to be created.
 }
 
 func (segment Influx) New(config map[string]string) segments.Segment {
@@ -64,17 +65,30 @@ func (segment Influx) New(config map[string]string) segments.Segment {
 
 	// set default Tags if not configured
 	if config["tags"] == "" {
-		log.Println("[info] Influx: Configuration parameter 'tags' not set. Using default tags to export.")
+		log.Println("[info] Influx: Configuration parameter 'tags' not set. Using default tags 'ProtoName' to export.")
 		config["tags"] = "ProtoName"
 	}
-	for _, tag := range strings.Split(config["tags"], ",") {
-		newsegment.Tags = append(newsegment.Tags, tag)
-	}
-	protofields := reflect.TypeOf(pb.EnrichedFlow{})
-	for _, field := range newsegment.Tags {
-		_, found := protofields.FieldByName(field)
+	newsegment.Tags = strings.Split(config["tags"], ",")
+	protomembers := reflect.TypeOf(pb.EnrichedFlow{})
+	for _, tagname := range newsegment.Tags {
+		_, found := protomembers.FieldByName(tagname)
 		if !found {
-			log.Printf("[error] Influx: Field '%s' specified in 'tags' does not exist.", field)
+			log.Printf("[error] Influx: Unknown name '%s' specified in 'tags'.", tagname)
+			return nil
+		}
+	}
+
+	// set default Fields if not configured
+	if config["fields"] == "" {
+		log.Println("[info] Influx: Configuration parameter 'fields' not set. Using default fields '' to export.")
+		newsegment.Fields = []string{}
+	} else {
+		newsegment.Fields = strings.Split(config["fields"], ",")
+	}
+	for _, fieldname := range newsegment.Fields {
+		_, found := protomembers.FieldByName(fieldname)
+		if !found {
+			log.Printf("[error] Influx: Unknown name '%s' specified in 'fields'.", fieldname)
 			return nil
 		}
 	}
@@ -91,6 +105,7 @@ func (segment *Influx) Run(wg *sync.WaitGroup) {
 		Token:     segment.Token,
 		Batchsize: 5000,
 		Tags:      segment.Tags,
+		Fields:    segment.Fields,
 	}
 
 	// initialize Influx endpoint

@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/url"
 	"reflect"
-	"sort"
 	"strings"
 	"sync"
 
@@ -70,23 +69,18 @@ func (segment Influx) New(config map[string]string) segments.Segment {
 		log.Println("[info] prometheus: Configuration parameter 'tags' not set. Using default tags to export.")
 		config["tags"] = "ProtoName"
 	}
-	var tags []string
 	for _, tag := range strings.Split(config["tags"], ",") {
 		log.Printf("[info] prometheus: custom tag found: %s", tag)
-		tags = append(tags, tag)
+		newsegment.Tags = append(newsegment.Tags, tag)
 	}
 	protofields := reflect.TypeOf(pb.EnrichedFlow{})
-	for _, field := range tags {
+	for _, field := range newsegment.Tags {
 		_, found := protofields.FieldByName(field)
 		if !found {
 			log.Printf("[error] Prometheus: Field '%s' specified in 'tags' does not exist.", field)
 			return nil
 		}
-		newsegment.fieldNames = append(newsegment.fieldNames, field)
 	}
-
-	// sort tags in alphabetical order
-	sort.Strings(tags)
 
 	return newsegment
 }
@@ -99,7 +93,7 @@ func (segment *Influx) Run(wg *sync.WaitGroup) {
 		Org:       segment.Org,
 		Token:     segment.Token,
 		Batchsize: 5000,
-		tags:      segment.Tags,
+		Tags:      segment.Tags,
 	}
 
 	// initialize Influx endpoint

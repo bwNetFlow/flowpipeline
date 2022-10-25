@@ -16,14 +16,13 @@ import (
 
 // Connector provides export features to Influx
 type Connector struct {
-	Address    string
-	Org        string
-	Bucket     string
-	Token      string
-	ExportFreq int
-	Batchsize  int
-
-	tags         []string
+	Address      string
+	Org          string
+	Bucket       string
+	Token        string
+	ExportFreq   int
+	Batchsize    int
+	Tags         []string
 	influxClient influxdb2.Client
 }
 
@@ -52,7 +51,7 @@ func (c *Connector) CreatePoint(msg *pb.EnrichedFlow) *write.Point {
 	// write tags for datapoint and drop them to not insert as fields
 	tags := make(map[string]string)
 	values := reflect.ValueOf(msg).Elem()
-	for _, fieldname := range c.tags {
+	for _, fieldname := range c.Tags {
 		value := values.FieldByName(fieldname).Interface()
 		switch value.(type) {
 		case []uint8: // this is necessary for proper formatting
@@ -73,9 +72,9 @@ func (c *Connector) CreatePoint(msg *pb.EnrichedFlow) *write.Point {
 	}
 
 	fields := map[string]interface{}{
-		"bytes": msg.Bytes,
+		"bytes":   msg.Bytes,
 		"packets": msg.Packets,
-		"flows": 1,
+		"flows":   1,
 	}
 
 	// create point

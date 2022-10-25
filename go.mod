@@ -3,7 +3,6 @@ module github.com/bwNetFlow/flowpipeline
 go 1.18
 
 require (
-	github.com/BelWue/bgp_routeinfo v0.0.0-20221004100427-d8095fc566dd
 	github.com/Shopify/sarama v1.37.2
 	github.com/Yawning/cryptopan v0.0.0-20170504040949-65bca51288fe
 	github.com/alouca/gosnmp v0.0.0-20170620005048-04d83944c9ab
@@ -25,6 +24,7 @@ require (
 )
 
 require (
+	github.com/BelWue/bgp_routeinfo v0.0.0-20221004100427-d8095fc566dd // indirect
 	github.com/alecthomas/participle/v2 v2.0.0-beta.1 // indirect
 	github.com/alouca/gologger v0.0.0-20120904114645-7d4b7291de9c // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

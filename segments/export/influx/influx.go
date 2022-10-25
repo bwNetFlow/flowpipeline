@@ -23,8 +23,6 @@ type Influx struct {
 	Bucket  string   // required, Influx bucket
 	Token   string   // required, Influx access token
 	Tags    []string // optional, list of Tags to be created. Recommended to keep this to a
-
-	fieldNames []string
 }
 
 func (segment Influx) New(config map[string]string) segments.Segment {
@@ -66,18 +64,17 @@ func (segment Influx) New(config map[string]string) segments.Segment {
 
 	// set default Tags if not configured
 	if config["tags"] == "" {
-		log.Println("[info] prometheus: Configuration parameter 'tags' not set. Using default tags to export.")
+		log.Println("[info] Influx: Configuration parameter 'tags' not set. Using default tags to export.")
 		config["tags"] = "ProtoName"
 	}
 	for _, tag := range strings.Split(config["tags"], ",") {
-		log.Printf("[info] prometheus: custom tag found: %s", tag)
 		newsegment.Tags = append(newsegment.Tags, tag)
 	}
 	protofields := reflect.TypeOf(pb.EnrichedFlow{})
 	for _, field := range newsegment.Tags {
 		_, found := protofields.FieldByName(field)
 		if !found {
-			log.Printf("[error] Prometheus: Field '%s' specified in 'tags' does not exist.", field)
+			log.Printf("[error] Influx: Field '%s' specified in 'tags' does not exist.", field)
 			return nil
 		}
 	}

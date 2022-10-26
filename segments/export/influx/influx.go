@@ -23,7 +23,7 @@ type Influx struct {
 	Bucket  string   // required, Influx bucket
 	Token   string   // required, Influx access token
 	Tags    []string // optional, list of Tags to be created.
-	Fields  []string // optional, list of Fields to be created.
+	Fields  []string // optional, list of Fields to be created, default is "Bytes,Packets"
 }
 
 func (segment Influx) New(config map[string]string) segments.Segment {
@@ -66,30 +66,32 @@ func (segment Influx) New(config map[string]string) segments.Segment {
 	// set default Tags if not configured
 	if config["tags"] == "" {
 		log.Println("[info] Influx: Configuration parameter 'tags' not set. Using default tags 'ProtoName' to export.")
-		config["tags"] = "ProtoName"
-	}
-	newsegment.Tags = strings.Split(config["tags"], ",")
-	protomembers := reflect.TypeOf(pb.EnrichedFlow{})
-	for _, tagname := range newsegment.Tags {
-		_, found := protomembers.FieldByName(tagname)
-		if !found {
-			log.Printf("[error] Influx: Unknown name '%s' specified in 'tags'.", tagname)
-			return nil
+		newsegment.Tags = []string{"ProtoName"}
+	} else {
+		newsegment.Tags = strings.Split(config["tags"], ",")
+		protomembers := reflect.TypeOf(pb.EnrichedFlow{})
+		for _, tagname := range newsegment.Tags {
+			_, found := protomembers.FieldByName(tagname)
+			if !found {
+				log.Printf("[error] Influx: Unknown name '%s' specified in 'tags'.", tagname)
+				return nil
+			}
 		}
 	}
 
 	// set default Fields if not configured
 	if config["fields"] == "" {
-		log.Println("[info] Influx: Configuration parameter 'fields' not set. Using default fields '' to export.")
-		newsegment.Fields = []string{}
+		log.Println("[info] Influx: Configuration parameter 'fields' not set. Using default fields 'Bytes,Packets' to export.")
+		newsegment.Fields = []string{"Bytes", "Packets"}
 	} else {
 		newsegment.Fields = strings.Split(config["fields"], ",")
-	}
-	for _, fieldname := range newsegment.Fields {
-		_, found := protomembers.FieldByName(fieldname)
-		if !found {
-			log.Printf("[error] Influx: Unknown name '%s' specified in 'fields'.", fieldname)
-			return nil
+		for _, fieldname := range newsegment.Fields {
+			protomembers := reflect.TypeOf(pb.EnrichedFlow{})
+			_, found := protomembers.FieldByName(fieldname)
+			if !found {
+				log.Printf("[error] Influx: Unknown name '%s' specified in 'fields'.", fieldname)
+				return nil
+			}
 		}
 	}
 

@@ -11,15 +11,12 @@ import (
 
 // Handler represents a Sarama consumer group consumer
 type Handler struct {
-	ready  chan bool
 	flows  chan *pb.EnrichedFlow
 	cancel context.CancelFunc
 }
 
 // Setup is run at the beginning of a new session, before ConsumeClaim
 func (h *Handler) Setup(sarama.ConsumerGroupSession) error {
-	// Mark the consumer as ready
-	close(h.ready)
 	return nil
 }
 

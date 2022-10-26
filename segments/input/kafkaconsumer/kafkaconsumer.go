@@ -155,7 +155,6 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 
 	handlerCtx, handlerCancel := context.WithCancel(context.Background())
 	var handler = &Handler{
-		ready: make(chan bool),
 		flows: make(chan *pb.EnrichedFlow),
 	}
 	handlerWg := sync.WaitGroup{}
@@ -173,10 +172,8 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 			if handlerCtx.Err() != nil {
 				return
 			}
-			handler.ready = make(chan bool) // TODO: this is from the official example, not sure it is necessary in out case
 		}
 	}()
-	<-handler.ready
 	log.Println("[info] KafkaConsumer: Connected and operational.")
 
 	defer func() {

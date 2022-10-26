@@ -177,7 +177,7 @@ in front of this export segment.
     # the lines below are optional and set to default
     address: http://127.0.0.1:8086
     tags: "ProtoName"
-    fields: ""
+    fields: "Bytes,Packets"
 ```
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/export/prometheus)

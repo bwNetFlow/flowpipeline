@@ -8,86 +8,94 @@ package influx
 import (
 	"log"
 	"net/url"
-	"sort"
+	"reflect"
 	"strings"
 	"sync"
 
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
 )
 
 type Influx struct {
 	segments.BaseSegment
-	Address string   // URL for influxdb endpoint
-	Org     string   // influx org name
-	Bucket  string   // influx bucket
-	Token   string   // influx access token
-	Tags    []string // optional, list of Tags to be created. Recommended to keep this to a
-	// 	Batchsize  uint32 // set the batch size for the writer
-	// 	ExportFreq uint32 // set the frequency for the writer
+	Address string   // optional, URL for influxdb endpoint, default is http://127.0.0.1:8086
+	Org     string   // required, Influx org name
+	Bucket  string   // required, Influx bucket
+	Token   string   // required, Influx access token
+	Tags    []string // optional, list of Tags to be created.
+	Fields  []string // optional, list of Fields to be created, default is "Bytes,Packets"
 }
 
 func (segment Influx) New(config map[string]string) segments.Segment {
+	newsegment := &Influx{}
+
 	// TODO: add paramteres for Influx endpoint and eval vars
-	var address = "http://127.0.0.1:8086"
 	if config["address"] != "" {
-		address = config["address"]
 		// check if a valid url has been passed
-		_, err := url.Parse(address)
+		_, err := url.Parse(config["address"])
 		if err != nil {
 			log.Printf("[error] Influx: error parsing given url: %e", err)
 		}
-		address = config["address"]
+		newsegment.Address = config["address"]
 	} else {
+		newsegment.Address = "http://127.0.0.1:8086"
 		log.Println("[info] Influx: Missing configuration parameter 'address'. Using default address 'http://127.0.0.1:8086'")
 	}
 
-	var org string
 	if config["org"] == "" {
 		log.Println("[error] Influx: Missing configuration parameter 'org'. Please set the organization to use.")
 		return nil
 	} else {
-		org = config["org"]
+		newsegment.Org = config["org"]
 	}
 
-	var bucket string
 	if config["bucket"] == "" {
 		log.Println("[error] Influx: Missing configuration parameter 'bucket'. Please set the bucket to use.")
 		return nil
 	} else {
-		bucket = config["bucket"]
+		newsegment.Bucket = config["bucket"]
 	}
 
-	var token string
 	if config["token"] == "" {
 		log.Println("[error] Influx: Missing configuration parameter 'token'. Please set the token to use.")
 		return nil
 	} else {
-		token = config["token"]
+		newsegment.Token = config["token"]
 	}
 
 	// set default Tags if not configured
-	var tags = []string{
-		"ProtoName",
-	}
 	if config["tags"] == "" {
-		log.Println("[info] Influx: Configuration parameter 'tags' not set. Using default tag 'ProtoName' to export")
+		log.Println("[info] Influx: Configuration parameter 'tags' not set. Using default tags 'ProtoName' to export.")
+		newsegment.Tags = []string{"ProtoName"}
 	} else {
-		tags = []string{}
-		for _, tag := range strings.Split(config["tags"], ",") {
-			log.Printf("[info] Influx: custom tag found: %s", tag)
-			tags = append(tags, tag)
+		newsegment.Tags = strings.Split(config["tags"], ",")
+		protomembers := reflect.TypeOf(pb.EnrichedFlow{})
+		for _, tagname := range newsegment.Tags {
+			_, found := protomembers.FieldByName(tagname)
+			if !found {
+				log.Printf("[error] Influx: Unknown name '%s' specified in 'tags'.", tagname)
+				return nil
+			}
 		}
 	}
-	// sort tags in alphabetical order
-	sort.Strings(tags)
 
-	return &Influx{
-		Address: address,
-		Org:     org,
-		Bucket:  bucket,
-		Token:   token,
-		Tags:    tags,
+	// set default Fields if not configured
+	if config["fields"] == "" {
+		log.Println("[info] Influx: Configuration parameter 'fields' not set. Using default fields 'Bytes,Packets' to export.")
+		newsegment.Fields = []string{"Bytes", "Packets"}
+	} else {
+		newsegment.Fields = strings.Split(config["fields"], ",")
+		for _, fieldname := range newsegment.Fields {
+			protomembers := reflect.TypeOf(pb.EnrichedFlow{})
+			_, found := protomembers.FieldByName(fieldname)
+			if !found {
+				log.Printf("[error] Influx: Unknown name '%s' specified in 'fields'.", fieldname)
+				return nil
+			}
+		}
 	}
+
+	return newsegment
 }
 
 func (segment *Influx) Run(wg *sync.WaitGroup) {
@@ -98,7 +106,8 @@ func (segment *Influx) Run(wg *sync.WaitGroup) {
 		Org:       segment.Org,
 		Token:     segment.Token,
 		Batchsize: 5000,
-		tags:      segment.Tags,
+		Tags:      segment.Tags,
+		Fields:    segment.Fields,
 	}
 
 	// initialize Influx endpoint

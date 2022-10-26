@@ -21,7 +21,6 @@ import (
 type Csv struct {
 	segments.BaseSegment
 	writer     *csv.Writer
-	fieldTypes []string
 	fieldNames []string
 
 	FileName string // optional, default is empty which means stdout
@@ -51,24 +50,21 @@ func (segment Csv) New(config map[string]string) segments.Segment {
 		protofields := reflect.TypeOf(pb.EnrichedFlow{})
 		conffields := strings.Split(config["fields"], ",")
 		for _, field := range conffields {
-			protofield, found := protofields.FieldByName(field)
+			_, found := protofields.FieldByName(field)
 			if !found {
 				log.Printf("[error] Csv: Field specified in 'fields' does not exist.")
 				return nil
 			}
-			newsegment.fieldNames = append(newsegment.fieldNames, field)
-			newsegment.fieldTypes = append(newsegment.fieldTypes, protofield.Type.String())
 			heading = append(heading, field)
+			newsegment.fieldNames = append(newsegment.fieldNames, field)
 		}
 	} else {
 		protofields := reflect.TypeOf(pb.EnrichedFlow{})
 		// +-3 skips over protobuf state, sizeCache and unknownFields
 		newsegment.fieldNames = make([]string, protofields.NumField()-3)
-		newsegment.fieldTypes = make([]string, protofields.NumField()-3)
 		for i := 3; i < protofields.NumField(); i++ {
 			field := protofields.Field(i)
 			newsegment.fieldNames[i-3] = field.Name
-			newsegment.fieldTypes[i-3] = field.Type.String()
 			heading = append(heading, field.Name)
 		}
 		newsegment.Fields = config["fields"]
@@ -93,23 +89,23 @@ func (segment *Csv) Run(wg *sync.WaitGroup) {
 	for msg := range segment.In {
 		var record []string
 		values := reflect.ValueOf(msg).Elem()
-		for i, fieldname := range segment.fieldNames {
-			protofield := values.FieldByName(fieldname)
-			switch segment.fieldTypes[i] {
-			case "[]uint8": // this is neccessary for proper formatting
-				ipstring := net.IP(protofield.Interface().([]uint8)).String()
+		for _, fieldname := range segment.fieldNames {
+			value := values.FieldByName(fieldname).Interface()
+			switch value.(type) {
+			case []uint8: // this is necessary for proper formatting
+				ipstring := net.IP(value.([]uint8)).String()
 				if ipstring == "<nil>" {
 					ipstring = ""
 				}
 				record = append(record, ipstring)
-			case "uint32": // this is because FormatUint is much faster than Sprint
-				record = append(record, strconv.FormatUint(uint64(protofield.Interface().(uint32)), 10))
-			case "uint64": // this is because FormatUint is much faster than Sprint
-				record = append(record, strconv.FormatUint(uint64(protofield.Interface().(uint64)), 10))
-			case "string": // this is because doing nothing is also much faster than Sprint
-				record = append(record, protofield.Interface().(string))
+			case uint32: // this is because FormatUint is much faster than Sprint
+				record = append(record, strconv.FormatUint(uint64(value.(uint32)), 10))
+			case uint64: // this is because FormatUint is much faster than Sprint
+				record = append(record, strconv.FormatUint(uint64(value.(uint64)), 10))
+			case string: // this is because doing nothing is also much faster than Sprint
+				record = append(record, value.(string))
 			default:
-				record = append(record, fmt.Sprint(protofield))
+				record = append(record, fmt.Sprint(value))
 			}
 		}
 		segment.writer.Write(record)

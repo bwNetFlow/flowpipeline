@@ -158,13 +158,37 @@ i.e. some fields might be lost. For instance, the `prometheus` segment as a
 metric provider does not export any information about flow timing or duration,
 among others.
 
+#### influx
+The `influx` segment provides a way to write into an Influxdb instance.
+The `tags` parameter allows any field to be used as a tag and takes a comma-separated list from any
+field available in the [protobuf definition](https://github.com/bwNetFlow/flowpipeline/blob/master/pb/flow.proto).
+The `fields` works in the exact same way, except that these protobuf fields won't be indexed by InfluxDB.
+
+Note that some of the above fields might not be present depending on the method
+of flow export, the input segment used in this pipeline, or the modify segments
+in front of this export segment.
+
+```
+- segment: influx
+  config:
+    org: my-org
+    bucket: my-bucket
+    token: $AUTH_TOKEN_ENVVAR
+    # the lines below are optional and set to default
+    address: http://127.0.0.1:8086
+    tags: "ProtoName"
+    fields: "Bytes,Packets"
+```
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/export/prometheus)
+[examples using this segment](https://github.com/search?q=%22segment%3A+prometheus%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
+
 #### prometheus
 The `prometheus` segment provides a standard prometheus exporter, exporting its
 own monitoring info at `:8080/metrics` and its flow data at `:8080/flowdata` by
 default. The label set included with each metric is freely configurable with a
-comma-separated list from any of the follwing valid fields: `router`,
-`ipversion`, `application`, `protoname`, `direction`, `peer`, `remoteas`,
-`remotecountry`, `src_port`, `dst_port`, `src_addr`, `dst_addr`.
+comma-separated list from any field available in the [protobuf definition](https://github.com/bwNetFlow/flowpipeline/blob/master/pb/flow.proto).
 
 Note that some of the above fields might not be present depending on the method
 of flow export, the input segment used in this pipeline, or the modify segments
@@ -173,9 +197,9 @@ in front of this export segment.
 ```
 - segment: prometheus
   config:
-    labels: "router,ipversion,application,protoname,direction,peer,remoteas,remotecountry"
     # the lines below are optional and set to default
     endpoint: ":8080"
+    labels: "Etype,Proto"
     metricspath: "/metrics"
     flowdatapath: "/flowdata"
 ```

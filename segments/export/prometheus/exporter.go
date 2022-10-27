@@ -11,6 +11,7 @@ import (
 
 // Exporter provides export features to Prometheus
 type Exporter struct {
+	MetaReg *prometheus.Registry
 	FlowReg *prometheus.Registry
 
 	kafkaMessageCount prometheus.Counter
@@ -35,7 +36,8 @@ func (e *Exporter) Initialize(labels []string) {
 			Name: "kafka_offset_current",
 			Help: "Current Kafka Offset of the consumer",
 		}, []string{"topic", "partition"})
-	prometheus.MustRegister(e.kafkaMessageCount, e.kafkaOffsets)
+	e.MetaReg = prometheus.NewRegistry()
+	e.MetaReg.MustRegister(e.kafkaMessageCount, e.kafkaOffsets)
 
 	// Flows are stored in a separate Registry
 	e.flowBits = prometheus.NewCounterVec(
@@ -51,9 +53,10 @@ func (e *Exporter) Initialize(labels []string) {
 
 // listen on given endpoint addr with Handler for metricPath and flowdataPath
 func (e *Exporter) ServeEndpoints(segment *Prometheus) {
-	http.Handle(segment.MetricsPath, promhttp.Handler())
-	http.Handle(segment.FlowdataPath, promhttp.HandlerFor(e.FlowReg, promhttp.HandlerOpts{}))
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle(segment.MetricsPath, promhttp.HandlerFor(e.MetaReg, promhttp.HandlerOpts{}))
+	mux.Handle(segment.FlowdataPath, promhttp.HandlerFor(e.FlowReg, promhttp.HandlerOpts{}))
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`<html>
 			<head><title>Flow Exporter</title></head>
 			<body>
@@ -63,11 +66,10 @@ func (e *Exporter) ServeEndpoints(segment *Prometheus) {
 			</body>
 		</html>`))
 	})
-
 	go func() {
-		http.ListenAndServe(segment.Endpoint, nil)
+		http.ListenAndServe(segment.Endpoint, mux)
 	}()
-	log.Printf("Enabled Prometheus %s and %s endpoints.", segment.MetricsPath, segment.FlowdataPath)
+	log.Printf("Enabled metrics on %s and %s, listening at %s.", segment.MetricsPath, segment.FlowdataPath, segment.Endpoint)
 }
 
 func (e *Exporter) Increment(bytes uint64, packets uint64, labelset prometheus.Labels) {

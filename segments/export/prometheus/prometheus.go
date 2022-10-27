@@ -44,16 +44,16 @@ func (segment Prometheus) New(config map[string]string) segments.Segment {
 		endpoint = config["endpoint"]
 	}
 	var metricsPath string = "/metrics"
-	if config["metricsPath"] == "" {
-		log.Println("[info] prometheus: Missing configuration parameter 'metricsPath'. Using default path \"/metrics\"")
+	if config["metricspath"] == "" {
+		log.Println("[info] prometheus: Missing configuration parameter 'metricspath'. Using default path \"/metrics\"")
 	} else {
-		metricsPath = config["metricsPath"]
+		metricsPath = config["metricspath"]
 	}
 	var flowdataPath string = "/flowdata"
-	if config["flowdataPath"] == "" {
-		log.Println("[info] prometheus: Missing configuration parameter 'flowdataPath'. Using default path \"/flowdata\"")
+	if config["flowdatapath"] == "" {
+		log.Println("[info] prometheus: Missing configuration parameter 'flowdatapath'. Using default path \"/flowdata\"")
 	} else {
-		flowdataPath = config["flowdataPath"]
+		flowdataPath = config["flowdatapath"]
 	}
 
 	newsegment := &Prometheus{

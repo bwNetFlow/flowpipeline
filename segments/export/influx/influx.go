@@ -71,6 +71,7 @@ func (segment Influx) New(config map[string]string) segments.Segment {
 		newsegment.Tags = strings.Split(config["tags"], ",")
 		protomembers := reflect.TypeOf(pb.EnrichedFlow{})
 		for _, tagname := range newsegment.Tags {
+			tagname = strings.TrimSpace(tagname)
 			_, found := protomembers.FieldByName(tagname)
 			if !found {
 				log.Printf("[error] Influx: Unknown name '%s' specified in 'tags'.", tagname)

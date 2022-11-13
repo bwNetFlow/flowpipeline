@@ -77,8 +77,16 @@ func (segment PrintFlowdump) New(config map[string]string) segments.Segment {
 
 func (segment PrintFlowdump) format_flow(flowmsg *pb.EnrichedFlow) string {
 	timestamp := time.Unix(int64(flowmsg.TimeFlowEnd), 0).Format("15:04:05")
-	src := net.IP(flowmsg.SrcAddr)
-	dst := net.IP(flowmsg.DstAddr)
+	src := net.IP(flowmsg.SrcAddr).String()
+	dst := net.IP(flowmsg.DstAddr).String()
+	if segment.Verbose {
+		if flowmsg.SrcHostName != "" {
+			src = fmt.Sprintf("%s%s", flowmsg.SrcHostName, src)
+		}
+		if flowmsg.DstHostName != "" {
+			dst = fmt.Sprintf("%s%s", flowmsg.DstHostName, dst)
+		}
+	}
 	router := net.IP(flowmsg.SamplerAddress)
 
 	var srcas, dstas string

@@ -2,20 +2,57 @@
 package reversedns
 
 import (
+	"context"
 	"log"
-	"net"
-	"strings"
+	"strconv"
 	"sync"
+	"time"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
+	"github.com/rs/dnscache"
 )
 
 type ReverseDns struct {
+	Cache           bool   // optional, default is true, disable to use a caching resolver directly
+	RefreshInterval string // optional, default is 5m, set another duration for cache refreshes
+
+	resolver *dnscache.Resolver
 	segments.BaseSegment
 }
 
 func (segment ReverseDns) New(config map[string]string) segments.Segment {
-	return &ReverseDns{}
+	newsegment := &ReverseDns{
+		resolver: &dnscache.Resolver{},
+	}
+
+	var cache bool = true
+	if config["cache"] != "" {
+		var err error
+		if cache, err = strconv.ParseBool(config["cache"]); err == nil {
+			log.Println("[error] ReverseDns: Invalid 'cache' parameter.")
+			return nil
+		}
+	}
+
+	if cache {
+		refresh := "5m"
+		if config["refreshinterval"] != "" {
+			refresh = config["refreshinterval"]
+		}
+		duration, err := time.ParseDuration(refresh)
+		if err != nil {
+			log.Println("[error] ReverseDns: Invalid 'refreshinterval' parameter.")
+			return nil
+		}
+		go func() {
+			t := time.NewTicker(duration)
+			defer t.Stop()
+			for range t.C {
+				newsegment.resolver.Refresh(true)
+			}
+		}()
+	}
+	return newsegment
 }
 
 func (segment *ReverseDns) Run(wg *sync.WaitGroup) {
@@ -24,23 +61,24 @@ func (segment *ReverseDns) Run(wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 	for msg := range segment.In {
-		var remoteAddress string
-		switch msg.RemoteAddr {
-		case 1:
-			remoteAddress = net.IP(msg.SrcAddr).String()
-		case 2:
-			remoteAddress = net.IP(msg.DstAddr).String()
-		default:
-			segment.Out <- msg
-			continue
+		hostnames, err := segment.resolver.LookupAddr(context.Background(), msg.SrcAddrObj().String())
+		if err == nil && len(hostnames) > 0 {
+			msg.SrcHostName = hostnames[0]
 		}
-
-		dnsName, err := net.LookupAddr(remoteAddress)
-		if err == nil {
-			msg.Note = strings.Join(dnsName, ",")
-		} else {
-			log.Println(err)
+		hostnames, err = segment.resolver.LookupAddr(context.Background(), msg.DstAddrObj().String())
+		if err == nil && len(hostnames) > 0 {
+			msg.DstHostName = hostnames[0]
 		}
+		hostnames, err = segment.resolver.LookupAddr(context.Background(), msg.NextHopObj().String())
+		if err == nil && len(hostnames) > 0 {
+			msg.NextHopHostName = hostnames[0]
+		}
+		hostnames, err = segment.resolver.LookupAddr(context.Background(), msg.SamplerAddressObj().String())
+		if err == nil && len(hostnames) > 0 {
+			msg.SamplerHostName = hostnames[0]
+		}
+		// TODO: lookup as names as well
+		// asnames, err := segment.resolver.LookupTxt(context.Background(), fmt.Sprintf("AS%d.asn.cymru.com", msg.SrcAS))
 		segment.Out <- msg
 	}
 }

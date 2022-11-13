@@ -268,6 +268,10 @@ func (flow *EnrichedFlow) DstAddrObj() net.IP {
 	return net.IP(flow.DstAddr)
 }
 
+func (flow *EnrichedFlow) NextHopObj() net.IP {
+	return net.IP(flow.NextHop)
+}
+
 func (flow *EnrichedFlow) SamplerAddressObj() net.IP {
 	return net.IP(flow.SamplerAddress)
 }

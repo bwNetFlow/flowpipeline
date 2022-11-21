@@ -473,6 +473,8 @@ Crypto-PAn algorithm. By default all possible IP address fields are targeted,
 this can be configured using the fields parameter. The key needs to be at least
 32 characters long.
 
+Supported Fields for anonymization are `SrcAddr,DstAddr,SamplerAddress,NextHop`
+
 ```
 - segment: anonymize
   config:

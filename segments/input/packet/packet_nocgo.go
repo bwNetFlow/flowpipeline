@@ -1,5 +1,5 @@
-//go:build !cgo
-// +build !cgo
+//go:build linux && !cgo
+// +build linux,!cgo
 
 package packet
 

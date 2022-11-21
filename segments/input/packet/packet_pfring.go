@@ -1,5 +1,5 @@
-//go:build cgo && pfring
-// +build cgo,pfring
+//go:build linux && cgo && pfring
+// +build linux,cgo,pfring
 
 package packet
 

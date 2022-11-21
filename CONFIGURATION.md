@@ -368,6 +368,8 @@ interfaces. This can be limited according to the data protection requirements
 set forth by the universities.
 
 #### packet
+**This segment is available only on Linux.**
+**This segment is available in the static binary release with some caveats in configuration.**
 
 The `packet` segment sources packet header data from a local interface and uses
 this data to run a Netflow-style cache before emitting flow data to the

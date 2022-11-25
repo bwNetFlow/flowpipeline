@@ -1,7 +1,4 @@
-//go:build linux
-// +build linux
-
-package packet
+package aggregate
 
 import (
 	"bytes"
@@ -14,6 +11,7 @@ import (
 	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+	"google.golang.org/protobuf/proto"
 )
 
 type FlowKey struct {
@@ -24,6 +22,18 @@ type FlowKey struct {
 	Proto   uint32
 	IPTos   uint8
 	InIface uint32
+}
+
+func NewFlowKeyFromFlow(flow *pb.EnrichedFlow) FlowKey {
+	return FlowKey{
+		SrcAddr: flow.SrcAddrObj().String(),
+		DstAddr: flow.DstAddrObj().String(),
+		SrcPort: uint16(flow.SrcPort),
+		DstPort: uint16(flow.DstPort),
+		Proto:   flow.Proto,
+		IPTos:   uint8(flow.IPTos),
+		InIface: flow.InIf,
+	}
 }
 
 func NewFlowKey(packet gopacket.Packet) FlowKey {
@@ -62,6 +72,7 @@ type FlowRecord struct {
 	SamplerAddress  net.IP
 	HardwareAddress net.HardwareAddr
 	Packets         []gopacket.Packet
+	Flows           []*pb.EnrichedFlow
 }
 
 func BuildFlow(f *FlowRecord) *pb.EnrichedFlow {
@@ -142,6 +153,16 @@ func BuildFlow(f *FlowRecord) *pb.EnrichedFlow {
 		// special handling
 		msg.Bytes += uint64(pkt.Metadata().Length)
 		msg.Packets += 1
+	}
+	for _, flow := range f.Flows {
+		proto.Merge(msg, flow)
+		// TODO: how to do this without custom behaviour for each field?
+		// TimeFlowStart: use earlier
+		// TimeFlowEnd: use later
+		// TimeReceived: use earlier
+		// Bytes: add, considering sampling rate
+		// Packets: add, considering sampling rate
+		// copy the rest?
 	}
 	return msg
 }
@@ -259,6 +280,23 @@ func (f *FlowExporter) Insert(pkt gopacket.Packet) {
 		}
 	}
 	f.mutex.Unlock()
+}
+
+func (f *FlowExporter) InsertFlow(flow *pb.EnrichedFlow) {
+	key := NewFlowKeyFromFlow(flow)
+
+	var record *FlowRecord
+	var exists bool
+
+	f.mutex.Lock()
+	if record, exists = f.cache[key]; !exists {
+		f.cache[key] = new(FlowRecord)
+		f.cache[key].TimeReceived = time.Now()
+		record = f.cache[key]
+	}
+	record.LastUpdated = time.Now()
+	record.SamplerAddress = f.samplerAddress
+	record.Flows = append(record.Flows, flow)
 }
 
 func (f *FlowExporter) ConsumeFrom(pkts chan gopacket.Packet) {

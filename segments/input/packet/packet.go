@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
+	"github.com/bwNetFlow/flowpipeline/segments/filter/aggregate"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcapgo"
@@ -22,7 +23,7 @@ import (
 type Packet struct {
 	segments.BaseSegment
 
-	exporter *FlowExporter
+	exporter *aggregate.FlowExporter
 
 	Method          string // required, default is "pcap", one of the available capture methods "pcapgo|pcap|pfring|file"
 	Source          string // required, the name of the source to capture from, depending on the method an interface or file name is required
@@ -137,7 +138,7 @@ func (segment Packet) New(config map[string]string) segments.Segment {
 		log.Println("[warning] Packet: Parameter 'filter' has been ignored as this requires a binary with CGO enabled.")
 	}
 
-	newsegment.exporter, err = NewFlowExporter(newsegment.ActiveTimeout, newsegment.InactiveTimeout)
+	newsegment.exporter, err = aggregate.NewFlowExporter(newsegment.ActiveTimeout, newsegment.InactiveTimeout)
 	if err != nil {
 		log.Printf("[error] Packet: error setting up exporter: %s", err)
 		return nil

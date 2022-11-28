@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"context"
 	"testing"
 
 	"github.com/bwNetFlow/flowpipeline/pb"
@@ -17,7 +18,7 @@ func TestPipelineBuild(t *testing.T) {
 	segmentList := []segments.Segment{&pass.Pass{}, &pass.Pass{}}
 	pipeline := New(segmentList...)
 	pipeline.Start()
-	pipeline.In <- &pb.EnrichedFlow{Type: 3}
+	pipeline.In <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{Type: 3}, Context: context.Background()}
 	fmsg := <-pipeline.Out
 	if fmsg.Type != 3 {
 		t.Error("Pipeline Setup is not working.")
@@ -29,7 +30,7 @@ func TestPipelineTeardown(t *testing.T) {
 	pipeline := New(segmentList...)
 	pipeline.Start()
 	pipeline.AutoDrain()
-	pipeline.In <- &pb.EnrichedFlow{Type: 3}
+	pipeline.In <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{Type: 3}, Context: context.Background()}
 	pipeline.Close() // fail test on halting ;)
 }
 
@@ -40,7 +41,7 @@ func TestPipelineConfigSuccess(t *testing.T) {
     foo: $baz
     bar: $0`))
 	pipeline.Start()
-	pipeline.In <- &pb.EnrichedFlow{Type: 3}
+	pipeline.In <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{Type: 3}, Context: context.Background()}
 	fmsg := <-pipeline.Out
 	if fmsg.Type != 3 {
 		t.Error("Pipeline built from config is not working.")
@@ -66,12 +67,12 @@ func Test_Branch_passthrough(t *testing.T) {
       fields: OutIf
 `))
 	pipeline.Start()
-	pipeline.In <- &pb.EnrichedFlow{Proto: 6, InIf: 1, OutIf: 1}
+	pipeline.In <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{Proto: 6, InIf: 1, OutIf: 1}, Context: context.Background()}
 	fmsg := <-pipeline.Out
 	if fmsg.Proto != 6 || fmsg.InIf == 1 || fmsg.OutIf != 1 {
 		t.Errorf("Branch segment did not work correctly, state is Proto %d, InIf %d, OutIf %d, should be (6, 0, 1).", fmsg.Proto, fmsg.InIf, fmsg.OutIf)
 	}
-	pipeline.In <- &pb.EnrichedFlow{Proto: 42, InIf: 1, OutIf: 1}
+	pipeline.In <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{Proto: 42, InIf: 1, OutIf: 1}, Context: context.Background()}
 	fmsg = <-pipeline.Out
 	if fmsg.Proto != 42 || fmsg.InIf != 1 || fmsg.OutIf == 1 {
 		t.Errorf("Branch segment did not work correctly, state is Proto %d, InIf %d, OutIf %d, should be (42, 1, 0).", fmsg.Proto, fmsg.InIf, fmsg.OutIf)
@@ -93,7 +94,7 @@ func Test_Branch_DeadlockFreeGeneration_If(t *testing.T) {
       fields: Bytes
 `))
 	pipeline.Start()
-	pipeline.In <- &pb.EnrichedFlow{Proto: 42, Bytes: 42}
+	pipeline.In <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{Proto: 42, Bytes: 42}, Context: context.Background()}
 	for i := 0; i < 5; i++ {
 		fmsg := <-pipeline.Out
 		if fmsg.Proto == 6 && fmsg.Bytes != 0 {
@@ -111,7 +112,7 @@ func Test_Branch_DeadlockFreeGeneration_Then(t *testing.T) {
   - segment: generator
 `))
 	pipeline.Start()
-	pipeline.In <- &pb.EnrichedFlow{Proto: 42, Bytes: 42}
+	pipeline.In <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{Proto: 42, Bytes: 42}, Context: context.Background()}
 	for i := 0; i < 5; i++ {
 		// no checks, not timeouting is enough
 		<-pipeline.Out
@@ -125,7 +126,7 @@ func Test_Branch_DeadlockFreeGeneration_Else(t *testing.T) {
   - segment: generator
 `))
 	pipeline.Start()
-	pipeline.In <- &pb.EnrichedFlow{Proto: 42, Bytes: 42}
+	pipeline.In <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{Proto: 42, Bytes: 42}, Context: context.Background()}
 	for i := 0; i < 5; i++ {
 		// no checks, not timeouting is enough
 		<-pipeline.Out

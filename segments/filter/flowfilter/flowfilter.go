@@ -50,7 +50,7 @@ func (segment *FlowFilter) Run(wg *sync.WaitGroup) {
 
 	filter := &visitors.Filter{}
 	for msg := range segment.In {
-		if match, _ := filter.CheckFlow(segment.expression, msg); match {
+		if match, _ := filter.CheckFlow(segment.expression, msg.EnrichedFlow); match {
 			segment.Out <- msg
 		} else if segment.Drops != nil {
 			segment.Drops <- msg

@@ -1,6 +1,7 @@
 package dropfields
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"os"
@@ -37,7 +38,7 @@ func BenchmarkDropFields(b *testing.B) {
 
 	segment := DropFields{}.New(map[string]string{"policy": "drop", "fields": "SrcAddr"})
 
-	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
+	in, out := make(chan *pb.FlowContainer), make(chan *pb.FlowContainer)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -45,7 +46,7 @@ func BenchmarkDropFields(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 142}, DstAddr: []byte{192, 168, 88, 143}}
+		in <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 142}, DstAddr: []byte{192, 168, 88, 143}}, Context: context.Background()}
 		_ = <-out
 	}
 	close(in)

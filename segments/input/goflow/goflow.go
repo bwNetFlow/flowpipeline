@@ -100,7 +100,7 @@ func (segment *Goflow) Run(wg *sync.WaitGroup) {
 				segment.goflow_in = nil // make unavailable for select
 				// TODO: think about restarting goflow?
 			}
-			segment.Out <- msg
+			segment.Out <- &pb.FlowContainer{EnrichedFlow: msg, Context: context.Background()}
 		case msg, ok := <-segment.In:
 			if !ok {
 				return

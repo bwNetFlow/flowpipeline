@@ -32,7 +32,7 @@ func (segment *PrintFlowdump) Run(wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 	for msg := range segment.In {
-		fmt.Println(segment.format_flow(msg))
+		fmt.Println(segment.format_flow(msg.EnrichedFlow))
 		segment.Out <- msg
 	}
 }

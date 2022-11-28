@@ -20,7 +20,7 @@ func TestSegment_Branch_passthrough(t *testing.T) {
 	if segment == nil {
 		log.Fatal("[error] Configured segment 'branch' could not be initialized properly, see previous messages.")
 	}
-	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
+	in, out := make(chan *pb.FlowContainer), make(chan *pb.FlowContainer)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}

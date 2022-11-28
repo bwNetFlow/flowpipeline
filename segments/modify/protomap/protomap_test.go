@@ -1,6 +1,7 @@
 package protomap
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"os"
@@ -36,7 +37,7 @@ func BenchmarkProtomap(b *testing.B) {
 
 	segment := Protomap{}.New(map[string]string{})
 
-	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
+	in, out := make(chan *pb.FlowContainer), make(chan *pb.FlowContainer)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -44,7 +45,7 @@ func BenchmarkProtomap(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &pb.EnrichedFlow{Proto: 6}
+		in <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{Proto: 6}, Context: context.Background()}
 		_ = <-out
 	}
 	close(in)

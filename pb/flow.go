@@ -1,7 +1,11 @@
 package pb
 
 import (
+	"context"
 	"net"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var (
@@ -52,6 +56,16 @@ var (
 		194: "Consumed (Terminate Incomplete Adjacency)",
 		195: "Consumed (Terminate For Us)"}
 )
+
+type FlowContainer struct {
+	*EnrichedFlow
+	Context context.Context
+}
+
+func (fc *FlowContainer) Trace(segmentName string) func(options ...trace.SpanEndOption) {
+	_, span := otel.Tracer("flowpipeline").Start(fc.Context, segmentName)
+	return span.End
+}
 
 func (flow *EnrichedFlow) FlowDirectionString() string {
 	return FlowDirectionMap[flow.GetFlowDirection()]

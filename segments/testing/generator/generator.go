@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"context"
 	"sync"
 
 	"github.com/bwNetFlow/flowpipeline/pb"
@@ -29,7 +30,7 @@ func (segment *Generator) Run(wg *sync.WaitGroup) {
 			}
 			segment.Out <- msg
 		default:
-			segment.Out <- &pb.EnrichedFlow{Proto: 6, Bytes: 42, Note: "generated test flow"}
+			segment.Out <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{Proto: 6, Bytes: 42, Note: "generated test flow"}, Context: context.Background()}
 		}
 	}
 }

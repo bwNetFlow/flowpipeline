@@ -1,6 +1,7 @@
 package json
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"os"
@@ -27,7 +28,7 @@ func BenchmarkJson(b *testing.B) {
 
 	segment := Json{}.New(map[string]string{})
 
-	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
+	in, out := make(chan *pb.FlowContainer), make(chan *pb.FlowContainer)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -35,7 +36,7 @@ func BenchmarkJson(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &pb.EnrichedFlow{}
+		in <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{}, Context: context.Background()}
 		_ = <-out
 	}
 	close(in)

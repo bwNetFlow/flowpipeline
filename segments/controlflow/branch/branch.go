@@ -13,9 +13,9 @@ import (
 type Pipeline interface {
 	Start()
 	Close()
-	GetInput() chan *pb.EnrichedFlow
-	GetOutput() <-chan *pb.EnrichedFlow
-	GetDrop() <-chan *pb.EnrichedFlow
+	GetInput() chan *pb.FlowContainer
+	GetOutput() <-chan *pb.FlowContainer
+	GetDrop() <-chan *pb.FlowContainer
 }
 
 type Branch struct {

@@ -1,6 +1,7 @@
 package geolocation
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"os"
@@ -59,7 +60,7 @@ func BenchmarkGeoLocation(b *testing.B) {
 
 	segment := GeoLocation{}.New(map[string]string{"filename": "../../../examples/enricher/GeoLite2-Country-Test.mmdb"})
 
-	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
+	in, out := make(chan *pb.FlowContainer), make(chan *pb.FlowContainer)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -67,7 +68,7 @@ func BenchmarkGeoLocation(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &pb.EnrichedFlow{RemoteAddr: 2, DstAddr: []byte{2, 125, 160, 218}}
+		in <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{RemoteAddr: 2, DstAddr: []byte{2, 125, 160, 218}}, Context: context.Background()}
 		_ = <-out
 	}
 	close(in)

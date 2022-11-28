@@ -4,6 +4,7 @@
 package bpf
 
 import (
+	"context"
 	"log"
 	"os"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/bwNetFlow/bpf_flowexport/flowexport"
 	"github.com/bwNetFlow/bpf_flowexport/packetdump"
+	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
 )
 
@@ -118,7 +120,7 @@ func (segment *Bpf) Run(wg *sync.WaitGroup) {
 			if !ok {
 				return
 			}
-			segment.Out <- msg
+			segment.Out <- &pb.FlowContainer{EnrichedFlow: msg, Context: context.Background()}
 		case msg, ok := <-segment.In:
 			if !ok {
 				segment.exporter.Stop()

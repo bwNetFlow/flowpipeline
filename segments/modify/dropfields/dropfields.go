@@ -38,8 +38,8 @@ func (segment *DropFields) Run(wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 	fields := strings.Split(segment.Fields, ",")
-	for original := range segment.In {
-		reflected_original := reflect.ValueOf(original)
+	for container := range segment.In {
+		reflected_original := reflect.ValueOf(container.EnrichedFlow)
 		for _, fieldname := range fields {
 			switch segment.Policy {
 			case "keep":
@@ -52,13 +52,14 @@ func (segment *DropFields) Run(wg *sync.WaitGroup) {
 				} else {
 					log.Printf("[warning] DropFields: A flow message did not have a field named '%s' to keep.", fieldname)
 				}
-				segment.Out <- reduced
+				container.EnrichedFlow = reduced
+				segment.Out <- container
 			case "drop":
 				original_field := reflect.Indirect(reflected_original).FieldByName(fieldname)
 				if original_field.IsValid() {
 					original_field.Set(reflect.Zero(original_field.Type()))
 				}
-				segment.Out <- original
+				segment.Out <- container
 			}
 		}
 	}

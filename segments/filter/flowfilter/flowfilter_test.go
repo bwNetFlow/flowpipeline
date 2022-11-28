@@ -1,6 +1,7 @@
 package flowfilter
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -44,7 +45,7 @@ func BenchmarkFlowFilter(b *testing.B) {
 
 	segment := FlowFilter{}.New(map[string]string{"filter": "port <50"})
 
-	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
+	in, out := make(chan *pb.FlowContainer), make(chan *pb.FlowContainer)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -52,7 +53,7 @@ func BenchmarkFlowFilter(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &pb.EnrichedFlow{SrcPort: uint32(rand.Intn(100))}
+		in <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{SrcPort: uint32(rand.Intn(100))}, Context: context.Background()}
 		_ = <-out
 	}
 	close(in)

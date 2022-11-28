@@ -5,6 +5,7 @@
 package segments
 
 import (
+	"context"
 	"log"
 	"sync"
 
@@ -51,29 +52,32 @@ func TestSegment(name string, config map[string]string, msg *pb.EnrichedFlow) *p
 		log.Fatalf("[error] Configured segment '%s' could not be initialized properly, see previous messages.", name)
 	}
 
-	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
+	in, out := make(chan *pb.FlowContainer), make(chan *pb.FlowContainer)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go segment.Run(wg)
 
-	in <- msg
+	in <- &pb.FlowContainer{EnrichedFlow: msg, Context: context.Background()}
 	close(in)
 	resultMsg := <-out
 	wg.Wait()
-
-	return resultMsg
+	if resultMsg == nil {
+		return nil
+	} else {
+		return resultMsg.EnrichedFlow
+	}
 }
 
 // This interface is central to an Pipeline object, as it operates on a list of
 // them. In general, Segments should embed the BaseSegment to provide the
 // Rewire function and the associated vars.
 type Segment interface {
-	New(config map[string]string) Segment                       // for reading the provided config
-	Run(wg *sync.WaitGroup)                                     // goroutine, must close(segment.Out) when segment.In is closed
-	Rewire(in chan *pb.EnrichedFlow, out chan *pb.EnrichedFlow) // embed this using BaseSegment
-	setName(name string)                                        // embed this using BaseSegment
+	New(config map[string]string) Segment                         // for reading the provided config
+	Run(wg *sync.WaitGroup)                                       // goroutine, must close(segment.Out) when segment.In is closed
+	Rewire(in chan *pb.FlowContainer, out chan *pb.FlowContainer) // embed this using BaseSegment
+	setName(name string)                                          // embed this using BaseSegment
 }
 
 // Serves as a basis for any Segment implementations. Segments embedding this
@@ -81,15 +85,15 @@ type Segment interface {
 // interface.
 type BaseSegment struct {
 	name string
-	In   <-chan *pb.EnrichedFlow
-	Out  chan<- *pb.EnrichedFlow
+	In   <-chan *pb.FlowContainer
+	Out  chan<- *pb.FlowContainer
 }
 
 // An extended basis for Segment implementations in the filter group. It
 // contains the necessities to process filtered (dropped) flows.
 type BaseFilterSegment struct {
 	BaseSegment
-	Drops chan<- *pb.EnrichedFlow
+	Drops chan<- *pb.FlowContainer
 }
 
 func (segment BaseSegment) setName(name string) {
@@ -100,7 +104,7 @@ func (segment BaseSegment) setName(name string) {
 // this channel closing when producing messages to this channel. This method is
 // only called by the flowpipeline tool from the controlflow/branch segment to
 // implement the then/else branches, otherwise this functionality is unused.
-func (segment *BaseFilterSegment) SubscribeDrops(drops chan<- *pb.EnrichedFlow) {
+func (segment *BaseFilterSegment) SubscribeDrops(drops chan<- *pb.FlowContainer) {
 	segment.Drops = drops
 }
 
@@ -110,7 +114,7 @@ func (segment *BaseFilterSegment) SubscribeDrops(drops chan<- *pb.EnrichedFlow) 
 // The peculiar implementation of passing the full channel list and providing
 // indexes is due to the fact that controlflow segments may want to skip
 // segments and thus need to have all later references available as well.
-func (segment *BaseSegment) Rewire(in chan *pb.EnrichedFlow, out chan *pb.EnrichedFlow) {
+func (segment *BaseSegment) Rewire(in chan *pb.FlowContainer, out chan *pb.FlowContainer) {
 	segment.In = in
 	segment.Out = out
 }

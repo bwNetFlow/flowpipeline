@@ -142,7 +142,7 @@ func (segment *Sqlite) Run(wg *sync.WaitGroup) {
 	var unsaved []*pb.EnrichedFlow
 
 	for msg := range segment.In {
-		unsaved = append(unsaved, msg)
+		unsaved = append(unsaved, msg.EnrichedFlow)
 		if len(unsaved) >= segment.BatchSize {
 			err := segment.bulkInsert(unsaved)
 			if err != nil {

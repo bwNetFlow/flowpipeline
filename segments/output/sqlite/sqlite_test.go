@@ -4,6 +4,7 @@
 package sqlite
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"os"
@@ -23,15 +24,15 @@ func TestSegment_Sqlite_passthrough(t *testing.T) {
 	// }
 	segment := Sqlite{}.New(map[string]string{"filename": "test.sqlite"})
 
-	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
+	in, out := make(chan *pb.FlowContainer), make(chan *pb.FlowContainer)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go segment.Run(wg)
-	in <- &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 1}, DstAddr: []byte{192, 168, 88, 1}, Proto: 1}
+	in <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 1}, DstAddr: []byte{192, 168, 88, 1}, Proto: 1}, Context: context.Background()}
 	<-out
-	in <- &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 2}, DstAddr: []byte{192, 168, 88, 2}, Proto: 2}
+	in <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 2}, DstAddr: []byte{192, 168, 88, 2}, Proto: 2}, Context: context.Background()}
 	<-out
 	close(in)
 	wg.Wait()
@@ -44,7 +45,7 @@ func BenchmarkSqlite_1000(b *testing.B) {
 
 	segment := Sqlite{}.New(map[string]string{"filename": "bench.sqlite"})
 
-	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
+	in, out := make(chan *pb.FlowContainer), make(chan *pb.FlowContainer)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -52,7 +53,7 @@ func BenchmarkSqlite_1000(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 142}, DstAddr: []byte{192, 168, 88, 143}, Proto: 45}
+		in <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 142}, DstAddr: []byte{192, 168, 88, 143}, Proto: 45}, Context: context.Background()}
 		_ = <-out
 	}
 	close(in)
@@ -65,7 +66,7 @@ func BenchmarkSqlite_10000(b *testing.B) {
 
 	segment := Sqlite{}.New(map[string]string{"filename": "bench.sqlite", "batchsize": "10000"})
 
-	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
+	in, out := make(chan *pb.FlowContainer), make(chan *pb.FlowContainer)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -73,7 +74,7 @@ func BenchmarkSqlite_10000(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 142}, DstAddr: []byte{192, 168, 88, 143}, Proto: 45}
+		in <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 142}, DstAddr: []byte{192, 168, 88, 143}, Proto: 45}, Context: context.Background()}
 		_ = <-out
 	}
 	close(in)
@@ -86,7 +87,7 @@ func BenchmarkSqlite_100000(b *testing.B) {
 
 	segment := Sqlite{}.New(map[string]string{"filename": "bench.sqlite", "batchsize": "100000"})
 
-	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
+	in, out := make(chan *pb.FlowContainer), make(chan *pb.FlowContainer)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -94,7 +95,7 @@ func BenchmarkSqlite_100000(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 142}, DstAddr: []byte{192, 168, 88, 143}, Proto: 45}
+		in <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 142}, DstAddr: []byte{192, 168, 88, 143}, Proto: 45}, Context: context.Background()}
 		_ = <-out
 	}
 	close(in)

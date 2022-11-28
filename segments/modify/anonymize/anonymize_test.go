@@ -1,6 +1,7 @@
 package anonymize
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"os"
@@ -37,7 +38,7 @@ func BenchmarkAnonymize(b *testing.B) {
 		Fields:        fields,
 	}
 
-	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
+	in, out := make(chan *pb.FlowContainer), make(chan *pb.FlowContainer)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -45,7 +46,7 @@ func BenchmarkAnonymize(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 142}, DstAddr: []byte{192, 168, 88, 123}, SamplerAddress: []byte{193, 168, 88, 2}}
+		in <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{SrcAddr: []byte{192, 168, 88, 142}, DstAddr: []byte{192, 168, 88, 123}, SamplerAddress: []byte{193, 168, 88, 2}}, Context: context.Background()}
 		_ = <-out
 	}
 	close(in)

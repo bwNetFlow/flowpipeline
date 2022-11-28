@@ -17,26 +17,26 @@ import (
 // the Pipeline as a whole, i.e. the ingress channel of the first and the
 // egress channel of the last segment in its SegmentList.
 type Pipeline struct {
-	In          chan *pb.EnrichedFlow
-	Out         <-chan *pb.EnrichedFlow
-	Drop        chan *pb.EnrichedFlow
+	In          chan *pb.FlowContainer
+	Out         <-chan *pb.FlowContainer
+	Drop        chan *pb.FlowContainer
 	wg          *sync.WaitGroup
 	SegmentList []segments.Segment
 }
 
-func (pipeline *Pipeline) GetInput() chan *pb.EnrichedFlow {
+func (pipeline *Pipeline) GetInput() chan *pb.FlowContainer {
 	return pipeline.In
 }
 
-func (pipeline *Pipeline) GetOutput() <-chan *pb.EnrichedFlow {
+func (pipeline *Pipeline) GetOutput() <-chan *pb.FlowContainer {
 	return pipeline.Out
 }
 
-func (pipeline *Pipeline) GetDrop() <-chan *pb.EnrichedFlow {
+func (pipeline *Pipeline) GetDrop() <-chan *pb.FlowContainer {
 	if pipeline.Drop != nil {
 		return pipeline.Drop
 	}
-	pipeline.Drop = make(chan *pb.EnrichedFlow)
+	pipeline.Drop = make(chan *pb.FlowContainer)
 	// Subscribe to drops from special segments, namely all based on
 	// BaseFilterSegment grouped in the filter directory.
 	for _, segment := range pipeline.SegmentList {
@@ -85,10 +85,10 @@ func New(segmentList ...segments.Segment) *Pipeline {
 	if len(segmentList) == 0 {
 		segmentList = []segments.Segment{&pass.Pass{}}
 	}
-	channels := make([]chan *pb.EnrichedFlow, len(segmentList)+1)
-	channels[0] = make(chan *pb.EnrichedFlow)
+	channels := make([]chan *pb.FlowContainer, len(segmentList)+1)
+	channels[0] = make(chan *pb.FlowContainer)
 	for i, segment := range segmentList {
-		channels[i+1] = make(chan *pb.EnrichedFlow)
+		channels[i+1] = make(chan *pb.FlowContainer)
 		segment.Rewire(channels[i], channels[i+1])
 	}
 	return &Pipeline{In: channels[0], Out: channels[len(channels)-1], wg: &sync.WaitGroup{}, SegmentList: segmentList}

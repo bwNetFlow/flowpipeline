@@ -1,6 +1,7 @@
 package normalize
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"os"
@@ -45,7 +46,7 @@ func BenchmarkNormalize(b *testing.B) {
 
 	segment := Normalize{}.New(map[string]string{})
 
-	in, out := make(chan *pb.EnrichedFlow), make(chan *pb.EnrichedFlow)
+	in, out := make(chan *pb.FlowContainer), make(chan *pb.FlowContainer)
 	segment.Rewire(in, out)
 
 	wg := &sync.WaitGroup{}
@@ -53,7 +54,7 @@ func BenchmarkNormalize(b *testing.B) {
 	go segment.Run(wg)
 
 	for n := 0; n < b.N; n++ {
-		in <- &pb.EnrichedFlow{SamplingRate: 0, Bytes: 1}
+		in <- &pb.FlowContainer{EnrichedFlow: &pb.EnrichedFlow{SamplingRate: 0, Bytes: 1}, Context: context.Background()}
 		_ = <-out
 	}
 	close(in)

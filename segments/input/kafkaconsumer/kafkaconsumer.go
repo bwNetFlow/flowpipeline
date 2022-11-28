@@ -195,7 +195,7 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 				handlerCancel() // This is in case the channel was closed somehow else, which shouldn't happen
 				return
 			}
-			segment.Out <- msg
+			segment.Out <- &pb.FlowContainer{EnrichedFlow: msg, Context: context.Background()}
 		case msg, ok := <-segment.In:
 			if !ok {
 				handlerCancel() // Trigger handler shutdown and cleanup

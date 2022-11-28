@@ -4,6 +4,7 @@ package stdin
 
 import (
 	"bufio"
+	"context"
 	"log"
 
 	"github.com/bwNetFlow/flowpipeline/pb"
@@ -80,7 +81,7 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 				log.Printf("[warning] StdIn: Skipping a flow, failed to recode input to protobuf: %v", err)
 				continue
 			}
-			segment.Out <- msg
+			segment.Out <- &pb.FlowContainer{EnrichedFlow: msg, Context: context.Background()}
 		}
 	}
 }

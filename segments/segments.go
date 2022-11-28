@@ -24,6 +24,9 @@ func RegisterSegment(name string, s Segment) {
 	if ok {
 		log.Fatalf("[error] Segments: Tried to register conflicting segment name '%s'.", name)
 	}
+
+	s.setName(name)
+
 	lock.Lock()
 	registeredSegments[name] = s
 	lock.Unlock()
@@ -70,14 +73,16 @@ type Segment interface {
 	New(config map[string]string) Segment                       // for reading the provided config
 	Run(wg *sync.WaitGroup)                                     // goroutine, must close(segment.Out) when segment.In is closed
 	Rewire(in chan *pb.EnrichedFlow, out chan *pb.EnrichedFlow) // embed this using BaseSegment
+	setName(name string)                                        // embed this using BaseSegment
 }
 
 // Serves as a basis for any Segment implementations. Segments embedding this
 // type only need the New and the Run methods to be compliant to the Segment
 // interface.
 type BaseSegment struct {
-	In  <-chan *pb.EnrichedFlow
-	Out chan<- *pb.EnrichedFlow
+	name string
+	In   <-chan *pb.EnrichedFlow
+	Out  chan<- *pb.EnrichedFlow
 }
 
 // An extended basis for Segment implementations in the filter group. It
@@ -85,6 +90,10 @@ type BaseSegment struct {
 type BaseFilterSegment struct {
 	BaseSegment
 	Drops chan<- *pb.EnrichedFlow
+}
+
+func (segment BaseSegment) setName(name string) {
+	segment.name = name
 }
 
 // Set a return channel for dropped flow messages. Segments need to be wary of

@@ -50,6 +50,7 @@ func (segment Csv) New(config map[string]string) segments.Segment {
 		protofields := reflect.TypeOf(pb.EnrichedFlow{})
 		conffields := strings.Split(config["fields"], ",")
 		for _, field := range conffields {
+			field = strings.TrimSpace(field)
 			_, found := protofields.FieldByName(field)
 			if !found {
 				log.Printf("[error] Csv: Field specified in 'fields' does not exist.")

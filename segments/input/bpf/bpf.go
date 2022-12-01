@@ -4,7 +4,6 @@
 package bpf
 
 import (
-	"context"
 	"log"
 	"os"
 	"strconv"
@@ -120,12 +119,19 @@ func (segment *Bpf) Run(wg *sync.WaitGroup) {
 			if !ok {
 				return
 			}
-			segment.Out <- &pb.FlowContainer{EnrichedFlow: msg, Context: context.Background()}
+			ts := time.Now()
+			fc := &pb.FlowContainer{EnrichedFlow: msg}
+			_, span := fc.Trace(segment.Name, ts)
+			span.AddEvent("generate")
+			span.End()
+			segment.Out <- fc
 		case msg, ok := <-segment.In:
 			if !ok {
 				segment.exporter.Stop()
 				return
 			}
+			_, span := msg.Trace(segment.Name)
+			span.End()
 			segment.Out <- msg
 		}
 	}

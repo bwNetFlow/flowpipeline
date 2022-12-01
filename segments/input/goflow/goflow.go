@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -100,11 +101,18 @@ func (segment *Goflow) Run(wg *sync.WaitGroup) {
 				segment.goflow_in = nil // make unavailable for select
 				// TODO: think about restarting goflow?
 			}
-			segment.Out <- &pb.FlowContainer{EnrichedFlow: msg, Context: context.Background()}
+			ts := time.Now()
+			fc := &pb.FlowContainer{EnrichedFlow: msg}
+			_, span := fc.Trace(segment.Name, ts)
+			span.AddEvent("generate")
+			span.End()
+			segment.Out <- fc
 		case msg, ok := <-segment.In:
 			if !ok {
 				return
 			}
+			_, span := msg.Trace(segment.Name)
+			span.End()
 			segment.Out <- msg
 		}
 	}

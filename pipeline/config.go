@@ -14,8 +14,9 @@ import (
 // A config representation of a segment. It is intended to look like this:
 //   - segment: pass
 //     config:
-//       key: value
-//       foo: bar
+//     key: value
+//     foo: bar
+//
 // This struct has the appropriate yaml tags inline.
 type SegmentRepr struct {
 	Name   string            `yaml:"segment"`             // to be looked up with a registry
@@ -69,9 +70,7 @@ func NewFromConfig(config []byte) *Pipeline {
 func SegmentsFromRepr(segmentReprs *[]SegmentRepr) []segments.Segment {
 	segmentList := make([]segments.Segment, len(*segmentReprs))
 	for i, segmentrepr := range *segmentReprs {
-		segmentTemplate := segments.LookupSegment(segmentrepr.Name) // a typed nil instance
-		// the Segment's New method knows how to handle our config
-		segment := segmentTemplate.New(segmentrepr.ExpandedConfig())
+		segment := segments.LookupSegment(segmentrepr.Name, segmentrepr.ExpandedConfig())
 		switch segment := segment.(type) { // handle special segments
 		case *branch.Branch:
 			segment.ImportBranches(

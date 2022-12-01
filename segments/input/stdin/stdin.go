@@ -4,11 +4,12 @@ package stdin
 
 import (
 	"bufio"
-	"context"
 	"log"
+	"time"
 
 	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
+	"go.opentelemetry.io/otel"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"os"
@@ -73,15 +74,28 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 			if !ok {
 				return
 			}
+			_, span := msg.Trace(segment.Name)
 			segment.Out <- msg
+			span.End()
 		case line := <-fromStdin:
+			ts := time.Now()
 			msg := &pb.EnrichedFlow{}
+			fc := &pb.FlowContainer{EnrichedFlow: msg}
+			ctx, span := fc.Trace(segment.Name, ts)
+			span.AddEvent("generate")
+
+			// parse stdin
+			_, parseSpan := otel.Tracer("flowpipeline").Start(ctx, "parse")
 			err := protojson.Unmarshal(line, msg)
 			if err != nil {
 				log.Printf("[warning] StdIn: Skipping a flow, failed to recode input to protobuf: %v", err)
+				span.AddEvent("parsing failed: " + err.Error())
+				parseSpan.End()
 				continue
 			}
-			segment.Out <- &pb.FlowContainer{EnrichedFlow: msg, Context: context.Background()}
+			parseSpan.End()
+			span.End()
+			segment.Out <- fc
 		}
 	}
 }

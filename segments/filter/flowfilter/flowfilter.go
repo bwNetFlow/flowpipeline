@@ -10,6 +10,7 @@ import (
 	"github.com/bwNetFlow/flowfilter/visitors"
 	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // FIXME: the flowfilter project needs to be updated to new protobuf too
@@ -50,9 +51,14 @@ func (segment *FlowFilter) Run(wg *sync.WaitGroup) {
 
 	filter := &visitors.Filter{}
 	for msg := range segment.In {
+		_, span := msg.Trace(segment.Name)
 		if match, _ := filter.CheckFlow(segment.expression, msg.EnrichedFlow); match {
+			span.SetAttributes(attribute.KeyValue{Key: "dropped", Value: attribute.BoolValue(false)})
+			span.End()
 			segment.Out <- msg
 		} else if segment.Drops != nil {
+			span.SetAttributes(attribute.KeyValue{Key: "dropped", Value: attribute.BoolValue(true)})
+			span.End()
 			segment.Drops <- msg
 		}
 	}

@@ -40,6 +40,8 @@ func (segment *Pass) Run(wg *sync.WaitGroup) {
 	}()
 	for msg := range segment.In {
 		// Work with the flow messages here.
+		_, span := msg.Trace(segment.Name)
+		span.End()
 		segment.Out <- msg
 	}
 }

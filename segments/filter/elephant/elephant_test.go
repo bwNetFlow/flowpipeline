@@ -14,7 +14,7 @@ import (
 
 // Elephant Segment test, passthrough test
 func TestSegment_Elephant_passthrough(t *testing.T) {
-	segment := segments.LookupSegment("elephant").New(map[string]string{})
+	segment := segments.LookupSegment("elephant", map[string]string{})
 	if segment == nil {
 		log.Fatal("[error] Configured segment 'elephant' could not be initialized properly, see previous messages.")
 	}

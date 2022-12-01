@@ -35,19 +35,23 @@ func RegisterSegment(name string, s Segment) {
 
 // Used by the pipeline package to convert segment names in configuration to
 // actual Segment objects.
-func LookupSegment(name string) Segment {
+func LookupSegment(name string, config map[string]string) Segment {
 	lock.RLock()
 	segment, ok := registeredSegments[name]
 	lock.RUnlock()
 	if !ok {
 		log.Fatalf("[error] Segments: Could not find a segment named '%s'.", name)
 	}
-	return segment
+	newsegment := segment.New(config)
+	if newsegment != nil {
+		newsegment.setName(name)
+	} // pass nil on regardless
+	return newsegment
 }
 
 // Used by the tests to run single flow messages through a segment.
 func TestSegment(name string, config map[string]string, msg *pb.EnrichedFlow) *pb.EnrichedFlow {
-	segment := LookupSegment(name).New(config)
+	segment := LookupSegment(name, config)
 	if segment == nil {
 		log.Fatalf("[error] Configured segment '%s' could not be initialized properly, see previous messages.", name)
 	}
@@ -78,13 +82,14 @@ type Segment interface {
 	Run(wg *sync.WaitGroup)                                       // goroutine, must close(segment.Out) when segment.In is closed
 	Rewire(in chan *pb.FlowContainer, out chan *pb.FlowContainer) // embed this using BaseSegment
 	setName(name string)                                          // embed this using BaseSegment
+	GetName() string                                              // embed this using BaseSegment
 }
 
 // Serves as a basis for any Segment implementations. Segments embedding this
 // type only need the New and the Run methods to be compliant to the Segment
 // interface.
 type BaseSegment struct {
-	name string
+	Name string
 	In   <-chan *pb.FlowContainer
 	Out  chan<- *pb.FlowContainer
 }
@@ -96,8 +101,12 @@ type BaseFilterSegment struct {
 	Drops chan<- *pb.FlowContainer
 }
 
-func (segment BaseSegment) setName(name string) {
-	segment.name = name
+func (segment BaseSegment) GetName() string {
+	return segment.Name
+}
+
+func (segment *BaseSegment) setName(name string) {
+	segment.Name = name
 }
 
 // Set a return channel for dropped flow messages. Segments need to be wary of

@@ -6,6 +6,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -14,9 +15,16 @@ import (
 	"os/signal"
 	"plugin"
 	"strings"
+	"time"
 
 	"github.com/bwNetFlow/flowpipeline/pipeline"
 	"github.com/hashicorp/logutils"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/alert/http"
 
@@ -90,6 +98,41 @@ func main() {
 		MinLevel: logutils.LogLevel(*loglevel),
 		Writer:   os.Stderr,
 	})
+
+	if *loglevel == "debug" {
+		log.Println("[info] Setting up tracing as log level is set to 'debug'.")
+		exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint("http://localhost:14268/api/traces")))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		tp := trace.NewTracerProvider(
+			trace.WithBatcher(exp),
+			trace.WithResource(
+				resource.NewWithAttributes(
+					semconv.SchemaURL,
+					semconv.ServiceNameKey.String("flowpipeline"),
+					semconv.ServiceVersionKey.String("git"),
+					attribute.String("environment", "dev"),
+				),
+			),
+		)
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		// Cleanly shutdown and flush telemetry when the application exits.
+		defer func(ctx context.Context) {
+			log.Println("[info] Finishing writing traces...")
+			// Do not make the application hang when it is shutdown.
+			ctx, cancel = context.WithTimeout(ctx, time.Second*5)
+			defer cancel()
+			if err := tp.Shutdown(ctx); err != nil {
+				log.Fatal(err)
+			}
+		}(ctx)
+		otel.SetTracerProvider(tp)
+	}
 
 	for _, path := range pluginPaths {
 		_, err := plugin.Open(path)

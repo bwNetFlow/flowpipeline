@@ -5,6 +5,7 @@
 package printflowdump
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -16,6 +17,7 @@ import (
 	"github.com/bwNetFlow/flowpipeline/segments"
 	"github.com/bwNetFlow/flowpipeline/segments/modify/protomap"
 	"github.com/dustin/go-humanize"
+	"go.opentelemetry.io/otel"
 )
 
 type PrintFlowdump struct {
@@ -32,7 +34,9 @@ func (segment *PrintFlowdump) Run(wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 	for msg := range segment.In {
-		fmt.Println(segment.format_flow(msg.EnrichedFlow))
+		ctx, span := msg.Trace(segment.Name)
+		fmt.Println(segment.format_flow(msg.EnrichedFlow, ctx))
+		span.End()
 		segment.Out <- msg
 	}
 }
@@ -75,11 +79,13 @@ func (segment PrintFlowdump) New(config map[string]string) segments.Segment {
 
 }
 
-func (segment PrintFlowdump) format_flow(flowmsg *pb.EnrichedFlow) string {
+func (segment PrintFlowdump) format_flow(flowmsg *pb.EnrichedFlow, ctx context.Context) string {
 	timestamp := time.Unix(int64(flowmsg.TimeFlowEnd), 0).Format("15:04:05")
+	_, span := otel.Tracer("flowpipeline").Start(ctx, "parse addresses")
 	src := net.IP(flowmsg.SrcAddr)
 	dst := net.IP(flowmsg.DstAddr)
 	router := net.IP(flowmsg.SamplerAddress)
+	span.End()
 
 	var srcas, dstas string
 	if segment.Verbose {

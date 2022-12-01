@@ -2,7 +2,9 @@ package pb
 
 import (
 	"context"
+	"fmt"
 	"net"
+	"time"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/trace"
@@ -59,12 +61,18 @@ var (
 
 type FlowContainer struct {
 	*EnrichedFlow
-	Context context.Context
+	FlowSpan trace.Span
+	Context  context.Context
 }
 
-func (fc *FlowContainer) Trace(segmentName string) func(options ...trace.SpanEndOption) {
-	_, span := otel.Tracer("flowpipeline").Start(fc.Context, segmentName)
-	return span.End
+func (fc *FlowContainer) Trace(name string, ts ...time.Time) (context.Context, trace.Span) {
+	if len(ts) == 0 {
+		ts = append(ts, time.Now())
+	}
+	if fc.FlowSpan == nil || fc.Context == nil {
+		fc.Context, fc.FlowSpan = otel.Tracer("flowpipeline").Start(context.Background(), fmt.Sprintf("flow-%d", fc.EnrichedFlow.SequenceNum), trace.WithTimestamp(ts[0]))
+	}
+	return otel.Tracer("flowpipeline").Start(fc.Context, name, trace.WithTimestamp(ts[0]))
 }
 
 func (flow *EnrichedFlow) FlowDirectionString() string {

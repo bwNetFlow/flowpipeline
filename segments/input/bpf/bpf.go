@@ -119,20 +119,23 @@ func (segment *Bpf) Run(wg *sync.WaitGroup) {
 			if !ok {
 				return
 			}
-			ts := time.Now()
-			fc := &pb.FlowContainer{EnrichedFlow: msg}
-			_, span := fc.Trace(segment.Name, ts)
-			span.AddEvent("generate")
-			span.End()
+			fc := pb.NewFlowContainer(msg, time.Now())
+			_, span := segment.Trace(fc)
+			if span != nil {
+				span.AddEvent("generate")
+				span.End()
+			}
 			segment.Out <- fc
-		case msg, ok := <-segment.In:
+		case fc, ok := <-segment.In:
 			if !ok {
 				segment.exporter.Stop()
 				return
 			}
-			_, span := msg.Trace(segment.Name)
-			span.End()
-			segment.Out <- msg
+			_, span := segment.Trace(fc)
+			if span != nil {
+				span.End()
+			}
+			segment.Out <- fc
 		}
 	}
 }

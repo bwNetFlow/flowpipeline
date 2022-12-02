@@ -65,14 +65,14 @@ type FlowContainer struct {
 	Context  context.Context
 }
 
-func (fc *FlowContainer) Trace(name string, ts ...time.Time) (context.Context, trace.Span) {
-	if len(ts) == 0 {
-		ts = append(ts, time.Now())
+func NewFlowContainer(msg *EnrichedFlow, ts time.Time) *FlowContainer {
+	newFc := &FlowContainer{EnrichedFlow: msg}
+	// TODO: we can disable profiling on a global condition here, but
+	// benchmarking indicates that there's not much of difference
+	if true {
+		newFc.Context, newFc.FlowSpan = otel.Tracer("flowpipeline").Start(context.Background(), fmt.Sprintf("flow-%d", msg.SequenceNum), trace.WithTimestamp(ts))
 	}
-	if fc.FlowSpan == nil || fc.Context == nil {
-		fc.Context, fc.FlowSpan = otel.Tracer("flowpipeline").Start(context.Background(), fmt.Sprintf("flow-%d", fc.EnrichedFlow.SequenceNum), trace.WithTimestamp(ts[0]))
-	}
-	return otel.Tracer("flowpipeline").Start(fc.Context, name, trace.WithTimestamp(ts[0]))
+	return newFc
 }
 
 func (flow *EnrichedFlow) FlowDirectionString() string {

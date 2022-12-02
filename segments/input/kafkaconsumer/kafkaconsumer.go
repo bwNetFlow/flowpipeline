@@ -195,19 +195,22 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 				handlerCancel() // This is in case the channel was closed somehow else, which shouldn't happen
 				return
 			}
-			ts := time.Now()
-			fc := &pb.FlowContainer{EnrichedFlow: msg}
-			_, span := fc.Trace(segment.Name, ts)
-			span.AddEvent("generate")
-			span.End()
+			fc := pb.NewFlowContainer(msg, time.Now())
+			_, span := segment.Trace(fc)
+			if span != nil {
+				span.AddEvent("generate")
+				span.End()
+			}
 			segment.Out <- fc
-		case msg, ok := <-segment.In:
+		case fc, ok := <-segment.In:
 			if !ok {
 				handlerCancel() // Trigger handler shutdown and cleanup
 			} else {
-				_, span := msg.Trace(segment.Name)
-				span.End()
-				segment.Out <- msg
+				_, span := segment.Trace(fc)
+				if span != nil {
+					span.End()
+				}
+				segment.Out <- fc
 			}
 		}
 	}

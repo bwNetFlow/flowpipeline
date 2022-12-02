@@ -50,16 +50,27 @@ func (segment *FlowFilter) Run(wg *sync.WaitGroup) {
 	log.Printf("[info] FlowFilter: Using filter expression: %s", segment.Filter)
 
 	filter := &visitors.Filter{}
-	for msg := range segment.In {
-		_, span := msg.Trace(segment.Name)
-		if match, _ := filter.CheckFlow(segment.expression, msg.EnrichedFlow); match {
-			span.SetAttributes(attribute.KeyValue{Key: "dropped", Value: attribute.BoolValue(false)})
-			span.End()
-			segment.Out <- msg
-		} else if segment.Drops != nil {
-			span.SetAttributes(attribute.KeyValue{Key: "dropped", Value: attribute.BoolValue(true)})
-			span.End()
-			segment.Drops <- msg
+	for fc := range segment.In {
+		_, span := segment.Trace(fc)
+		if match, _ := filter.CheckFlow(segment.expression, fc.EnrichedFlow); match {
+			if span != nil {
+				span.SetAttributes(attribute.KeyValue{Key: "dropped", Value: attribute.BoolValue(false)})
+				span.End()
+			}
+			segment.Out <- fc
+		} else {
+			if span != nil {
+				span.SetAttributes(attribute.KeyValue{Key: "dropped", Value: attribute.BoolValue(true)})
+				span.End()
+			}
+			if segment.Drops != nil {
+				segment.Drops <- fc
+			} else {
+				// if dropped flows don't continue somewhere, end their flow span as well
+				if fc.FlowSpan != nil {
+					fc.FlowSpan.End()
+				}
+			}
 		}
 	}
 }

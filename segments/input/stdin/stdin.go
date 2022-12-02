@@ -10,6 +10,7 @@ import (
 	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/protobuf/encoding/protojson"
 
 	"os"
@@ -70,22 +71,27 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 	}()
 	for {
 		select {
-		case msg, ok := <-segment.In:
+		case fc, ok := <-segment.In:
 			if !ok {
 				return
 			}
-			_, span := msg.Trace(segment.Name)
-			segment.Out <- msg
+			_, span := segment.Trace(fc)
+			if span != nil {
+				span.End()
+			}
+			segment.Out <- fc
 			span.End()
 		case line := <-fromStdin:
 			ts := time.Now()
 			msg := &pb.EnrichedFlow{}
-			fc := &pb.FlowContainer{EnrichedFlow: msg}
-			ctx, span := fc.Trace(segment.Name, ts)
-			span.AddEvent("generate")
+			fc := pb.NewFlowContainer(msg, ts)
+			parentCtx, span := segment.Trace(fc)
 
 			// parse stdin
-			_, parseSpan := otel.Tracer("flowpipeline").Start(ctx, "parse")
+			var parseSpan trace.Span
+			if parentCtx != nil {
+				_, parseSpan = otel.Tracer("flowpipeline").Start(parentCtx, "parse")
+			}
 			err := protojson.Unmarshal(line, msg)
 			if err != nil {
 				log.Printf("[warning] StdIn: Skipping a flow, failed to recode input to protobuf: %v", err)
@@ -93,8 +99,11 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 				parseSpan.End()
 				continue
 			}
-			parseSpan.End()
-			span.End()
+			if parseSpan != nil {
+				parseSpan.End()
+				span.AddEvent("generate")
+				span.End()
+			}
 			segment.Out <- fc
 		}
 	}

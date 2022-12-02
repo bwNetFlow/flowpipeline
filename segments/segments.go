@@ -10,6 +10,8 @@ import (
 	"sync"
 
 	"github.com/bwNetFlow/flowpipeline/pb"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var (
@@ -99,6 +101,13 @@ type BaseSegment struct {
 type BaseFilterSegment struct {
 	BaseSegment
 	Drops chan<- *pb.FlowContainer
+}
+
+func (segment BaseSegment) Trace(fc *pb.FlowContainer) (context.Context, trace.Span) {
+	if fc.Context == nil {
+		return nil, nil
+	}
+	return otel.Tracer("flowpipeline").Start(fc.Context, segment.Name)
 }
 
 func (segment BaseSegment) GetName() string {

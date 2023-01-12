@@ -17,7 +17,10 @@ type Handler struct {
 }
 
 // Setup is run at the beginning of a new session, before ConsumeClaim
-func (h *Handler) Setup(sarama.ConsumerGroupSession) error {
+func (h *Handler) Setup(session sarama.ConsumerGroupSession) error {
+	log.Println("[info] KafkaConsumer: Received new partition set to claim:", session.Claims()) // TODO: print those
+	// reopen flows channel
+	h.flows = make(chan *pb.EnrichedFlow)
 	// Mark the consumer as ready
 	close(h.ready)
 	return nil
@@ -29,24 +32,20 @@ func (h *Handler) Cleanup(sarama.ConsumerGroupSession) error {
 	return nil
 }
 
-func (h *Handler) Close() {
-	h.cancel()
-}
-
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 func (h *Handler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	// NOTE:
-	// Do not move the code below to a goroutine.
-	// The `ConsumeClaim` itself is called within a goroutine, see:
-	// https://github.com/Shopify/sarama/blob/master/consumer_group.go#L27-L29
-	for message := range claim.Messages() {
-		session.MarkMessage(message, "")
-		flowMsg := new(pb.EnrichedFlow)
-		if err := proto.Unmarshal(message.Value, flowMsg); err == nil {
-			h.flows <- flowMsg
-		} else {
-			log.Printf("[warning] KafkaConsumer: Error decoding flow, this might be due to the use of Goflow custom fields. Original error:\n  %s", err)
+	for {
+		select {
+		case message := <-claim.Messages():
+			session.MarkMessage(message, "")
+			flowMsg := new(pb.EnrichedFlow)
+			if err := proto.Unmarshal(message.Value, flowMsg); err == nil {
+				h.flows <- flowMsg
+			} else {
+				log.Printf("[warning] KafkaConsumer: Error decoding flow, this might be due to the use of Goflow custom fields. Original error:\n  %s", err)
+			}
+		case <-session.Context().Done():
+			return nil
 		}
 	}
-	return nil
 }

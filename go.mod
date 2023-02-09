@@ -2,6 +2,8 @@ module github.com/bwNetFlow/flowpipeline
 
 go 1.18
 
+replace github.com/asecurityteam/rolling => ./vendored/github.com/asecurityteam/rolling
+
 require (
 	github.com/BelWue/bgp_routeinfo v0.0.0-20221004100427-d8095fc566dd
 	github.com/Shopify/sarama v1.38.1

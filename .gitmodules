@@ -1,0 +1,3 @@
+[submodule "vendored/github.com/asecurityteam/rolling"]
+	path = vendored/github.com/asecurityteam/rolling
+	url = https://github.com/asecurityteam/rolling.git

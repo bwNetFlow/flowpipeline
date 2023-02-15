@@ -21,14 +21,15 @@ import (
 // FIXME: clean up those todos
 type KafkaConsumer struct {
 	segments.BaseSegment
-	Server  string // required
-	Topic   string // required
-	Group   string // required
-	User    string // required if auth is true
-	Pass    string // required if auth is true
-	Tls     bool   // optional, default is true
-	Auth    bool   // optional, default is true
-	StartAt string // optional, one of "oldest" or "newest", default is "newest"
+	Server  string        // required
+	Topic   string        // required
+	Group   string        // required
+	User    string        // required if auth is true
+	Pass    string        // required if auth is true
+	Tls     bool          // optional, default is true
+	Auth    bool          // optional, default is true
+	StartAt string        // optional, one of "oldest" or "newest", default is "newest"
+	Timeout time.Duration // optional, default is 5m, any parsable duration
 
 	startingOffset int64
 	saramaConfig   *sarama.Config
@@ -137,8 +138,18 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 	newsegment.saramaConfig.Consumer.Offsets.Initial = startingOffset
 	newsegment.StartAt = startAt
 
-	timeout, err := time.ParseDuration("5s")
-	newsegment.saramaConfig.Net.DialTimeout = timeout
+	newsegment.Timeout = 15 * time.Second
+	if timeout, err := time.ParseDuration(config["timeout"]); err != nil {
+		newsegment.Timeout = timeout
+		log.Printf("[info] KafkaConsumer: Set timeout to '%s'.", config["timeout"])
+	} else {
+		if config["timeout"] != "" {
+			log.Printf("[warning] KafkaConsumer: Bad configuration of timeout, set to default '15s'.")
+		} else {
+			log.Printf("[info] KafkaConsumer: Timeout set to default '15s'.")
+		}
+	}
+	newsegment.saramaConfig.Net.DialTimeout = newsegment.Timeout
 	return newsegment
 }
 

@@ -49,7 +49,8 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 	}
 
 	// set some unconfigurable defaults
-	newsegment.saramaConfig.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
+	// newsegment.saramaConfig.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategySticky
+	newsegment.saramaConfig.Consumer.Group.Rebalance.GroupStrategies = []sarama.BalanceStrategy{sarama.BalanceStrategySticky}
 
 	// TODO: parse and set kafka version
 	newsegment.saramaConfig.Version, err = sarama.ParseKafkaVersion("2.4.0")
@@ -191,14 +192,14 @@ func (segment *KafkaConsumer) Run(wg *sync.WaitGroup) {
 		select {
 		case msg, ok := <-handler.flows:
 			if !ok {
-				// This will occur when the handler calls its Cleanup method
-				handlerCancel() // This is in case the channel was closed somehow else, which shouldn't happen
-				return
+				// This will occur during a rebalance when the handler calls its Cleanup method
+				continue
 			}
 			segment.Out <- msg
 		case msg, ok := <-segment.In:
 			if !ok {
 				handlerCancel() // Trigger handler shutdown and cleanup
+				return
 			} else {
 				segment.Out <- msg
 			}

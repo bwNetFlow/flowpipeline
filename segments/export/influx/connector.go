@@ -2,10 +2,11 @@ package influx
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
+	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/bwNetFlow/flowpipeline/pb"
@@ -15,14 +16,14 @@ import (
 
 // Connector provides export features to Influx
 type Connector struct {
-	Address    string
-	Org        string
-	Bucket     string
-	Token      string
-	ExportFreq int
-	Batchsize  int
-
-	tags         []string
+	Address      string
+	Org          string
+	Bucket       string
+	Token        string
+	ExportFreq   int
+	Batchsize    int
+	Tags         []string
+	Fields       []string
 	influxClient influxdb2.Client
 }
 
@@ -49,47 +50,31 @@ func (c *Connector) checkBucket() {
 
 func (c *Connector) CreatePoint(msg *pb.EnrichedFlow) *write.Point {
 	// write tags for datapoint and drop them to not insert as fields
-	// TODO: maybe we will add more fields from the Protobuf Definition to be used as Tags
-	tags := map[string]string{}
-	for index, t := range c.tags {
-		switch t {
-		case "Cid":
-			tags[t] = fmt.Sprint(msg.Cid)
-		case "ProtoName":
-			tags[t] = fmt.Sprint(msg.GetProtoName())
-		case "RemoteCountry":
-			tags[t] = msg.GetRemoteCountry()
-		case "SamplerAddress":
-			tags[t] = net.IP(msg.GetSamplerAddress()).String()
-		case "SrcIfDesc":
-			tags[t] = fmt.Sprint(msg.SrcIfDesc)
-		case "DstIfDesc":
-			tags[t] = fmt.Sprint(msg.DstIfDesc)
+	tags := make(map[string]string)
+	values := reflect.ValueOf(msg).Elem()
+	for _, tagname := range c.Tags {
+		value := values.FieldByName(tagname).Interface()
+		switch value.(type) {
+		case []uint8: // this is necessary for proper formatting
+			ipstring := net.IP(value.([]uint8)).String()
+			if ipstring == "<nil>" {
+				ipstring = ""
+			}
+			tags[tagname] = ipstring
+		case uint32: // this is because FormatUint is much faster than Sprint
+			tags[tagname] = strconv.FormatUint(uint64(value.(uint32)), 10)
+		case uint64: // this is because FormatUint is much faster than Sprint
+			tags[tagname] = strconv.FormatUint(uint64(value.(uint64)), 10)
+		case string: // this is because doing nothing is also much faster than Sprint
+			tags[tagname] = value.(string)
 		default:
-			log.Printf("[info] Influx: Chosen Tag not supported. ignoring tag %s", t)
-			// delete not supported tags
-			c.tags = append(c.tags[:index], c.tags[index+1:]...)
+			tags[tagname] = fmt.Sprint(value)
 		}
 	}
 
-	// marshall protobuf to json
-	data, err := json.Marshal(msg)
-	if err != nil {
-		log.Printf("[warning] influx: Skipping a flow, failed to recode protobuf as JSON: %v", err)
-		return nil
-	}
-
-	// convert json []byte to insert in influx
 	fields := make(map[string]interface{})
-	err = json.Unmarshal([]byte(data), &fields)
-	if err != nil {
-		log.Printf("[warning] influx: Skipping a flow, failed to unmarshall JSON: %v", err)
-		return nil
-	}
-
-	//remove used tags from fields
-	for _, tag := range c.tags {
-		delete(fields, tag)
+	for _, fieldname := range c.Fields {
+		fields[fieldname] = values.FieldByName(fieldname).Interface()
 	}
 
 	// create point

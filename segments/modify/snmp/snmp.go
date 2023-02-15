@@ -128,7 +128,7 @@ func (segment *SNMPInterface) querySNMP(router string, iface uint32, key string)
 	oid := fmt.Sprintf(oidBase, oidExts[key], iface)
 	resp, err := s.Get(oid)
 	if err != nil {
-		log.Printf("[warning] SNMPInterface: Failed getting %s from %s. Error: %s", key, router, err)
+		log.Printf("[warning] SNMPInterface: Failed getting OID '%s' from %s. Error: %s", oid, router, err)
 		segment.snmpCache.Delete(fmt.Sprintf("%s-%d-%s", router, iface, key))
 		return
 	} else {
@@ -151,7 +151,10 @@ func (segment *SNMPInterface) fetchInterfaceData(router string, iface uint32) (s
 	var speed uint32
 	for key, _ := range oidExts {
 		// if value in cache and cache content is not nil, i.e. marked as "being queried"
-		if value, found := segment.snmpCache.Get(fmt.Sprintf("%s-%d-%s", router, iface, key)); found && value != nil {
+		if value, found := segment.snmpCache.Get(fmt.Sprintf("%s-%d-%s", router, iface, key)); found {
+			if value == nil { // this occures if a goroutine is querying this interface
+				return "", "", 0
+			}
 			switch key {
 			case "name":
 				name = value.(string)
@@ -161,7 +164,7 @@ func (segment *SNMPInterface) fetchInterfaceData(router string, iface uint32) (s
 				speed = uint32(value.(uint64))
 			}
 		} else {
-			// mark as "being queried" by putting nil into the cache
+			// mark as "being queried" by putting nil into the cache, so a future run will use the cached nil
 			segment.snmpCache.Set(fmt.Sprintf("%s-%d-%s", router, iface, key), nil, cache.DefaultExpiration)
 			// go query it
 			go segment.querySNMP(router, iface, key)

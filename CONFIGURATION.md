@@ -601,6 +601,23 @@ Any optional parameters relate to the `cidr` policy only and behave as in the
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/remoteaddress)
 [examples using this segment](https://github.com/search?q=%22segment%3A+remoteaddress%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
+#### reversedns
+The `reversedns` segment looks up DNS PTR records for Src, Dst, Sampler and NextHopAddr and adds
+them to our flows. The results are also written to a internal cache which works well for ad-hoc
+usage, but it's recommended to use an actual caching resolver in real deployment scenarios. The
+refresh interval setting pertains to the internal cache only.
+
+```
+- segment: reversedns
+  config:
+    # the lines below are optional and set to default
+    cache: true
+    refreshinterval: 5m
+```
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/reversedns)
+[examples using this segment](https://github.com/search?q=%22segment%3A+reversedns%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
 #### snmpinterface
 The `snmpinterface` segment annotates flows with interface information learned
 directly from routers using SNMP. This is a potentially perfomance impacting

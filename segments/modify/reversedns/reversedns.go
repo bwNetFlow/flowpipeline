@@ -77,8 +77,14 @@ func (segment *ReverseDns) Run(wg *sync.WaitGroup) {
 		if err == nil && len(hostnames) > 0 {
 			msg.SamplerHostName = hostnames[0]
 		}
-		// TODO: lookup as names as well
+		// TODO: Add support for looking up AS names as well. This
+		// requires some function such as:
+		//
 		// asnames, err := segment.resolver.LookupTxt(context.Background(), fmt.Sprintf("AS%d.asn.cymru.com", msg.SrcAS))
+		//
+		// Which would be trivial to add here, if the cache of our
+		// choice provided support for TXT record lookups. This will
+		// have to be added upstream.
 		segment.Out <- msg
 	}
 }

@@ -72,6 +72,7 @@ func (segment Prometheus) New(config map[string]string) segments.Segment {
 	}
 	protofields := reflect.TypeOf(pb.EnrichedFlow{})
 	for _, field := range labels {
+		field = strings.TrimSpace(field)
 		_, found := protofields.FieldByName(field)
 		if !found {
 			log.Printf("[error] Prometheus: Field '%s' specified in 'labels' does not exist.", field)

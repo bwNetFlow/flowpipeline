@@ -272,6 +272,10 @@ func (flow *EnrichedFlow) SamplerAddressObj() net.IP {
 	return net.IP(flow.SamplerAddress)
 }
 
+func (flow *EnrichedFlow) NextHopObj() net.IP {
+	return net.IP(flow.NextHop)
+}
+
 func (flow *EnrichedFlow) GetBps() uint64 {
 	duration := flow.TimeFlowEnd - flow.TimeFlowStart
 	if duration == 0 {

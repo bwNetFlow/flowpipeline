@@ -19,8 +19,8 @@ type StdIn struct {
 	segments.BaseSegment
 	scanner *bufio.Scanner
 
-	FileName   string // optional, default is empty which means read from stdin
-	CloseOnEOF bool   // optional, default is fals. Closes Pipeleine gracefully after input file was read
+	FileName  string // optional, default is empty which means read from stdin
+	EofCloses bool   // optional, default is false. Closes Pipeleine gracefully after input file was read
 }
 
 func (segment StdIn) New(config map[string]string) segments.Segment {
@@ -29,7 +29,7 @@ func (segment StdIn) New(config map[string]string) segments.Segment {
 	var filename string = "stdout"
 	var file *os.File
 	var err error
-	var closeOnEOF bool = false
+	var eofCloses bool = false
 	if config["filename"] != "" {
 		file, err = os.Open(config["filename"])
 		if err != nil {
@@ -37,9 +37,9 @@ func (segment StdIn) New(config map[string]string) segments.Segment {
 			return nil
 		}
 		filename = config["filename"]
-		if config["closeoneof"] != "" {
+		if config["eofcloses"] != "" {
 			if parsedClose, err := strconv.ParseBool(config["closeoneof"]); err == nil {
-				closeOnEOF = parsedClose
+				eofCloses = parsedClose
 			} else {
 				log.Println("[error] StdIn: Could not parse 'closeoneof' parameter, using default false.")
 			}
@@ -53,7 +53,7 @@ func (segment StdIn) New(config map[string]string) segments.Segment {
 	newsegment.scanner = bufio.NewScanner(file)
 
 	newsegment.FileName = filename
-	newsegment.CloseOnEOF = closeOnEOF
+	newsegment.EofCloses = eofCloses
 
 	return newsegment
 }
@@ -71,7 +71,7 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 				log.Printf("[warning] StdIn: Skipping a flow, could not read line from stdin: %v", err)
 				continue
 			}
-			if segment.CloseOnEOF && !scan && segment.scanner.Err() == nil {
+			if segment.EofCloses && !scan && segment.scanner.Err() == nil {
 				log.Printf("[info] Reached eof of %s, closing pipeline", segment.FileName)
 				segment.ShutdownParentPipeline()
 				return

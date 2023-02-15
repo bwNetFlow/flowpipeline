@@ -175,7 +175,7 @@ func (segment *KafkaProducer) Run(wg *sync.WaitGroup) {
 				Value: sarama.ByteEncoder(binary),
 			}
 		} else {
-			fmsg := reflect.ValueOf(msg)
+			fmsg := reflect.ValueOf(msg).Elem()
 			field := fmsg.FieldByName(segment.TopicSuffix)
 			var suffix string
 			switch field.Type().String() {

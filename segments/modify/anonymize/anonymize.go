@@ -87,6 +87,11 @@ func (segment *Anonymize) Run(wg *sync.WaitGroup) {
 					continue
 				}
 				msg.SamplerAddress = segment.anonymizer.Anonymize(msg.SamplerAddress)
+			case "NextHop":
+				if msg.NextHopObj() == nil {
+					continue
+				}
+				msg.NextHop = segment.anonymizer.Anonymize(msg.NextHop)
 			}
 		}
 		segment.Out <- msg

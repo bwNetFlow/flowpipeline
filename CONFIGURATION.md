@@ -372,14 +372,14 @@ The `stdin` segment reads JSON encoded flows from stdin or a given file and intr
 into the pipeline. This is intended to be used in conjunction with the `json`
 segment, which allows flowpipelines to be piped into each other.
 This segment can also read files created with the `json` segment.
-The `closeoneof` parameter can therefore be used to gracefully terminate the pipeline after reading the file.
+The `eofcloses` parameter can therefore be used to gracefully terminate the pipeline after reading the file.
 
 ```yaml
 - segment: stdin
   # the lines below are optional and set to default
   config:
     filename: ""
-    closeoneof: false
+    eofcloses: false
 ```
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/input/stdin)

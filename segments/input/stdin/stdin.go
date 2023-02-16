@@ -38,13 +38,13 @@ func (segment StdIn) New(config map[string]string) segments.Segment {
 		}
 		filename = config["filename"]
 		if config["eofcloses"] != "" {
-			if parsedClose, err := strconv.ParseBool(config["closeoneof"]); err == nil {
+			if parsedClose, err := strconv.ParseBool(config["eofcloses"]); err == nil {
 				eofCloses = parsedClose
 			} else {
-				log.Println("[error] StdIn: Could not parse 'closeoneof' parameter, using default false.")
+				log.Println("[error] StdIn: Could not parse 'eofcloses' parameter, using default false.")
 			}
 		} else {
-			log.Println("[info] StdIn: 'closeoneof' set to default false.")
+			log.Println("[info] StdIn: 'eofcloses' set to default false.")
 		}
 	} else {
 		file = os.Stdin

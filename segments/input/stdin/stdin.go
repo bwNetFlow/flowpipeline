@@ -5,6 +5,7 @@ package stdin
 import (
 	"bufio"
 	"log"
+	"strconv"
 
 	"github.com/bwNetFlow/flowpipeline/pb"
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -18,7 +19,8 @@ type StdIn struct {
 	segments.BaseSegment
 	scanner *bufio.Scanner
 
-	FileName string // optional, default is empty which means read from stdin
+	FileName  string // optional, default is empty which means read from stdin
+	EofCloses bool   // optional, default is false. Closes Pipeleine gracefully after input file was read
 }
 
 func (segment StdIn) New(config map[string]string) segments.Segment {
@@ -27,6 +29,7 @@ func (segment StdIn) New(config map[string]string) segments.Segment {
 	var filename string = "stdout"
 	var file *os.File
 	var err error
+	var eofCloses bool = false
 	if config["filename"] != "" {
 		file, err = os.Open(config["filename"])
 		if err != nil {
@@ -34,6 +37,15 @@ func (segment StdIn) New(config map[string]string) segments.Segment {
 			return nil
 		}
 		filename = config["filename"]
+		if config["eofcloses"] != "" {
+			if parsedClose, err := strconv.ParseBool(config["eofcloses"]); err == nil {
+				eofCloses = parsedClose
+			} else {
+				log.Println("[error] StdIn: Could not parse 'eofcloses' parameter, using default false.")
+			}
+		} else {
+			log.Println("[info] StdIn: 'eofcloses' set to default false.")
+		}
 	} else {
 		file = os.Stdin
 		log.Println("[info] StdIn: 'filename' unset, using stdIn.")
@@ -41,6 +53,7 @@ func (segment StdIn) New(config map[string]string) segments.Segment {
 	newsegment.scanner = bufio.NewScanner(file)
 
 	newsegment.FileName = filename
+	newsegment.EofCloses = eofCloses
 
 	return newsegment
 }
@@ -53,10 +66,15 @@ func (segment *StdIn) Run(wg *sync.WaitGroup) {
 	fromStdin := make(chan []byte)
 	go func() {
 		for {
-			segment.scanner.Scan()
+			scan := segment.scanner.Scan()
 			if err := segment.scanner.Err(); err != nil {
 				log.Printf("[warning] StdIn: Skipping a flow, could not read line from stdin: %v", err)
 				continue
+			}
+			if segment.EofCloses && !scan && segment.scanner.Err() == nil {
+				log.Printf("[info] Reached eof of %s, closing pipeline", segment.FileName)
+				segment.ShutdownParentPipeline()
+				return
 			}
 			if len(segment.scanner.Text()) == 0 {
 				continue

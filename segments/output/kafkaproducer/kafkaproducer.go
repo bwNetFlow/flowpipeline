@@ -7,7 +7,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"log"
-	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -187,7 +186,8 @@ func (segment *KafkaProducer) Run(wg *sync.WaitGroup) {
 				suffix = field.Interface().(string)
 			default:
 				log.Println("[error] KafkaProducer: TopicSuffix must be of type uint or string.")
-				os.Exit(1)
+				segment.ShutdownParentPipeline()
+				return
 			}
 			producer.Input() <- &sarama.ProducerMessage{
 				Topic: segment.Topic + "-" + suffix,

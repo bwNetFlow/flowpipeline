@@ -7,6 +7,7 @@ package segments
 import (
 	"log"
 	"sync"
+	"syscall"
 
 	"github.com/bwNetFlow/flowpipeline/pb"
 )
@@ -70,6 +71,7 @@ type Segment interface {
 	New(config map[string]string) Segment                       // for reading the provided config
 	Run(wg *sync.WaitGroup)                                     // goroutine, must close(segment.Out) when segment.In is closed
 	Rewire(in chan *pb.EnrichedFlow, out chan *pb.EnrichedFlow) // embed this using BaseSegment
+	ShutdownParentPipeline()                                    // shut down Parent Pipeline gracefully
 }
 
 // Serves as a basis for any Segment implementations. Segments embedding this
@@ -104,4 +106,10 @@ func (segment *BaseFilterSegment) SubscribeDrops(drops chan<- *pb.EnrichedFlow) 
 func (segment *BaseSegment) Rewire(in chan *pb.EnrichedFlow, out chan *pb.EnrichedFlow) {
 	segment.In = in
 	segment.Out = out
+}
+
+// This functions shutdown Parent Pipeline segments on the given syscall.
+// It is used for intended termination within pipeline function, e.g. end pipeline on read from file.
+func (segment *BaseSegment) ShutdownParentPipeline() {
+	syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 }

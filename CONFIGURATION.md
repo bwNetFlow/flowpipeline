@@ -350,6 +350,7 @@ state for this specific user/topic/consumergroup combination.
     tls: true
     auth: true
     startat: newest
+    timeout: 15s
 ```
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/input/kafkaconsumer)

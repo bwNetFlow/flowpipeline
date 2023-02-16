@@ -57,6 +57,8 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/print/printdots"
 	_ "github.com/bwNetFlow/flowpipeline/segments/print/printflowdump"
 	_ "github.com/bwNetFlow/flowpipeline/segments/print/toptalkers"
+
+	_ "github.com/bwNetFlow/flowpipeline/segments/analysis/toptalkers_metrics"
 )
 
 var Version string

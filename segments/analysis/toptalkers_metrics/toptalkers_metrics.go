@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -13,15 +14,16 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+const cleanupWindowSizes = 5
+
 type Record struct {
-	FwdBytes    []uint64
-	FwdPackets  []uint64
-	DropBytes   []uint64
-	DropPackets []uint64
-	capacity    int
-	pointer     int
-	stopOnce    sync.Once
-	stopC       chan struct{}
+	FwdBytes       []uint64
+	FwdPackets     []uint64
+	DropBytes      []uint64
+	DropPackets    []uint64
+	capacity       int
+	pointer        int
+	aboveThreshold atomic.Bool
 	sync.RWMutex
 }
 
@@ -30,21 +32,30 @@ type ToptalkersMetrics struct {
 	writer   *bufio.Writer
 	database *Database
 
-	TrafficType     string // optional, default is "", name for the traffic type (included as label)
-	Window          int    // optional, default is 60, sets the number of seconds used as a sliding window size
-	ThresholdWindow int    // optional, use the last N buckets for calculation of averages, default: $window
-	ReportWindow    int    // optional, use the last N buckets to calculate averages that are reported as result, default: $window
-	ThresholdBps    uint64 // optional, default is 0, only log talkers with an average bits per second rate higher than this value
-	ThresholdPps    uint64 // optional, default is 0, only log talkers with an average packets per second rate higher than this value
-	Endpoint        string // optional, default value is ":8080"
-	MetricsPath     string // optional, default is "/metrics"
-	FlowdataPath    string // optional, default is "/flowdata"
-	RelevantAddress string // optional, default is "destination", options are "destination", "source", "both"
+	TrafficType      string // optional, default is "", name for the traffic type (included as label)
+	Buckets          int    // optional, default is 60, sets the number of seconds used as a sliding window size
+	ThresholdBuckets int    // optional, use the last N buckets for calculation of averages, default: $Buckets
+	ReportBuckets    int    // optional, use the last N buckets to calculate averages that are reported as result, default: $Buckets
+	BucketDuration   int    // optional, duration of a bucket, default is 1 second
+	ThresholdBps     uint64 // optional, default is 0, only log talkers with an average bits per second rate higher than this value
+	ThresholdPps     uint64 // optional, default is 0, only log talkers with an average packets per second rate higher than this value
+	Endpoint         string // optional, default value is ":8080"
+	MetricsPath      string // optional, default is "/metrics"
+	FlowdataPath     string // optional, default is "/flowdata"
+	RelevantAddress  string // optional, default is "destination", options are "destination", "source", "both"
 }
 
 type Database struct {
-	database   map[string]*Record
-	windowSize int
+	database         map[string]*Record
+	thresholdBps     uint64
+	thresholdPps     uint64
+	buckets          int // seconds
+	bucketDuration   int // seconds
+	thresholdBuckets int
+	cleanupCounter   int
+	stopOnce         sync.Once
+	stopCleanupC     chan struct{}
+	stopClockC       chan struct{}
 	sync.RWMutex
 }
 
@@ -53,7 +64,7 @@ func (db *Database) GetRecord(key string) *Record {
 	defer db.Unlock()
 	record, found := db.database[key]
 	if !found || record == nil {
-		record = NewRecord(db.windowSize)
+		record = NewRecord(db.buckets)
 		db.database[key] = record
 	}
 	return record
@@ -67,9 +78,7 @@ func NewRecord(windowSize int) *Record {
 		DropPackets: make([]uint64, windowSize),
 		capacity:    windowSize,
 		pointer:     0,
-		stopC:       make(chan struct{}),
 	}
-	go record.clock()
 	return record
 }
 
@@ -85,50 +94,21 @@ func (record *Record) Append(bytes uint64, packets uint64, statusFwd bool) {
 	}
 }
 
-func (record *Record) GetBytes(lastBuckets int) uint64 {
-	// lastBuckets == 0 means "look at the whole window"
-	if lastBuckets == 0 {
-		lastBuckets = record.capacity
-	}
-	var sum uint64
+func (record *Record) isEmpty() bool {
 	record.RLock()
 	defer record.RUnlock()
-	pos := record.pointer
-	for i := 0; i < lastBuckets; i++ {
-		if pos <= 0 {
-			pos = record.capacity - 1
-		} else {
-			pos--
+	for i := 0; i < record.capacity; i++ {
+		if record.FwdPackets[i] > 0 || record.DropPackets[i] > 0 {
+			return false
 		}
-		sum = sum + record.FwdBytes[pos] + record.DropBytes[pos]
 	}
-	return sum
+	return true
 }
 
-func (record *Record) GetPackets(lastBuckets int) uint64 {
-	// lastBuckets == 0 means "look at the whole window"
-	if lastBuckets == 0 {
-		lastBuckets = record.capacity
-	}
-	var sum uint64
-	record.RLock()
-	defer record.RUnlock()
-	pos := record.pointer
-	for i := 0; i < lastBuckets; i++ {
-		if pos <= 0 {
-			pos = record.capacity - 1
-		} else {
-			pos--
-		}
-		sum = sum + record.FwdPackets[pos] + record.DropPackets[pos]
-	}
-	return sum
-}
-
-func (record *Record) GetMetrics(lastBuckets int) (uint64, uint64, uint64, uint64) {
-	// lastBuckets == 0 means "look at the whole window"
-	if lastBuckets == 0 {
-		lastBuckets = record.capacity
+func (record *Record) GetMetrics(buckets int, bucketDuration int) (float64, float64, float64, float64) {
+	// buckets == 0 means "look at the whole window"
+	if buckets == 0 {
+		buckets = record.capacity
 	}
 	sumFwdBytes := uint64(0)
 	sumFwdPackets := uint64(0)
@@ -137,7 +117,7 @@ func (record *Record) GetMetrics(lastBuckets int) (uint64, uint64, uint64, uint6
 	record.RLock()
 	defer record.RUnlock()
 	pos := record.pointer
-	for i := 0; i < lastBuckets; i++ {
+	for i := 0; i < buckets; i++ {
 		if pos <= 0 {
 			pos = record.capacity - 1
 		} else {
@@ -148,26 +128,87 @@ func (record *Record) GetMetrics(lastBuckets int) (uint64, uint64, uint64, uint6
 		sumDropBytes += record.DropBytes[pos]
 		sumDropPackets += record.DropPackets[pos]
 	}
-	return sumFwdBytes, sumFwdPackets, sumDropBytes, sumDropPackets
+	sumFwdBps := float64(sumFwdBytes*8) / float64(buckets*bucketDuration)
+	sumFwdPps := float64(sumFwdPackets) / float64(buckets*bucketDuration)
+	sumDropBps := float64(sumDropBytes*8) / float64(buckets*bucketDuration)
+	sumDropPps := float64(sumDropPackets) / float64(buckets*bucketDuration)
+	return sumFwdBps, sumFwdPps, sumDropBps, sumDropPps
 }
 
-func (record *Record) clock() {
-	ticker := time.NewTicker(time.Second)
+func (record *Record) tick(thresholdBuckets int, bucketDuration int, thresholdBps uint64, thresholdPps uint64) {
+	record.Lock()
+	defer record.Unlock()
+	// advance pointer to the next position
+	record.pointer++
+	if record.pointer >= record.capacity {
+		record.pointer = 0
+	}
+	// calculate averages and check thresholds
+	if thresholdBuckets == 0 {
+		// thresholdBuckets == 0 means "look at the whole window"
+		thresholdBuckets = record.capacity
+	}
+	var sumBytes uint64
+	var sumPackets uint64
+	pos := record.pointer
+	for i := 0; i < thresholdBuckets; i++ {
+		if pos <= 0 {
+			pos = record.capacity - 1
+		} else {
+			pos--
+		}
+		sumBytes = sumBytes + record.FwdBytes[pos] + record.DropBytes[pos]
+		sumPackets = sumPackets + record.FwdPackets[pos] + record.DropPackets[pos]
+	}
+	bps := uint64(float64(sumBytes*8) / float64(bucketDuration*thresholdBuckets))
+	pps := uint64(float64(sumPackets) / float64(bucketDuration*thresholdBuckets))
+	if (bps > thresholdBps) || (pps > thresholdPps) {
+		record.aboveThreshold.Store(true)
+	} else {
+		record.aboveThreshold.Store(false)
+	}
+	// clear the current bucket
+	record.FwdBytes[record.pointer] = 0
+	record.FwdPackets[record.pointer] = 0
+	record.DropBytes[record.pointer] = 0
+	record.DropPackets[record.pointer] = 0
+}
+
+func (db *Database) clock() {
+	ticker := time.NewTicker(time.Duration(db.bucketDuration) * time.Second)
 	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C:
-			record.Lock()
-			record.pointer++
-			if record.pointer >= record.capacity {
-				record.pointer = 0
+			db.Lock()
+			for _, record := range db.database {
+				record.tick(db.thresholdBuckets, db.bucketDuration, db.thresholdBps, db.thresholdPps)
 			}
-			record.FwdBytes[record.pointer] = 0
-			record.FwdPackets[record.pointer] = 0
-			record.DropBytes[record.pointer] = 0
-			record.DropPackets[record.pointer] = 0
-			record.Unlock()
-		case <-record.stopC:
+			db.Unlock()
+		case <-db.stopClockC:
+			return
+		}
+	}
+}
+
+func (db *Database) cleanup() {
+	ticker := time.NewTicker(time.Duration(db.bucketDuration*db.buckets) * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			db.Lock()
+			db.cleanupCounter--
+			if db.cleanupCounter <= 0 {
+				db.cleanupCounter = db.buckets * cleanupWindowSizes
+				for key, record := range db.database {
+					if record.isEmpty() == true {
+						delete(db.database, key)
+					}
+				}
+			}
+			db.Unlock()
+		case <-db.stopCleanupC:
 			return
 		}
 	}
@@ -188,14 +229,6 @@ func (db *Database) GetAllRecords() <-chan struct {
 			close(out)
 		}()
 		for key, record := range db.database {
-			// if there were no packets seen for one window length, remove the key/address
-			if record.GetPackets(0) == 0 {
-				record.stopOnce.Do(func() {
-					record.stopC <- struct{}{}
-				})
-				delete(db.database, key)
-				continue
-			}
 			out <- struct {
 				key    string
 				record *Record
@@ -251,56 +284,57 @@ func (e *PrometheusExporter) ServeEndpoints(segment *ToptalkersMetrics) {
 
 func (segment ToptalkersMetrics) New(config map[string]string) segments.Segment {
 	newsegment := &ToptalkersMetrics{
-		Window:          60,
-		ThresholdWindow: 60,
-		ReportWindow:    60,
-		TrafficType:     "",
-		Endpoint:        ":8080",
-		MetricsPath:     "/metrics",
-		FlowdataPath:    "/flowdata",
-		RelevantAddress: "destination",
+		Buckets:          60,
+		ThresholdBuckets: 60,
+		ReportBuckets:    60,
+		BucketDuration:   1,
+		TrafficType:      "",
+		Endpoint:         ":8080",
+		MetricsPath:      "/metrics",
+		FlowdataPath:     "/flowdata",
+		RelevantAddress:  "destination",
 	}
 
-	if config["window"] != "" {
-		if parsedWindow, err := strconv.ParseInt(config["window"], 10, 64); err == nil {
-			newsegment.Window = int(parsedWindow)
-			if newsegment.Window <= 0 {
-				log.Println("[error] : Window has to be >0.")
+	if config["buckets"] != "" {
+		if parsedBuckets, err := strconv.ParseInt(config["buckets"], 10, 64); err == nil {
+			newsegment.Buckets = int(parsedBuckets)
+			if newsegment.Buckets <= 0 {
+				log.Println("[error] : Buckets has to be >0.")
 				return nil
 			}
 		} else {
-			log.Println("[error] ToptalkersMetrics: Could not parse 'window' parameter, using default 60.")
+			log.Println("[error] ToptalkersMetrics: Could not parse 'buckets' parameter, using default 60.")
 		}
 	} else {
-		log.Println("[info] ToptalkersMetrics: 'window' set to default 60.")
+		log.Println("[info] ToptalkersMetrics: 'buckets' set to default 60.")
 	}
 
-	if config["thresholdwindow"] != "" {
-		if parsedThresholdWindow, err := strconv.ParseInt(config["thresholdwindow"], 10, 64); err == nil {
-			newsegment.ThresholdWindow = int(parsedThresholdWindow)
-			if newsegment.ThresholdWindow <= 0 {
-				log.Println("[error] : thresholdwindow has to be >0.")
+	if config["thresholdbuckets"] != "" {
+		if parsedThresholdBuckets, err := strconv.ParseInt(config["thresholdbuckets"], 10, 64); err == nil {
+			newsegment.ThresholdBuckets = int(parsedThresholdBuckets)
+			if newsegment.ThresholdBuckets <= 0 {
+				log.Println("[error] : thresholdbuckets has to be >0.")
 				return nil
 			}
 		} else {
-			log.Println("[error] ToptalkersMetrics: Could not parse 'thresholdwindow' parameter, using default (1 window).")
+			log.Println("[error] ToptalkersMetrics: Could not parse 'thresholdbuckets' parameter, using default (1 buckets).")
 		}
 	} else {
-		log.Println("[info] ToptalkersMetrics: 'thresholdwindow' set to default (1 window).")
+		log.Println("[info] ToptalkersMetrics: 'thresholdbuckets' set to default (1 buckets).")
 	}
 
-	if config["reportwindow"] != "" {
-		if parsedReportWindow, err := strconv.ParseInt(config["reportwindow"], 10, 64); err == nil {
-			newsegment.ReportWindow = int(parsedReportWindow)
-			if newsegment.ReportWindow <= 0 {
-				log.Println("[error] : reportwindow has to be >0.")
+	if config["reportbuckets"] != "" {
+		if parsedReportBuckets, err := strconv.ParseInt(config["reportbuckets"], 10, 64); err == nil {
+			newsegment.ReportBuckets = int(parsedReportBuckets)
+			if newsegment.ReportBuckets <= 0 {
+				log.Println("[error] : reportbuckets has to be >0.")
 				return nil
 			}
 		} else {
-			log.Println("[error] ReportPrometheus: Could not parse 'reportwindow' parameter, using default (1 window).")
+			log.Println("[error] ReportPrometheus: Could not parse 'reportbuckets' parameter, using default (1 buckets).")
 		}
 	} else {
-		log.Println("[info] ReportPrometheus: 'reportwindow' set to default (1 window).")
+		log.Println("[info] ReportPrometheus: 'reportbuckets' set to default (1 buckets).")
 	}
 
 	if config["traffictype"] != "" {
@@ -367,9 +401,18 @@ func (segment *ToptalkersMetrics) Run(wg *sync.WaitGroup) {
 	}()
 
 	segment.database = &Database{
-		database:   map[string]*Record{},
-		windowSize: segment.Window,
+		database:         map[string]*Record{},
+		thresholdBps:     segment.ThresholdBps,
+		thresholdPps:     segment.ThresholdPps,
+		thresholdBuckets: segment.ThresholdBuckets,
+		cleanupCounter:   segment.Buckets * cleanupWindowSizes, // cleanup every N windows
+		buckets:          segment.Buckets,
+		bucketDuration:   segment.BucketDuration,
+		stopCleanupC:     make(chan struct{}),
+		stopClockC:       make(chan struct{}),
 	}
+	go segment.database.clock()
+	go segment.database.cleanup()
 
 	var promExporter = PrometheusExporter{}
 	collector := &PrometheusCollector{segment}
@@ -420,33 +463,32 @@ func (collector *PrometheusCollector) Collect(ch chan<- prometheus.Metric) {
 		key := entry.key
 		record := entry.record
 		// check if thresholds are exceeded
-		rw := collector.segment.ReportWindow
-		sumBps := float64(record.GetBytes(rw)*8) / float64(rw)
-		sumPps := float64(record.GetPackets(rw)) / float64(rw)
-		if (sumBps > float64(collector.segment.ThresholdBps)) && (sumPps > float64(collector.segment.ThresholdPps)) {
-			sumFwdBytes, sumFwdPackets, sumDropBytes, sumDropPackets := record.GetMetrics(rw)
+		buckets := collector.segment.ReportBuckets
+		bucketDuration := collector.segment.BucketDuration
+		if record.aboveThreshold.Load() == true {
+			sumFwdBps, sumFwdPps, sumDropBps, sumDropPps := record.GetMetrics(buckets, bucketDuration)
 			ch <- prometheus.MustNewConstMetric(
 				trafficBpsDesc,
 				prometheus.GaugeValue,
-				float64(sumFwdBytes*8)/float64(rw),
+				sumFwdBps,
 				collector.segment.TrafficType, key, "forwarded",
 			)
 			ch <- prometheus.MustNewConstMetric(
 				trafficBpsDesc,
 				prometheus.GaugeValue,
-				float64(sumDropBytes*8)/float64(rw),
+				sumDropBps,
 				collector.segment.TrafficType, key, "dropped",
 			)
 			ch <- prometheus.MustNewConstMetric(
 				trafficPpsDesc,
 				prometheus.GaugeValue,
-				float64(sumFwdPackets)/float64(rw),
+				sumFwdPps,
 				collector.segment.TrafficType, key, "forwarded",
 			)
 			ch <- prometheus.MustNewConstMetric(
 				trafficPpsDesc,
 				prometheus.GaugeValue,
-				float64(sumDropPackets)/float64(rw),
+				sumDropPps,
 				collector.segment.TrafficType, key, "dropped",
 			)
 		}

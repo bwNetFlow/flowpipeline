@@ -429,11 +429,17 @@ func (segment *ToptalkersMetrics) Run(wg *sync.WaitGroup) {
 		} else if segment.RelevantAddress == "both" {
 			keys = []string{msg.SrcAddrObj().String(), msg.DstAddrObj().String()}
 		}
+		forward := false
 		for _, key := range keys {
 			record := segment.database.GetRecord(key)
 			record.Append(msg.Bytes, msg.Packets, msg.IsForwarded())
+			if record.aboveThreshold.Load() == true {
+				forward = true
+			}
 		}
-		segment.Out <- msg
+		if forward == true {
+			segment.Out <- msg
+		}
 	}
 }
 

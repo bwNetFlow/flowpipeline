@@ -3,6 +3,8 @@ module github.com/bwNetFlow/flowpipeline
 go 1.18
 
 require (
+	github.com/BelWue/bgp_routeinfo v0.0.0-20221004100427-d8095fc566dd
+	github.com/ClickHouse/clickhouse-go/v2 v2.6.1
 	github.com/Shopify/sarama v1.37.2
 	github.com/Yawning/cryptopan v0.0.0-20170504040949-65bca51288fe
 	github.com/alouca/gosnmp v0.0.0-20170620005048-04d83944c9ab
@@ -11,8 +13,8 @@ require (
 	github.com/bwNetFlow/flowfilter v0.0.0-20221025122858-60746fa15915
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04
 	github.com/bwNetFlow/protobuf/go v0.0.0-20211004083441-61e193b4b342
-	github.com/google/gopacket v1.1.19
 	github.com/dustin/go-humanize v1.0.1
+	github.com/google/gopacket v1.1.19
 	github.com/hashicorp/logutils v1.0.0
 	github.com/influxdata/influxdb-client-go/v2 v2.11.0
 	github.com/mattn/go-sqlite3 v1.14.15
@@ -20,14 +22,13 @@ require (
 	github.com/oschwald/maxminddb-golang v1.10.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.13.0
+	github.com/rs/dnscache v0.0.0-20211102005908-e0241e321417
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
-	github.com/BelWue/bgp_routeinfo v0.0.0-20221004100427-d8095fc566dd // indirect
 	github.com/ClickHouse/ch-go v0.51.2 // indirect
-	github.com/ClickHouse/clickhouse-go/v2 v2.6.1 // indirect
 	github.com/alecthomas/participle/v2 v2.0.0-beta.1 // indirect
 	github.com/alouca/gologger v0.0.0-20120904114645-7d4b7291de9c // indirect
 	github.com/andybalholm/brotli v1.0.4 // indirect
@@ -88,6 +89,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.11.2 // indirect
 	golang.org/x/crypto v0.1.0 // indirect
 	golang.org/x/net v0.1.0 // indirect
+	golang.org/x/sync v0.0.0-20220923202941-7f9b1623fab7 // indirect
 	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20221024183307-1bc688fe9f3e // indirect

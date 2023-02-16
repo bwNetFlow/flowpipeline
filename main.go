@@ -45,6 +45,7 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/normalize"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/protomap"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/remoteaddress"
+	_ "github.com/bwNetFlow/flowpipeline/segments/modify/reversedns"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/snmp"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/pass"

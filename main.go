@@ -34,6 +34,7 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/input/bpf"
 	_ "github.com/bwNetFlow/flowpipeline/segments/input/goflow"
 	_ "github.com/bwNetFlow/flowpipeline/segments/input/kafkaconsumer"
+	_ "github.com/bwNetFlow/flowpipeline/segments/input/packet"
 	_ "github.com/bwNetFlow/flowpipeline/segments/input/stdin"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/addcid"

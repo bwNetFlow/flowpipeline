@@ -28,7 +28,7 @@ type Record struct {
 }
 
 type ToptalkersMetrics struct {
-	segments.BaseSegment
+	segments.BaseFilterSegment
 	writer   *bufio.Writer
 	database *Database
 
@@ -449,6 +449,8 @@ func (segment *ToptalkersMetrics) Run(wg *sync.WaitGroup) {
 		}
 		if forward == true {
 			segment.Out <- msg
+		} else if segment.Drops != nil {
+			segment.Drops <- msg
 		}
 	}
 }

@@ -70,6 +70,55 @@ conditional, limiting payload data, and multiple receivers.
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/alert/http)
 [examples using this segment](https://github.com/search?q=%22segment%3A+http%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
+### Analysis Group
+Segments in this group do higher level analysis on flow data. They usually
+export or print results in some way, but might also filter given flows.
+
+#### toptalkers-metrics
+The `toptalkers-metrics` segment calculates statistics about traffic levels
+per IP address and exports them in OpenMetrics format via HTTP.
+
+Traffic is counted in bits per second and packets per second, categorized into
+forwarded and dropped traffic. By default, only the destination IP addresses
+are accounted, but the configuration allows using the source IP address or
+both addresses. For the latter, a flows number of bytes and packets are
+ccounted for both addresses.
+
+Thresholds for bits per second or packets per second can be configured. Only
+metrics for addresses that exceeded this threshold during the last window size
+are exported. This can be used for detection of unusual or unwanted traffic
+levels. This can also be used as a flow filter: While the average traffic for
+an address is above threshold, flows are passed, other flows are dropped.
+
+The averages are calculated with a sliding window. The window size (in number
+of buckets) and the bucket duration can be configured. By default, it uses
+60 buckets of 1 second each (1 minute of sliding window). Optionally, the
+window size for the exported metrics calculation and for the threshold check
+can be configured differently.
+
+The parameter "traffictype" is passed as OpenMetrics label, so this segment
+can be used multiple times in one pipeline without metrics getting mixed up.
+
+```
+- segment: toptalkers-metrics
+  config:
+    # the lines below are optional and set to default
+    traffictype: ""
+    buckets: 60
+    BucketDuration: 1
+    Thresholdbuckets: 60
+    reportbuckets: 60
+    thresholdbps: 0
+    thresholdpps: 0
+    endpoint: ":8080"
+    metricspath: "/metrics"
+    flowdatapath: "/flowdata"
+    relevantaddress: "destination"
+```
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/analysis/toptalkers-metrics)
+[examples using this segment](https://github.com/search?q=%22segment%3A+toptalkers-metrics%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
 ### Controlflow Group
 Segments in this group have the ability to change the sequence of segments any
 given flow traverses.

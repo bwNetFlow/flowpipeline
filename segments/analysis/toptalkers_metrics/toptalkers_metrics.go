@@ -53,6 +53,7 @@ type Database struct {
 	bucketDuration   int // seconds
 	thresholdBuckets int
 	cleanupCounter   int
+	promExporter     PrometheusExporter
 	stopOnce         sync.Once
 	stopCleanupC     chan struct{}
 	stopClockC       chan struct{}
@@ -207,6 +208,7 @@ func (db *Database) cleanup() {
 					}
 				}
 			}
+			db.promExporter.dbSize.Set(float64(len(db.database)))
 			db.Unlock()
 		case <-db.stopCleanupC:
 			return
@@ -244,6 +246,7 @@ type PrometheusExporter struct {
 	FlowReg *prometheus.Registry
 
 	kafkaMessageCount prometheus.Counter
+	dbSize            prometheus.Gauge
 }
 
 // Initialize Prometheus Exporter
@@ -254,8 +257,14 @@ func (e *PrometheusExporter) Initialize(collector *PrometheusCollector) {
 			Name: "kafka_messages_total",
 			Help: "Number of Kafka messages",
 		})
+	e.dbSize = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "toptalkers_db_size",
+			Help: "Number of Keys in the current toptalkers database",
+		})
 	e.MetaReg = prometheus.NewRegistry()
 	e.MetaReg.MustRegister(e.kafkaMessageCount)
+	e.MetaReg.MustRegister(e.dbSize)
 
 	e.FlowReg = prometheus.NewRegistry()
 	e.FlowReg.MustRegister(collector)
@@ -400,12 +409,18 @@ func (segment *ToptalkersMetrics) Run(wg *sync.WaitGroup) {
 		wg.Done()
 	}()
 
+	var promExporter = PrometheusExporter{}
+	collector := &PrometheusCollector{segment}
+	promExporter.Initialize(collector)
+	promExporter.ServeEndpoints(segment)
+
 	segment.database = &Database{
 		database:         map[string]*Record{},
 		thresholdBps:     segment.ThresholdBps,
 		thresholdPps:     segment.ThresholdPps,
 		thresholdBuckets: segment.ThresholdBuckets,
 		cleanupCounter:   segment.Buckets * cleanupWindowSizes, // cleanup every N windows
+		promExporter:     promExporter,
 		buckets:          segment.Buckets,
 		bucketDuration:   segment.BucketDuration,
 		stopCleanupC:     make(chan struct{}),
@@ -413,11 +428,6 @@ func (segment *ToptalkersMetrics) Run(wg *sync.WaitGroup) {
 	}
 	go segment.database.clock()
 	go segment.database.cleanup()
-
-	var promExporter = PrometheusExporter{}
-	collector := &PrometheusCollector{segment}
-	promExporter.Initialize(collector)
-	promExporter.ServeEndpoints(segment)
 
 	for msg := range segment.In {
 		promExporter.kafkaMessageCount.Inc()

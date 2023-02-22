@@ -5,7 +5,6 @@ package bpf
 
 import (
 	"log"
-	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -101,7 +100,8 @@ func (segment *Bpf) Run(wg *sync.WaitGroup) {
 	err := segment.dumper.Start()
 	if err != nil {
 		log.Printf("[error] Bpf: error starting up BPF dumping: %s", err)
-		os.Exit(1)
+		segment.ShutdownParentPipeline()
+		return
 	}
 	segment.exporter.Start(segment.dumper.SamplerAddress)
 	go segment.exporter.ConsumeFrom(segment.dumper.Packets())

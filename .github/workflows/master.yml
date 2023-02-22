@@ -20,6 +20,10 @@ jobs:
     - name: checkout
       uses: actions/checkout@v3
 
+    - name: install libpcap
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt-get install -y libpcap-dev
+
     - name: setup go
       uses: actions/setup-go@v3
       with:
@@ -38,7 +42,7 @@ jobs:
         path: ./flowpipeline
 
     - name: build statically linked
-      run: go build -o flowpipeline-static .
+      run: go build -o flowpipeline-static -ldflags "-X main.Version=${{ github.sha }}" .
       env:
         CGO_ENABLED: 0
 

@@ -25,7 +25,7 @@ func (segment Pass) New(config map[string]string) segments.Segment {
 // The main goroutine of any Segment. Any Run method must:
 // 1. close(segment.Out) when the In channel is closed by the previous segment or the Pipeline itself
 // 2. call wg.Done() before exiting
-// 3. if exiting for any other reason, use os.Exit or just continue to pass from In to Out
+// 3. if exiting for any other reason, use segment.ShutdownParentPipeline() or just continue to pass from In to Out
 //
 // Usually, when using a range over In in combination with below defer, nothing
 // will go wrong. However, some segments have a legitimate use case for using

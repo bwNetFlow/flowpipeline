@@ -196,8 +196,13 @@ message EnrichedFlow {
   RemoteAddrType RemoteAddr = 1011; // TODO: figure out a better system? applicable only to service providers right now...
 
   // modify/reversedns
-  string SrcAddrName = 1180; // new
-  string DstAddrName = 1181; // new
+  string SrcHostName = 1180;
+  string DstHostName = 1181;
+  string NextHopHostName = 1182;
+  string SrcASName = 1183;
+  string DstASName = 1184;
+  string NextHopASName = 1185;
+  string SamplerHostName = 1186;
 
   // modify/snmp
   string SrcIfName = 1003;  // TODO: rename to match InIf and OutIf

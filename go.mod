@@ -1,6 +1,6 @@
 module github.com/bwNetFlow/flowpipeline
 
-go 1.18
+go 1.20
 
 require (
 	github.com/BelWue/bgp_routeinfo v0.0.0-20221004100427-d8095fc566dd

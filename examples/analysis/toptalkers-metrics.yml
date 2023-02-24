@@ -1,0 +1,35 @@
+---
+###############################################################################
+# Consume flow messages, it's best to use an enriched topic as flowdump
+# printing involves interface descriptions.
+- segment: kafkaconsumer
+  config:
+    server: kafka01.example.com:9093
+    topic: flow-messages-enriched
+    group: myuser-flowdump
+    user: myuser
+    pass: $KAFKA_SASL_PASS
+
+###############################################################################
+# filter for some interesting traffic, in this case something
+# that is likely used for DDoS attacks (UDP with source port 123
+# is seen during NTP amplification attacks)
+- segment: flowfilter
+  config:
+    filter: "proto udp and src port 123"
+
+###############################################################################
+# creates OpenMetrics endpoints for traffic data
+# default endpoints are:
+# <host>:8080/flowdata
+# <host>:8080/metrics
+# the given labels in this example are the default ones.
+# They are also applied if the labels field is omitted.
+- segment: prometheus
+  config:
+    endpoint: ":8080"
+    # 12 buckets at 5 seconds each -> 1 minute of sliding window
+    buckets: 12
+    bucketduration: 5
+    # set some thresholds (here 1 Gbps)
+    thresholdbps: 1000000000

@@ -29,7 +29,7 @@ type KafkaConsumer struct {
 	Tls     bool          // optional, default is true
 	Auth    bool          // optional, default is true
 	StartAt string        // optional, one of "oldest" or "newest", default is "newest"
-	Timeout time.Duration // optional, default is 5m, any parsable duration
+	Timeout time.Duration // optional, default is 15s, any parsable duration
 
 	startingOffset int64
 	saramaConfig   *sarama.Config
@@ -139,7 +139,7 @@ func (segment KafkaConsumer) New(config map[string]string) segments.Segment {
 	newsegment.StartAt = startAt
 
 	newsegment.Timeout = 15 * time.Second
-	if timeout, err := time.ParseDuration(config["timeout"]); err != nil {
+	if timeout, err := time.ParseDuration(config["timeout"]); err == nil {
 		newsegment.Timeout = timeout
 		log.Printf("[info] KafkaConsumer: Set timeout to '%s'.", config["timeout"])
 	} else {

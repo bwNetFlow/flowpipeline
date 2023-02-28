@@ -326,10 +326,10 @@ func (segment ToptalkersMetrics) New(config map[string]string) segments.Segment 
 				return nil
 			}
 		} else {
-			log.Println("[error] ToptalkersMetrics: Could not parse 'thresholdbuckets' parameter, using default (1 buckets).")
+			log.Println("[error] ToptalkersMetrics: Could not parse 'thresholdbuckets' parameter, using default (60 buckets).")
 		}
 	} else {
-		log.Println("[info] ToptalkersMetrics: 'thresholdbuckets' set to default (1 buckets).")
+		log.Println("[info] ToptalkersMetrics: 'thresholdbuckets' set to default (60 buckets).")
 	}
 
 	if config["reportbuckets"] != "" {
@@ -340,10 +340,10 @@ func (segment ToptalkersMetrics) New(config map[string]string) segments.Segment 
 				return nil
 			}
 		} else {
-			log.Println("[error] ReportPrometheus: Could not parse 'reportbuckets' parameter, using default (1 buckets).")
+			log.Println("[error] ReportPrometheus: Could not parse 'reportbuckets' parameter, using default (60 buckets).")
 		}
 	} else {
-		log.Println("[info] ReportPrometheus: 'reportbuckets' set to default (1 buckets).")
+		log.Println("[info] ReportPrometheus: 'reportbuckets' set to default (60 buckets).")
 	}
 
 	if config["traffictype"] != "" {

@@ -163,7 +163,7 @@ func (record *Record) tick(thresholdBuckets int, bucketDuration int, thresholdBp
 	}
 	bps := uint64(float64(sumBytes*8) / float64(bucketDuration*thresholdBuckets))
 	pps := uint64(float64(sumPackets) / float64(bucketDuration*thresholdBuckets))
-	if (bps > thresholdBps) || (pps > thresholdPps) {
+	if (bps > thresholdBps) && (pps > thresholdPps) {
 		record.aboveThreshold.Store(true)
 	} else {
 		record.aboveThreshold.Store(false)

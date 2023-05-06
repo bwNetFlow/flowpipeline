@@ -510,6 +510,26 @@ Roadmap:
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/addcid)
 [examples using this segment](https://github.com/search?q=%22segment%3A+addcid%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
+#### aslookup
+The `aslookup` segment can map IP addresses to their AS numbers using a route
+collector dump. These dumps are provided in the `MRT` format.
+To obtain a database which maps IP ranges to AS numbers `asnlookup` is used.
+While it is possible to import `.mrt` files this is not recommended since the
+file has to be processed at every startup. Instead, a database can be generated
+using `asnlookup-util`. To import a processed database `type: db` has to be set.
+
+```
+- segment: aslookup
+  config:
+    filename: ./lookup_table.mrt
+    # the lines below are optional and set to default
+    type: mrt
+```
+[MRT specification](https://datatracker.ietf.org/doc/html/rfc6396)
+[asnlookup](https://github.com/banviktor/asnlookup)
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/aslookup)
+[examples using this segment](https://github.com/search?q=%22segment%3A+aslookup%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
 #### bgp
 The `bgp` segment can add a information from BGP to flows. By default, this
 information is retrieved from a session with the router specified by a flow's

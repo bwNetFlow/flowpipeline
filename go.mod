@@ -9,6 +9,7 @@ require (
 	github.com/Yawning/cryptopan v0.0.0-20170504040949-65bca51288fe
 	github.com/alouca/gosnmp v0.0.0-20170620005048-04d83944c9ab
 	github.com/asecurityteam/rolling v2.0.4+incompatible
+	github.com/banviktor/asnlookup v0.1.0
 	github.com/bwNetFlow/bpf_flowexport v0.0.0-20220515112212-cd8128615c05
 	github.com/bwNetFlow/flowfilter v0.0.0-20221025122858-60746fa15915
 	github.com/bwNetFlow/ip_prefix_trie v0.0.0-20210830112018-b360b7b65c04
@@ -61,6 +62,7 @@ require (
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/k-sone/critbitgo v1.4.0 // indirect
+	github.com/kaorimatz/go-mrt v0.0.0-20210326003454-aa11f3646f93 // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
 	github.com/libp2p/go-reuseport v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
@@ -101,3 +103,5 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/kaorimatz/go-mrt => github.com/TheFireMike/go-mrt v0.0.0-20220205210421-b3040c1c0b7e

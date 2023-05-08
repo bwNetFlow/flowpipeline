@@ -511,19 +511,20 @@ Roadmap:
 [examples using this segment](https://github.com/search?q=%22segment%3A+addcid%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
 #### aslookup
-The `aslookup` segment can map IP addresses to their AS numbers using a route
-collector dump. These dumps are provided in the `MRT` format.
-To obtain a database which maps IP ranges to AS numbers `asnlookup` is used.
-While it is possible to import `.mrt` files this is not recommended since the
-file has to be processed at every startup. Instead, a database can be generated
-using `asnlookup-util`. To import a processed database `type: db` has to be set.
+The `aslookup` segment can add AS numbers to flows using route collector dumps.
+Dumps can be obtained from your RIR in the `.mrt` format and can be converted to
+lookup databases using the `asnlookup-util` from the `asnlookup` package. These
+databases contain a mapping from IP ranges to AS number in binary format.
 
-```
+By default the type is set to `db`. It is possible to directly parse `.mrt` files,
+however this is not recommended since this will significantly slow down lookup times.
+
+```yaml
 - segment: aslookup
   config:
-    filename: ./lookup_table.mrt
+    filename: ./lookup.db
     # the lines below are optional and set to default
-    type: mrt
+    type: db # can be either db or mrt
 ```
 [MRT specification](https://datatracker.ietf.org/doc/html/rfc6396)
 [asnlookup](https://github.com/banviktor/asnlookup)

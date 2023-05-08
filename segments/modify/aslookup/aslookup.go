@@ -13,11 +13,30 @@ import (
 type AsLookup struct {
 	segments.BaseSegment
     FileName    string
+    Type        string
 
     asDatabase  database.Database
 }
 
 func (segment AsLookup) New(config map[string]string) segments.Segment {
+
+    newSegment := &AsLookup{}
+
+    // parse options
+	if config["filename"] == "" {
+		log.Println("[error] AsLookup: This segment requires a 'filename' parameter.")
+		return nil
+	}
+    newSegment.FileName = config["filename"]
+
+    if config["type"] == "db" {
+        newSegment.Type = "db"
+    } else if config["type"] == "mrt" {
+        newSegment.Type = "mrt"
+    } else {
+		log.Println("[info] AsLookup: 'type' set to default 'db'.")
+        newSegment.Type = "db"
+    }
 
     // open lookup file
 	lookupfile, err := os.OpenFile(config["filename"], os.O_RDONLY, 0)
@@ -27,13 +46,9 @@ func (segment AsLookup) New(config map[string]string) segments.Segment {
 	}
     defer lookupfile.Close()
 
-    newSegment := &AsLookup{
-        FileName: config["filename"],
-    }
-
 	// lookup file can either be an MRT file or a lookup database generated with asnlookup
     // see: https://github.com/banviktor/asnlookup
-    if config["type"] == "db" {
+    if newSegment.Type == "db" {
         // open lookup db
         db, err := database.NewFromDump(lookupfile)
         if err != nil {
@@ -69,7 +84,7 @@ func (segment *AsLookup) Run(wg *sync.WaitGroup) {
         dstIp := net.ParseIP(msg.DstAddrObj().String())
         dstAs, err := segment.asDatabase.Lookup(dstIp)
         if err != nil {
-            log.Printf("[error] AsLookup: Error looking up ASN for %s: %s", msg.DstAddrObj().String(), err)
+            log.Printf("[warning] AsLookup: Failed to look up ASN for %s: %s", msg.DstAddrObj().String(), err)
 		    segment.Out <- msg
             continue
         }
@@ -79,7 +94,7 @@ func (segment *AsLookup) Run(wg *sync.WaitGroup) {
         srcIp := net.ParseIP(msg.SrcAddrObj().String())
         srcAs, err := segment.asDatabase.Lookup(srcIp)
         if err != nil {
-            log.Printf("[error] AsLookup: Error looking up ASN for %s: %s", msg.SrcAddrObj().String(), err)
+            log.Printf("[warning] AsLookup: Failed to look up ASN for %s: %s", msg.SrcAddrObj().String(), err)
 		    segment.Out <- msg
             continue
         }

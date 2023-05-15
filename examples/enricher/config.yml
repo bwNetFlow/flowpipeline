@@ -38,6 +38,14 @@
     dropunmatched: 1  # limit to flows belonging to customers
 
 ###############################################################################
+# Looks up AS numbers from a local database which can be generated from
+# an mrt route dump. This database can be generated using asnlookup.
+- segment: aslookup
+  config:
+    filename: lookup.db
+    type: db
+
+###############################################################################
 # Add a geolocation field to all flows. As this works on remote addresses (the
 # assumption being that your own addresses are national), we need to run after
 # the 'remoteaddress' segment.

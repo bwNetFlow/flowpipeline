@@ -20,7 +20,7 @@ func TestSegment_AsLookup_existingIp(t *testing.T) {
 }
 
 func TestSegment_AsLookup_nonexistingIp(t *testing.T) {
-    result := segments.TestSegment("aslookup", map[string]string{"filename": "../../../examples/aslookup/lookup.db", "type": "db"},
+    result := segments.TestSegment("aslookup", map[string]string{"filename": "../../../examples/enricher/lookup.db", "type": "db"},
 		&pb.EnrichedFlow{SrcAddr: []byte{2, 125, 160, 218}, DstAddr: []byte{2, 125, 160, 218}})
 	if result.SrcAS != 0 {
 		t.Error("Segment AsLookup is setting the source AS when the corresponding IP does not exist in the lookup database.")

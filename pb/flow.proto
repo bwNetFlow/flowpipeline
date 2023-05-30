@@ -214,4 +214,12 @@ message EnrichedFlow {
 
   // general
   string Note = 1016; // free-form field to implement anything
+
+  // modify/addrstrings
+  string SourceIP = 1290;
+  string DestinationIP = 1291;
+  string NextHopIP = 1292;
+  string SamplerIP = 1293;
+  string SourceMAC = 1294;
+  string DestinationMAC = 1295;
 }

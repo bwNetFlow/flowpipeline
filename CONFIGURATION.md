@@ -510,6 +510,20 @@ Roadmap:
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/addcid)
 [examples using this segment](https://github.com/search?q=%22segment%3A+addcid%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
+#### addrstrings
+
+The `addrstrings` segment adds string representations of IP and MAC addresses which are set. The new fields are
+
+* `SourceIP` (from `SrcAddr`)
+* `DestinationIP` (from `DstAddr`)
+* `NextHopIP` (from `NextHop`)
+* `SamplerIP` (from `SamplerAddress`)
+
+* `SourceMAC` (from `SrcMac`)
+* `DestinationMAC` (from `DasMac`)
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/addrstrings)
+
 #### aslookup
 The `aslookup` segment can add AS numbers to flows using route collector dumps.
 Dumps can be obtained from your RIR in the `.mrt` format and can be converted to

@@ -874,6 +874,56 @@ dump.
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/json)
 [examples using this segment](https://github.com/search?q=%22segment%3A+json%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
 
+#### lumberjack (elastic beats)
+The `lumberjack` segment sends flows to one or more [elastic beats](https://github.com/elastic/beats)
+servers user the [lumberjack](https://github.com/logstash-plugins/logstash-input-beats/blob/main/PROTOCOL.md)
+protocol. Flows are queued in a non-deterministic, round-robin fashion to the servers.
+
+The only mandatory option is `servers` which contains a comma separated list of lumberjack
+server URLs. Each URL must start with one of these schemata: `tcp://` (plain TCP,
+no encryption), `tls://` (TLS encryption) or `tlsnoverify://` (TLS encryption without
+certificate verification). The schema is followed by the hostname or IP address, a colon `:`,
+and a port number. IPv6 addresses must be surrounded by square brackets.
+
+To prevent blocking, flows are buffered in a channel between the segment and the output
+go routines. Each output go routine maintains a buffer of flows which are send either when the
+buffer is full or after a configurable timeout. Proper parameter sizing for the queue,
+buffers, and timeouts depends on multiple individual factors (like size, characteristics
+of the incoming netflows and the responsiveness of the target servers). There are parameters
+to both observe and tune this segment's performance.
+
+Upon connection error or loss, the segment will try to reconnect indefinitely with a pause of
+`reconnectwait` between attempts.
+
+* `queuesize` (integer) sets the number of flows that are buffered between the segment and the output go routines.
+* `batchsize` (integer) sets the number of flows that each output go routine buffers before sending.
+* `batchtimeout` (duration) sets the maximum time that flows are buffered before sending.
+* `reconnectwait` (duration) sets the time to wait between reconnection attempts.
+
+These options help to observe the performance characteristics of the segment:
+
+* `batchdebug` (bool) enables debug logging of batch operations (full send, partial send and skipped send).
+* `queuestatusinterval` (duration) sets the interval at which the segment logs the current queue status.
+
+To see debug output, set the `-l debug` flag when starting `flowpipeline`.
+
+See [time.ParseDuration](https://pkg.go.dev/time#ParseDuration) for legal duration format
+strings and [strconv.ParseBool](https://pkg.go.dev/strconv#ParseBool) for allowed bool keywords.
+
+```
+- segment: lumberjack
+  config:
+    servers: tcp://foo.example.com:5044, tls://bar.example.com:5044, tlsnoverify://[2001:db8::1]:5044
+    batchsize: 1024
+    queuesize: = 2048
+    batchtimeout: "2000ms"
+    reconnectwait: "1s"
+    batchdebug: false
+    queuestatusinterval: "0s"
+```
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/lumberjack)
+
 ### Print Group
 Segments in this group serve to print flows immediately to the user. This is intended for ad-hoc applications and instant feedback use cases.
 

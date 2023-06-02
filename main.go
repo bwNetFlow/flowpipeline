@@ -54,6 +54,7 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/csv"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/json"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/kafkaproducer"
+	_ "github.com/bwNetFlow/flowpipeline/segments/output/lumberjack"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/sqlite"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/print/count"

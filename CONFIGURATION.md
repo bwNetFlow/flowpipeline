@@ -606,8 +606,8 @@ fields parameter. For a list of fields, check our
   config:
     # required, options are drop or keep
     policy: drop
-    # the lines below are optional and set to default
-    fields: ""
+    # required, fields to keep or drop
+    fields: "SrcAddr,DstAddr"
 ```
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/dropfields)

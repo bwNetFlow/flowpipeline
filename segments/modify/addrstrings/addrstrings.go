@@ -38,7 +38,7 @@ func (segment *AddrStrings) Run(wg *sync.WaitGroup) {
 		}
 		// SourceMAC
 		if original.SrcMac != 0x0 {
-			original.SourceIP = original.SrcMacString()
+			original.SourceMAC = original.SrcMacString()
 		}
 		// DestinationMAC
 		if original.DstMac != 0x0 {

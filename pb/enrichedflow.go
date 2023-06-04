@@ -286,7 +286,7 @@ func (flow *EnrichedFlow) DstMacString() string {
 }
 
 func MacToString(mac uint64) string {
-	return fmt.Sprintf("%02X:%02X:%02X:%02X:%02X:%02X",
+	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
 		uint64((mac & 0x0000000000FF)),
 		uint64((mac&0x00000000FF00)>>8),
 		uint64((mac&0x000000FF0000)>>16),

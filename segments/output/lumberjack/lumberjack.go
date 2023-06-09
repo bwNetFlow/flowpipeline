@@ -124,7 +124,7 @@ func (segment *Lumberjack) New(config map[string]string) segments.Segment {
 	// parse batchSize option
 	segment.BatchSize = defaultBatchSize
 	if config["batchsize"] != "" {
-		segment.BatchSize, err = strconv.Atoi(config["batchsize"])
+		segment.BatchSize, err = strconv.Atoi(strings.ReplaceAll(config["batchsize"], "_", ""))
 		if err != nil {
 			log.Fatalf("[error] Lumberjack: Failed to parse batchsize config option: %s", err)
 		}
@@ -183,7 +183,7 @@ func (segment *Lumberjack) New(config map[string]string) segments.Segment {
 
 	// create buffered channel
 	if config["queuesize"] != "" {
-		buflen, err = strconv.Atoi(config["queuesize"])
+		buflen, err = strconv.Atoi(strings.ReplaceAll(config["queuesize"], "_", ""))
 		if err != nil {
 			log.Fatalf("[error] Lumberjack: Failed to parse queuesize config option: %s", err)
 		}

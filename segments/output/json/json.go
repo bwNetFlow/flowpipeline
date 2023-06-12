@@ -54,7 +54,7 @@ func (segment *Json) Run(wg *sync.WaitGroup) {
 			continue
 		}
 
-		// use frpintln because it add newline depending on OS
+		// use Fprintln because it adds newline depending on OS
 		fmt.Fprintln(segment.writer, string(data))
 		// we need to flush here every time because we need full lines and can not wait
 		// in case of using this output as in input for other instances consuming flow data

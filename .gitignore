@@ -2,6 +2,7 @@ config.yml
 config
 *.so
 
+.idea
 .vscode
 flowpipeline
 *.sqlite

@@ -8,7 +8,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
@@ -38,6 +37,7 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/input/stdin"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/addcid"
+	_ "github.com/bwNetFlow/flowpipeline/segments/modify/addrstrings"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/anonymize"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/aslookup"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/bgp"
@@ -54,6 +54,7 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/csv"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/json"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/kafkaproducer"
+	_ "github.com/bwNetFlow/flowpipeline/segments/output/lumberjack"
 	_ "github.com/bwNetFlow/flowpipeline/segments/output/sqlite"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/print/count"
@@ -110,7 +111,7 @@ func main() {
 		}
 	}
 
-	config, err := ioutil.ReadFile(*configfile)
+	config, err := os.ReadFile(*configfile)
 	if err != nil {
 		log.Printf("[error] reading config file: %s", err)
 		return

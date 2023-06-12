@@ -24,20 +24,20 @@ segment. Additionally it is possible to reference command line arguments that
 flowpipeline was invoked with that have not been parsed by the binary itself.
 For instance:
 
-```
+```yaml
 segment: kafkaconsumer
 config:
   user: myself
   pass: $PASSWORD
 ```
 
-```
+```yaml
 segment: flowfilter
 config:
   filter: $0
 ```
 
-```
+```yaml
 segment: bpf
 config:
   device: $0
@@ -61,7 +61,7 @@ post requests with the full flow data to a single endpoint at the moment. The
 roadmap includes various features such as different methods, builtin
 conditional, limiting payload data, and multiple receivers.
 
-```
+```yaml
 - segment: http
   config:
     url: https://example.com/postable-endpoint
@@ -99,7 +99,7 @@ can be configured differently.
 The parameter "traffictype" is passed as OpenMetrics label, so this segment
 can be used multiple times in one pipeline without metrics getting mixed up.
 
-```
+```yaml
 - segment: toptalkers-metrics
   config:
     # the lines below are optional and set to default
@@ -149,7 +149,7 @@ Instead of a minimal example, the following more elaborate one highlights all
 TCP flows while printing to standard output and keeps only these highlighted
 ones in a sqlite export:
 
-```
+```yaml
 - segment: branch
   if:
   - segment: flowfilter
@@ -187,7 +187,7 @@ skip value of `1` would result in any TCP flows not being exported by the
 following segment. Setting invert to `true` is equivalent to negating the
 condition.
 
-```
+```yaml
 - segment: skip
   config:
     condition: `proto tcp`
@@ -217,7 +217,7 @@ Note that some of the above fields might not be present depending on the method
 of flow export, the input segment used in this pipeline, or the modify segments
 in front of this export segment.
 
-```
+```yaml
 - segment: influx
   config:
     org: my-org
@@ -243,7 +243,7 @@ Note that some of the above fields might not be present depending on the method
 of flow export, the input segment used in this pipeline, or the modify segments
 in front of this export segment.
 
-```
+```yaml
 - segment: prometheus
   config:
     # the lines below are optional and set to default
@@ -265,7 +265,7 @@ criteria.
 The `drop` segment is used to drain a pipeline, effectively starting a new
 pipeline after it. In conjunction with `skip`, this can act as a `flowfilter`.
 
-```
+```yaml
 - segment: drop
 ```
 
@@ -283,7 +283,7 @@ instead relying on the much faster P-square estimation. For quick ad-hoc usage,
 it can be useful to adjust the window size (in seconds).
 The ramp up time defults to 0 (disabled), but can be configured to wait for analyzing flows. All flows within this Timerange are dropped after the start of the pipeline.
 
-```
+```yaml
 - segment: elephant
   # the lines below are optional and set to default
   config:
@@ -303,7 +303,7 @@ The `flowfilter` segment uses
 based on the evaluation value of the provided filter conditional against any
 flow passing through this segment.
 
-```
+```yaml
 - segment: flowfilter
   config:
     filter: "proto tcp"
@@ -336,7 +336,7 @@ Roadmap:
 * allow hardware offloading to be configured
 * implement sampling
 
-```
+```yaml
 - segment: bpf
   config:
     # required fields
@@ -360,7 +360,7 @@ beginning of this project).
 This flow collector needs to receive input from any IPFIX/Netflow/sFlow
 exporters, for instance your network devices.
 
-```
+```yaml
 - segment: goflow
   # the lines below are optional and set to default
   config:
@@ -385,7 +385,7 @@ The startat configuration sets whether to start at the newest or oldest
 available flow (i.e. Kafka offset). It only takes effect if Kafka has no stored
 state for this specific user/topic/consumergroup combination.
 
-```
+```yaml
 - segment: kafkaconsumer
   config:
     # required fields
@@ -436,7 +436,7 @@ supports different methods:
 
 The filter parameter available for some methods will filter packets before they are aggregated in any flow cache.
 
-```
+```yaml
 - segment: packet
   config:
 	method: pcap # required, one of the available capture methods "pcapgo|pcap|pfring|file"
@@ -498,7 +498,7 @@ field, actually no matching entry in data base).
 Roadmap:
 * figure out how to deal with customers talking to one another
 
-```
+```yaml
 - segment: addcid
   config:
     filename: filename.csv
@@ -509,6 +509,27 @@ Roadmap:
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/addcid)
 [examples using this segment](https://github.com/search?q=%22segment%3A+addcid%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
+#### addrstrings
+
+The `addrstrings` segment adds string representations of IP and MAC addresses which are set. The new fields are
+
+* `SourceIP` (from `SrcAddr`)
+* `DestinationIP` (from `DstAddr`)
+* `NextHopIP` (from `NextHop`)
+* `SamplerIP` (from `SamplerAddress`)
+
+* `SourceMAC` (from `SrcMac`)
+* `DestinationMAC` (from `DstMac`)
+
+This segment has no configuration options. It is intended to be used in conjunction with the `dropfields` segment
+to remove the original fields.
+
+```yaml
+- segment: addrstrings
+```
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/addrstrings)
 
 #### aslookup
 The `aslookup` segment can add AS numbers to flows using route collector dumps.
@@ -562,7 +583,7 @@ If no `fallbackrouter` is set, no data will be annotated. The annotated fields a
 `ASPath`, `Med`, `LocalPref`, `DstAS`, `NextHopAS`, `NextHop`, wheras the last
 three are possibly overwritten from the original router export.
 
-```
+```yaml
 - segment: bgp
   config:
     filename: "bgp.conf"
@@ -582,7 +603,7 @@ this can be configured using the fields parameter. The key needs to be at least
 
 Supported Fields for anonymization are `SrcAddr,DstAddr,SamplerAddress,NextHop`
 
-```
+```yaml
 - segment: anonymize
   config:
     key: "abcdef"
@@ -601,13 +622,13 @@ segment. To this end, this segment requires a policy parameter to be set to
 fields parameter. For a list of fields, check our
 [protobuf definition](https://github.com/bwNetFlow/protobuf/blob/master/flow-messages-enriched.proto).
 
-```
+```yaml
 - segment: dropfields
   config:
     # required, options are drop or keep
     policy: drop
-    # the lines below are optional and set to default
-    fields: ""
+    # required, fields to keep or drop
+    fields: "SrcAddr,DstAddr"
 ```
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/modify/dropfields)
@@ -625,7 +646,7 @@ SrcAddr and DstAddr into SrcCountry and DstCountry. The dropunmatched parameter
 however behaves in the same way: flows without any remote country data set will
 be dropped.
 
-```
+```yaml
 - segment: geolocation
   config:
     # required
@@ -648,7 +669,7 @@ the sampling rate for some reason.
 Roadmap:
 * replace Normalized with an OriginalSamplingRate field and set SamplingRate to 1 instead
 
-```
+```yaml
 - segment: normalize
   # the lines below are optional and set to default
   config:
@@ -664,7 +685,7 @@ integer field. Note that this should only be done before final usage, as
 lugging additional string content around can be costly regarding performance
 and storage size.
 
-```
+```yaml
 - segment: protomap
 ```
 
@@ -694,7 +715,7 @@ The short version is:
 Any optional parameters relate to the `cidr` policy only and behave as in the
 `addcid` segment.
 
-```
+```yaml
 - segment: remoteaddress
   config:
     # required, one of cidr, border, user, or clear
@@ -714,7 +735,7 @@ them to our flows. The results are also written to a internal cache which works 
 usage, but it's recommended to use an actual caching resolver in real deployment scenarios. The
 refresh interval setting pertains to the internal cache only.
 
-```
+```yaml
 - segment: reversedns
   config:
     # the lines below are optional and set to default
@@ -759,7 +780,7 @@ fields. Also see the full examples linked below.
 Roadmap:
 * cache timeout should be configurable
 
-```
+```yaml
 - segment: snmpinterface
   # the lines below are optional and set to default
   config:
@@ -785,7 +806,7 @@ parameter can be used to limit which fields will be exported.
 If no filename is provided or empty, the output goes to stdout.
 By default all fields are exported. To reduce them, use a valid comma seperated list of fields.
 
-```
+```yaml
 - segment: csv
   # the lines below are optional and set to default
   config:
@@ -813,7 +834,7 @@ once. A typical use case is this:
 This could also be used to populate topics by Proto, or by Etype, or by any
 number of other things.
 
-```
+```yaml
 - segment: kafkaproducer
   config:
     # required fields
@@ -846,7 +867,7 @@ this should be an okay value for processing at least 1000 flows per second on
 most szenarios, i.e. flushing to disk once per second. Mind the expected flow
 throughput when setting this parameter.
 
-```
+```yaml
 - segment: sqlite
   config:
     filename: dump.sqlite
@@ -876,11 +897,61 @@ Simply use `zstdcat` to decompress the archive and remove the last line (`| head
   # the lines below are optional and set to default
   config:
     filename: ""
-    zstd: 3
+    zstd: 0
 ```
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/json)
 [examples using this segment](https://github.com/search?q=%22segment%3A+json%22+extension%3Ayml+repo%3AbwNetFlow%2Fflowpipeline%2Fexamples&type=Code)
+
+#### lumberjack (elastic beats)
+The `lumberjack` segment sends flows to one or more [elastic beats](https://github.com/elastic/beats)
+servers user the [lumberjack](https://github.com/logstash-plugins/logstash-input-beats/blob/main/PROTOCOL.md)
+protocol. Flows are queued in a non-deterministic, round-robin fashion to the servers.
+
+The only mandatory option is `servers` which contains a comma separated list of lumberjack
+server URLs. Each URL must start with one of these schemata: `tcp://` (plain TCP,
+no encryption), `tls://` (TLS encryption) or `tlsnoverify://` (TLS encryption without
+certificate verification). The schema is followed by the hostname or IP address, a colon `:`,
+and a port number. IPv6 addresses must be surrounded by square brackets.
+
+To prevent blocking, flows are buffered in a channel between the segment and the output
+go routines. Each output go routine maintains a buffer of flows which are send either when the
+buffer is full or after a configurable timeout. Proper parameter sizing for the queue,
+buffers, and timeouts depends on multiple individual factors (like size, characteristics
+of the incoming netflows and the responsiveness of the target servers). There are parameters
+to both observe and tune this segment's performance.
+
+Upon connection error or loss, the segment will try to reconnect indefinitely with a pause of
+`reconnectwait` between attempts.
+
+* `queuesize` (integer) sets the number of flows that are buffered between the segment and the output go routines.
+* `batchsize` (integer) sets the number of flows that each output go routine buffers before sending.
+* `batchtimeout` (duration) sets the maximum time that flows are buffered before sending.
+* `reconnectwait` (duration) sets the time to wait between reconnection attempts.
+
+These options help to observe the performance characteristics of the segment:
+
+* `batchdebug` (bool) enables debug logging of batch operations (full send, partial send and skipped send).
+* `queuestatusinterval` (duration) sets the interval at which the segment logs the current queue status.
+
+To see debug output, set the `-l debug` flag when starting `flowpipeline`.
+
+See [time.ParseDuration](https://pkg.go.dev/time#ParseDuration) for legal duration format
+strings and [strconv.ParseBool](https://pkg.go.dev/strconv#ParseBool) for allowed bool keywords.
+
+```
+- segment: lumberjack
+  config:
+    servers: tcp://foo.example.com:5044, tls://bar.example.com:5044, tlsnoverify://[2001:db8::1]:5044
+    batchsize: 1024
+    queuesize: = 2048
+    batchtimeout: "2000ms"
+    reconnectwait: "1s"
+    batchdebug: false
+    queuestatusinterval: "0s"
+```
+
+[godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/lumberjack)
 
 ### Print Group
 Segments in this group serve to print flows immediately to the user. This is intended for ad-hoc applications and instant feedback use cases.
@@ -894,7 +965,7 @@ through the filter without resorting to some command employing `| wc -l`.
 
 The result is printed upon termination of the flowpipeline.
 
-```
+```yaml
 - segment: count
   # the lines below are optional and set to default
   config:
@@ -910,7 +981,7 @@ every `flowsperdot` flows. Its parameter needs to be chosen with the expected
 flows per second in mind to be useful. Used to get visual feedback when
 necessary.
 
-```
+```yaml
 - segment: printdots
   # the lines below are optional and set to default
   config:
@@ -948,7 +1019,7 @@ the decoded forwarding status (Cisco-style) in a human-readable manner. The
 see the [relevant example](https://github.com/bwNetFlow/flowpipeline/tree/master/examples/highlighted_flowdump)
 for an application.
 
-```
+```yaml
 - segment: printflowdump
   # the lines below are optional and set to default
   config:
@@ -980,7 +1051,7 @@ writing to the same file. The thresholds serve to only log when the largest top
 talkers are of note: the output is suppressed when either bytes or packets per
 second are under their thresholds.
 
-```
+```yaml
 - segment: toptalkers
   # the lines below are optional and set to default
   config:
@@ -1009,7 +1080,7 @@ Roadmap:
 * things to expect go here
 * and here
 
-```
+```yaml
 - segment: pass
   # the lines below are optional and set to default
   config:

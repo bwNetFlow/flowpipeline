@@ -1,6 +1,7 @@
 package pb
 
 import (
+	"fmt"
 	"net"
 
 	oldpb "github.com/bwNetFlow/protobuf/go"
@@ -274,6 +275,25 @@ func (flow *EnrichedFlow) NextHopObj() net.IP {
 
 func (flow *EnrichedFlow) SamplerAddressObj() net.IP {
 	return net.IP(flow.SamplerAddress)
+}
+
+func (flow *EnrichedFlow) SrcMacString() string {
+	return MacToString(flow.SrcMac)
+}
+
+func (flow *EnrichedFlow) DstMacString() string {
+	return MacToString(flow.DstMac)
+}
+
+func MacToString(mac uint64) string {
+	return fmt.Sprintf("%02x:%02x:%02x:%02x:%02x:%02x",
+		uint64((mac & 0x0000000000FF)),
+		uint64((mac&0x00000000FF00)>>8),
+		uint64((mac&0x000000FF0000)>>16),
+		uint64((mac&0x0000FF000000)>>24),
+		uint64((mac&0x00FF00000000)>>32),
+		uint64((mac&0xFF0000000000)>>40),
+	)
 }
 
 func (flow *EnrichedFlow) GetBps() uint64 {

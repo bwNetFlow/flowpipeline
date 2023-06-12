@@ -4,6 +4,7 @@ package dropfields
 import (
 	"log"
 	"reflect"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -11,24 +12,48 @@ import (
 	"github.com/bwNetFlow/flowpipeline/segments"
 )
 
+type Policy int
+
+const (
+	PolicyDrop Policy = iota
+	PolicyKeep
+)
+
+var (
+	FieldSplitRegex = regexp.MustCompile(`[\s,;:]+`)
+)
+
 type DropFields struct {
 	segments.BaseSegment
-	Policy string // required, options are 'keep' or 'drop'
-	Fields string // optional, default is empty, determines which fields are kept/dropped
+	Policy Policy   // required, determines whether to keep or drop fields
+	Fields []string // required, determines which fields are kept/dropped
 }
 
-func (segment DropFields) New(config map[string]string) segments.Segment {
-	if !(config["policy"] == "keep" || config["policy"] == "drop") {
-		log.Println("[error] DropFields: The 'policy' parameter is required to be either 'keep' or 'drop'.")
-		return nil
+func (segment *DropFields) New(config map[string]string) segments.Segment {
+	var (
+		policy Policy
+		fields []string
+	)
+
+	// parse policy
+	switch config["policy"] {
+	case "keep":
+		policy = PolicyKeep
+	case "drop":
+		policy = PolicyDrop
+	default:
+		log.Fatalln("[error] DropFields: The 'policy' parameter is required to be either 'keep' or 'drop'.")
 	}
-	if config["fields"] == "" {
-		log.Println("[warning] DropFields: This segment is probably misconfigured, the 'fields' parameter should not be empty.")
+
+	// parse fields
+	fields = FieldSplitRegex.Split(strings.TrimSpace(config["fields"]), -1)
+	if len(fields) == 0 {
+		log.Fatalln("[warning] DropFields: The 'fields' parameter can not be empty.")
 	}
 
 	return &DropFields{
-		Policy: config["policy"],
-		Fields: config["fields"],
+		Policy: policy,
+		Fields: fields,
 	}
 }
 
@@ -37,29 +62,30 @@ func (segment *DropFields) Run(wg *sync.WaitGroup) {
 		close(segment.Out)
 		wg.Done()
 	}()
-	fields := strings.Split(segment.Fields, ",")
 	for original := range segment.In {
-		reflected_original := reflect.ValueOf(original)
-		for _, fieldname := range fields {
-			switch segment.Policy {
-			case "keep":
-				reduced := &pb.EnrichedFlow{}
-				reflected_reduced := reflect.ValueOf(reduced)
-				original_field := reflect.Indirect(reflected_original).FieldByName(fieldname)
-				reduced_field := reflected_reduced.Elem().FieldByName(fieldname)
-				if original_field.IsValid() && reduced_field.IsValid() {
-					reduced_field.Set(original_field)
+		// get reflected value of original flow
+		reflectedOriginal := reflect.ValueOf(original).Elem()
+		switch segment.Policy {
+		case PolicyKeep:
+			resultFlow := &pb.EnrichedFlow{}
+			for _, fieldName := range segment.Fields {
+				originalField := reflectedOriginal.FieldByName(fieldName)
+				resultFlowDestinationField := reflect.ValueOf(resultFlow).Elem().FieldByName(fieldName)
+				if originalField.IsValid() && resultFlowDestinationField.CanSet() {
+					resultFlowDestinationField.Set(originalField)
 				} else {
-					log.Printf("[warning] DropFields: A flow message did not have a field named '%s' to keep.", fieldname)
+					log.Fatalf("[error] KeepFields: Field '%s' is not valid or can not be set.", fieldName)
 				}
-				segment.Out <- reduced
-			case "drop":
-				original_field := reflect.Indirect(reflected_original).FieldByName(fieldname)
-				if original_field.IsValid() {
-					original_field.Set(reflect.Zero(original_field.Type()))
-				}
-				segment.Out <- original
 			}
+			segment.Out <- resultFlow
+		case PolicyDrop:
+			for _, fieldName := range segment.Fields {
+				originalField := reflect.Indirect(reflectedOriginal).FieldByName(fieldName)
+				if originalField.IsValid() && originalField.CanSet() {
+					originalField.SetZero()
+				}
+			}
+			segment.Out <- original
 		}
 	}
 }

@@ -885,11 +885,19 @@ It uses stdout by default, but can be instructed to write to file using the file
 This is intended to be able to pipe flows between instances of flowpipeline, but it is
 also very useful when debugging flowpipelines or to create a quick plaintext
 dump.
+
+if the option `zstd` is set, the output will be compressed using the [zstandard algorithm](https://facebook.github.io/zstd/).
+If the option `zstd` is set to a positive integer, the compression level will be set to
+([approximately](https://github.com/klauspost/compress/tree/master/zstd#status)) that value.
+When `flowpipeline` is stopped abruptly (e.g by pressing Ctrl+C), the end of the archive will get corrupted.
+Simply use `zstdcat` to decompress the archive and remove the last line (`| head -n -1`).
+
 ```yaml
 - segment: json
   # the lines below are optional and set to default
   config:
     filename: ""
+    zstd: 0
 ```
 
 [godoc](https://pkg.go.dev/github.com/bwNetFlow/flowpipeline/segments/output/json)

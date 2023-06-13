@@ -4,8 +4,10 @@ package json
 import (
 	"bufio"
 	"fmt"
+	"github.com/klauspost/compress/zstd"
 	"log"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/bwNetFlow/flowpipeline/segments"
@@ -35,15 +37,33 @@ func (segment Json) New(config map[string]string) segments.Segment {
 		file = os.Stdout
 		log.Println("[info] Json: 'filename' unset, using stdout.")
 	}
+	// configure zstd compression
+	if config["zstd"] != "" {
+		rawLevel, err := strconv.Atoi(config["zstd"])
+		var level zstd.EncoderLevel
+		if err != nil {
+			log.Printf("[warning] Json: Unable to parse zstd option, using default: %s", err)
+			level = zstd.SpeedDefault
+		} else {
+			level = zstd.EncoderLevelFromZstd(rawLevel)
+		}
+		encoder, err := zstd.NewWriter(file, zstd.WithEncoderLevel(level))
+		if err != nil {
+			log.Fatalf("[error] Json: error creating zstd encoder: %s", err)
+		}
+		newsegment.writer = bufio.NewWriter(encoder)
+	} else {
+		// no compression
+		newsegment.writer = bufio.NewWriter(file)
+	}
 	newsegment.FileName = filename
-	newsegment.writer = bufio.NewWriter(file)
 
 	return newsegment
 }
 
 func (segment *Json) Run(wg *sync.WaitGroup) {
 	defer func() {
-		segment.writer.Flush()
+		_ = segment.writer.Flush()
 		close(segment.Out)
 		wg.Done()
 	}()
@@ -54,11 +74,15 @@ func (segment *Json) Run(wg *sync.WaitGroup) {
 			continue
 		}
 
-		// use Fprintln because it adds newline depending on OS
-		fmt.Fprintln(segment.writer, string(data))
+		// use Fprintln because it adds an OS specific newline
+		_, err = fmt.Fprintln(segment.writer, string(data))
+		if err != nil {
+			log.Printf("[warning] Json: Skipping a flow, failed to write to file %s: %v", segment.FileName, err)
+			continue
+		}
 		// we need to flush here every time because we need full lines and can not wait
 		// in case of using this output as in input for other instances consuming flow data
-		segment.writer.Flush()
+		_ = segment.writer.Flush()
 		segment.Out <- msg
 	}
 }

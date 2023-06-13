@@ -914,6 +914,10 @@ no encryption), `tls://` (TLS encryption) or `tlsnoverify://` (TLS encryption wi
 certificate verification). The schema is followed by the hostname or IP address, a colon `:`,
 and a port number. IPv6 addresses must be surrounded by square brackets.
 
+Transport compression is disabled by default. Use `compression` to set the compression level
+for all hosts. Compression levels can vary between 0 (no compression) and 9 (maximum compression).
+To set per-host transport compression adding `?compression=<level>` to the server URI.
+
 To prevent blocking, flows are buffered in a channel between the segment and the output
 go routines. Each output go routine maintains a buffer of flows which are send either when the
 buffer is full or after a configurable timeout. Proper parameter sizing for the queue,
@@ -936,13 +940,14 @@ These options help to observe the performance characteristics of the segment:
 
 To see debug output, set the `-l debug` flag when starting `flowpipeline`.
 
-See [time.ParseDuration](https://pkg.go.dev/time#ParseDuration) for legal duration format
+See [time.ParseDuration](https://pkg.go.dev/time#ParseDuration) for proper duration format
 strings and [strconv.ParseBool](https://pkg.go.dev/strconv#ParseBool) for allowed bool keywords.
 
 ```
 - segment: lumberjack
   config:
-    servers: tcp://foo.example.com:5044, tls://bar.example.com:5044, tlsnoverify://[2001:db8::1]:5044
+    servers: tcp://foo.example.com:5044, tls://bar.example.com:5044?compression=3, tlsnoverify://[2001:db8::1]:5044
+    compression: 0
     batchsize: 1024
     queuesize: = 2048
     batchtimeout: "2000ms"

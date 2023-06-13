@@ -24,6 +24,7 @@ const (
 type ServerOptions struct {
 	UseTLS            bool
 	VerifyCertificate bool
+	CompressionLevel  int
 }
 
 type Lumberjack struct {
@@ -44,9 +45,24 @@ func DoDebugPrintf(format string, v ...any) {
 
 func (segment *Lumberjack) New(config map[string]string) segments.Segment {
 	var (
-		err    error
-		buflen int
+		err                error
+		buflen             int
+		defaultCompression int
 	)
+
+	// parse default compression level
+	defaultCompressionString := config["compression"]
+	if defaultCompressionString == "" {
+		defaultCompression = 0
+	} else {
+		defaultCompression, err = strconv.Atoi(defaultCompressionString)
+		if err != nil {
+			log.Fatalf("[error] Lumberjack: Failed to parse default compression level %s: %s", defaultCompressionString, err)
+		}
+		if defaultCompression < 0 || defaultCompression > 9 {
+			log.Fatalf("[error] Lumberjack: Default compression level %d is out of range", defaultCompression)
+		}
+	}
 
 	// parse server URLs
 	rawServerStrings := strings.Split(config["servers"], ",")
@@ -62,6 +78,9 @@ func (segment *Lumberjack) New(config map[string]string) segments.Segment {
 			if err != nil {
 				log.Fatalf("[error] Lumberjack: Failed to parse server URL %s: %s", rawServerString, err)
 			}
+			urlQueryParams := serverURL.Query()
+
+			// parse TLS options
 			var useTLS, verifyTLS bool
 			switch serverURL.Scheme {
 			case "tcp":
@@ -76,9 +95,28 @@ func (segment *Lumberjack) New(config map[string]string) segments.Segment {
 			default:
 				log.Fatalf("[error] Lumberjack: Unknown scheme %s in server URL %s", serverURL.Scheme, rawServerString)
 			}
+
+			// parse compression level
+			var compressionLevel int
+			compressionString := urlQueryParams.Get("compression")
+
+			if compressionString == "" {
+				// use global default if not specified
+				compressionLevel = defaultCompression
+			} else {
+				compressionLevel, err = strconv.Atoi(compressionString)
+				if err != nil {
+					log.Fatalf("[error] Lumberjack: Failed to parse compression level %s for host %s: %s", compressionString, serverURL.Host, err)
+				}
+				if compressionLevel < 0 || compressionLevel > 9 {
+					log.Fatalf("[error] Lumberjack: Compression level %d out of range for host %s", compressionLevel, serverURL.Host)
+				}
+			}
+
 			segment.Servers[serverURL.Host] = ServerOptions{
 				UseTLS:            useTLS,
 				VerifyCertificate: verifyTLS,
+				CompressionLevel:  compressionLevel,
 			}
 		}
 	}
@@ -190,7 +228,7 @@ func (segment *Lumberjack) Run(wg *sync.WaitGroup) {
 			// connect to lumberjack server
 			client := NewResilientClient(server, options, segment.ReconnectWait)
 			defer client.Close()
-			log.Printf("[info] Lumberjack: Connected to %s (TLS: %v, VerifyTLS: %v)", server, options.UseTLS, options.VerifyCertificate)
+			log.Printf("[info] Lumberjack: Connected to %s (TLS: %v, VerifyTLS: %v, Compression: %d)", server, options.UseTLS, options.VerifyCertificate, options.CompressionLevel)
 
 			flowInterface := make([]interface{}, segment.BatchSize)
 			idx := 0

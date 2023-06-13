@@ -53,7 +53,7 @@ func (c *resilientClient) connect() {
 	}
 	// try connecting indefinitely
 	for {
-		c.sc, err = lumber.SyncDialWith(dialFunc, c.ServerName, lumber.JSONEncoder(jsonEncoderWrapper))
+		c.sc, err = lumber.SyncDialWith(dialFunc, c.ServerName, lumber.JSONEncoder(jsonEncoderWrapper), lumber.CompressionLevel(c.Options.CompressionLevel))
 		if err == nil {
 			return
 		}

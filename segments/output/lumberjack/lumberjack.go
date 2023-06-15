@@ -6,6 +6,7 @@ import (
 	"github.com/bwNetFlow/flowpipeline/segments"
 	"log"
 	"net/url"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -25,6 +26,7 @@ type ServerOptions struct {
 	UseTLS            bool
 	VerifyCertificate bool
 	CompressionLevel  int
+	Parallism         int
 }
 
 type Lumberjack struct {
@@ -113,10 +115,29 @@ func (segment *Lumberjack) New(config map[string]string) segments.Segment {
 				}
 			}
 
+			// parse count url argument
+			var numRoutines = 1
+			numRoutinesString := urlQueryParams.Get("count")
+			if numRoutinesString == "" {
+				numRoutines = 1
+			} else {
+				numRoutines, err = strconv.Atoi(numRoutinesString)
+				switch {
+				case err != nil:
+					log.Fatalf("[error] Lumberjack: Failed to parse count %s for host %s: %s", numRoutinesString, serverURL.Host, err)
+				case numRoutines < 1:
+					log.Printf("[warning] Lumberjack: count is smaller than 1, setting to 1")
+					numRoutines = 1
+				case numRoutines > runtime.NumCPU():
+					log.Printf("[warning] Lumberjack: count is larger than runtime.NumCPU (%d). This will most likely hurt performance.", runtime.NumCPU())
+				}
+			}
+
 			segment.Servers[serverURL.Host] = ServerOptions{
 				UseTLS:            useTLS,
 				VerifyCertificate: verifyTLS,
 				CompressionLevel:  compressionLevel,
+				Parallism:         numRoutines,
 			}
 		}
 	}
@@ -224,80 +245,82 @@ func (segment *Lumberjack) Run(wg *sync.WaitGroup) {
 	for server, options := range segment.Servers {
 		writerWG.Add(1)
 		options := options
-		go func(server string) {
-			// connect to lumberjack server
-			client := NewResilientClient(server, options, segment.ReconnectWait)
-			defer client.Close()
-			log.Printf("[info] Lumberjack: Connected to %s (TLS: %v, VerifyTLS: %v, Compression: %d)", server, options.UseTLS, options.VerifyCertificate, options.CompressionLevel)
+		for i := 0; i < options.Parallism; i++ {
+			go func(server string, numServer int) {
+				// connect to lumberjack server
+				client := NewResilientClient(server, options, segment.ReconnectWait)
+				defer client.Close()
+				log.Printf("[info] Lumberjack: Connected to %s (TLS: %v, VerifyTLS: %v, Compression: %d, number %d/%d)", server, options.UseTLS, options.VerifyCertificate, options.CompressionLevel, numServer+1, options.Parallism)
 
-			flowInterface := make([]interface{}, segment.BatchSize)
-			idx := 0
+				flowInterface := make([]interface{}, segment.BatchSize)
+				idx := 0
 
-			// see https://stackoverflow.com/questions/66037676/go-reset-a-timer-newtimer-within-select-loop for timer mechanics
-			timer := time.NewTimer(segment.BatchTimeout)
-			timer.Stop()
-			defer timer.Stop()
-			var timerSet bool
+				// see https://stackoverflow.com/questions/66037676/go-reset-a-timer-newtimer-within-select-loop for timer mechanics
+				timer := time.NewTimer(segment.BatchTimeout)
+				timer.Stop()
+				defer timer.Stop()
+				var timerSet bool
 
-			for {
-				select {
-				case flow, isOpen := <-segment.LumberjackOut:
-					// exit on closed channel
-					if !isOpen {
-						// send local buffer
-						count, err := client.SendNoRetry(flowInterface[:idx])
-						if err != nil {
-							log.Printf("[error] Lumberjack: Failed to send final flow batch upon exit to %s: %s", server, err)
-						} else {
-							segment.BatchDebugPrintf("[debug] Lumberjack: %s Sent final batch (%d)", server, count)
-						}
-						wg.Done()
-						return
-					}
-
-					// append flow to batch
-					flowInterface[idx] = flow
-					idx++
-
-					// send batch if full
-					if idx == segment.BatchSize {
-						// We got an event, and timer was already set.
-						// We need to stop the timer and drain the channel if needed,
-						// so that we can safely reset it later.
-						if timerSet {
-							if !timer.Stop() {
-								<-timer.C
+				for {
+					select {
+					case flow, isOpen := <-segment.LumberjackOut:
+						// exit on closed channel
+						if !isOpen {
+							// send local buffer
+							count, err := client.SendNoRetry(flowInterface[:idx])
+							if err != nil {
+								log.Printf("[error] Lumberjack: Failed to send final flow batch upon exit to %s: %s", server, err)
+							} else {
+								segment.BatchDebugPrintf("[debug] Lumberjack: %s Sent final batch (%d)", server, count)
 							}
-							timerSet = false
+							wg.Done()
+							return
 						}
 
-						client.Send(flowInterface)
-						segment.BatchDebugPrintf("[debug] Lumberjack: %s Sent full batch (%d)", server, segment.BatchSize)
+						// append flow to batch
+						flowInterface[idx] = flow
+						idx++
 
-						// reset idx
-						idx = 0
+						// send batch if full
+						if idx == segment.BatchSize {
+							// We got an event, and timer was already set.
+							// We need to stop the timer and drain the channel if needed,
+							// so that we can safely reset it later.
+							if timerSet {
+								if !timer.Stop() {
+									<-timer.C
+								}
+								timerSet = false
+							}
 
-						// If timer was not set, or it was stopped before, it's safe to reset it.
-						if !timerSet {
-							timerSet = true
-							timer.Reset(segment.BatchTimeout)
+							client.Send(flowInterface)
+							segment.BatchDebugPrintf("[debug] Lumberjack: %s Sent full batch (%d)", server, segment.BatchSize)
+
+							// reset idx
+							idx = 0
+
+							// If timer was not set, or it was stopped before, it's safe to reset it.
+							if !timerSet {
+								timerSet = true
+								timer.Reset(segment.BatchTimeout)
+							}
 						}
-					}
-				case <-timer.C:
-					// timer expired, send batch
-					if idx > 0 {
-						segment.BatchDebugPrintf("[debug] Lumberjack: %s Sending incomplete batch (%d/%d)", server, idx, segment.BatchSize)
-						client.Send(flowInterface[:idx])
-						idx = 0
-					} else {
-						segment.BatchDebugPrintf("[debug] Lumberjack: %s Timer expired with empty batch", server)
-					}
+					case <-timer.C:
+						// timer expired, send batch
+						if idx > 0 {
+							segment.BatchDebugPrintf("[debug] Lumberjack: %s Sending incomplete batch (%d/%d)", server, idx, segment.BatchSize)
+							client.Send(flowInterface[:idx])
+							idx = 0
+						} else {
+							segment.BatchDebugPrintf("[debug] Lumberjack: %s Timer expired with empty batch", server)
+						}
 
-					timer.Reset(segment.BatchTimeout)
-					timerSet = true
+						timer.Reset(segment.BatchTimeout)
+						timerSet = true
+					}
 				}
-			}
-		}(server)
+			}(server, i)
+		}
 	}
 
 	// forward flows to lumberjack servers and to the next segment

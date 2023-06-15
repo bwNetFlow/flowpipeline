@@ -914,6 +914,19 @@ no encryption), `tls://` (TLS encryption) or `tlsnoverify://` (TLS encryption wi
 certificate verification). The schema is followed by the hostname or IP address, a colon `:`,
 and a port number. IPv6 addresses must be surrounded by square brackets.
 
+A goroutine is spawned for every lumberjack server. Each goroutine only uses one CPU core to
+process and send flows. This may not be enough when the ingress flow rate is high and/or a high compression
+level is used. The number of goroutines per backend can by set explicitly with the `?count=x` URL
+parameter. For example:
+
+```yaml
+config:
+  server: tls://host1:5043/?count=4, tls://host2:5043/?compression=9&count=16
+```
+
+will use four parallel goroutines for `host1` and sixteen parallel goroutines for `host2`. Use `&count=…` instead of
+`?count=…` when `count` is not the first parameter (standard URI convention).
+
 Transport compression is disabled by default. Use `compression` to set the compression level
 for all hosts. Compression levels can vary between 0 (no compression) and 9 (maximum compression).
 To set per-host transport compression adding `?compression=<level>` to the server URI.

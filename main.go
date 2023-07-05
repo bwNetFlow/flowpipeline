@@ -35,6 +35,7 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/input/kafkaconsumer"
 	_ "github.com/bwNetFlow/flowpipeline/segments/input/packet"
 	_ "github.com/bwNetFlow/flowpipeline/segments/input/stdin"
+	_ "github.com/bwNetFlow/flowpipeline/segments/input/diskbuffer"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/addcid"
 	_ "github.com/bwNetFlow/flowpipeline/segments/modify/addrstrings"
@@ -63,6 +64,8 @@ import (
 	_ "github.com/bwNetFlow/flowpipeline/segments/print/toptalkers"
 
 	_ "github.com/bwNetFlow/flowpipeline/segments/analysis/toptalkers_metrics"
+
+	_ "github.com/bwNetFlow/flowpipeline/segments/dev/filegate"
 )
 
 var Version string

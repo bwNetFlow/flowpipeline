@@ -204,6 +204,7 @@ func (segment *Lumberjack) Run(wg *sync.WaitGroup) {
 
 	defer func() {
 		close(segment.Out)
+		writerWG.Wait()
 		wg.Done()
 		log.Println("[info] Lumberjack: All writer functions have stopped, exiting…")
 	}()
@@ -225,6 +226,7 @@ func (segment *Lumberjack) Run(wg *sync.WaitGroup) {
 		writerWG.Add(1)
 		options := options
 		go func(server string) {
+			defer writerWG.Done()
 			// connect to lumberjack server
 			client := NewResilientClient(server, options, segment.ReconnectWait)
 			defer client.Close()
@@ -251,7 +253,6 @@ func (segment *Lumberjack) Run(wg *sync.WaitGroup) {
 						} else {
 							segment.BatchDebugPrintf("[debug] Lumberjack: %s Sent final batch (%d)", server, count)
 						}
-						wg.Done()
 						return
 					}
 
@@ -305,6 +306,7 @@ func (segment *Lumberjack) Run(wg *sync.WaitGroup) {
 		segment.LumberjackOut <- msg
 		segment.Out <- msg
 	}
+	close(segment.LumberjackOut)
 }
 
 // register segment
